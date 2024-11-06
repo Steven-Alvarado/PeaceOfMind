@@ -1,11 +1,10 @@
-// config/db.js
 const { Pool } = require('pg');
 require('dotenv').config();
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL, // Use full URL if set
+  connectionString: process.env.DATABASE_URL, 
   ssl: {
-    rejectUnauthorized: false // This may be needed for connections to services like Railway
+    rejectUnauthorized: false // Railway
   }
 });
 
