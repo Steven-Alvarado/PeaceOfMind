@@ -1,4 +1,4 @@
-const pool = require('../db'); // Pool instance for PostgreSQL
+const pool = require('../config/db'); // Pool instance for PostgreSQL
 
 // Create a new user in the auth table
 const createUser = async (email, passwordHash, role) => {
