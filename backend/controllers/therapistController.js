@@ -1,10 +1,11 @@
 const bcrypt = require('bcrypt');
-const {createUser, createTherapist, findTherapistById, getAvilableTherapists } = require('../models/authModel');
+const {createUser, createTherapist,findUserByEmail, findTherapistById, getAvilableTherapists } = require('../models/authModel');
 
 
 exports.registerTherapist = async (req, res) => {
     //Some validation result
     //const errors =
+    const { email, password, firstName, lastName, address, licenseNumber, specialization, experienceYears, monthlyRate } = req.body;
     if (!(email && password && licenseNumber && specialization && firstName && lastName && address)) {
         return res.status(400).json({ error: "Missing required fields" });
     }
@@ -56,10 +57,7 @@ exports.getTherapistDetails = async (req, res) => {
         if(!therapist){
             return res.status(404).json({error: "Therapist not found"});
         }
-        res.json({
-            message: "Therapist details success",
-            therapist
-        });
+        res.json({message: "Therapist details success",therapist});
     }
     catch(error){
         console.error("Error therapist details:", error);
@@ -83,4 +81,4 @@ exports.listAvailableTherapists = async (req, res) => {
 
 
 
-module.exports = { registerTherapist, getTherapistDetails};
+//module.exports = {registerTherapist, getTherapistDetails, listAvailableTherapists};

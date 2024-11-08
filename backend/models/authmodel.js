@@ -55,23 +55,19 @@ const findTherapistById = async (therapistId) => {
         WHERE t.id = $1;
     `;
     const result = await pool.query(query, [therapistId]);
-    if (result.rows.length > 0) {
-        return result.rows[0];
-    } else {
-        return null; // Return null if no therapist is found
-    }
+    return result.rows[0];
 };
 //Get the availabe therapist using availability in therapist table
 const getAvilableTherapists = async() =>{
-  const query = `
+    const query = `
         SELECT t.*, a.email
         FROM therapists t
         INNER JOIN users u ON t.user_id = u.id
         INNER JOIN auth a ON u.id = a.user_id
         WHERE t.availability = true;
     `;
-  const result = await pool.query(query);
-  return result.rows;
+    const result = await pool.query(query);
+    return result.rows;
 };
 
 module.exports = {
