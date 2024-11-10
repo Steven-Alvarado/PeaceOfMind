@@ -20,7 +20,6 @@ import Advice2 from '../lotties/AdviceSection2.json';
 import Advice3 from '../lotties/AdviceSection3.json';
 
 
-
 function LandingPage() {
   return (
     <div>

@@ -39,15 +39,15 @@ const HeaderLandingPage = () => {
           <Link to="contact" smooth={true} duration={500} className="cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]">
             Contact Us
           </Link>
-          <Link to="#" smooth={true} duration={500} className="cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]">
+          <a href="/for-therapists" className="cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]">
             For Therapists
-          </Link>
-          <Link to="#" smooth={true} duration={500} className="cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]">
+          </a>
+          <a href="/sign-up" className="cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]">
             Sign Up
-          </Link>
-          <Link to="#" smooth={true} duration={500} className="cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]">
+          </a>
+          <a href="/login" className="cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]">
             Login
-          </Link>
+          </a>
         </nav>
 
         {/* Mobile Hamburger Icon */}
@@ -73,6 +73,15 @@ const HeaderLandingPage = () => {
           </Link>
           <Link to="contact" smooth={true} duration={500} className="block cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]">
             Contact Us
+          </Link>
+          <Link to="/for-therapists" smooth={true} duration={500} className="cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]">
+            For Therapists
+          </Link>
+          <Link to="/sign-up" smooth={true} duration={500} className="cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]">
+            Sign Up
+          </Link>
+          <Link to="/login" smooth={true} duration={500} className="cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]">
+            Login
           </Link>
         </nav>
       )}
