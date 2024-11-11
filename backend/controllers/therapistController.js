@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt');
-const {createUser, createTherapist,findUserByEmail, findTherapistById, getAvilableTherapists } = require('../models/authModel');
-
+const {createTherapist,findTherapistById, getAvilableTherapists, isLicenseVerified } = require('../models/therapistModel');
+const {createUser, findUserByEmail} = require('../models/authModel');
 
 exports.registerTherapist = async (req, res) => {
     //Some validation result
