@@ -1,3 +1,18 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.slick-slide {
+  padding: 0 20px; /* Adjust for horizontal spacing */
+}
+
+.wave-background {
+  background-image: url('../src/Images/WaveLandingPage.svg');
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: bottom;
+}
+
+html {
+    scroll-behavior: smooth;
+  }
