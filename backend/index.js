@@ -18,7 +18,7 @@ app.use(express.json());
 // Mount the API routes under `/api`
 app.use("/api", apiRoutes);
 
-//Check that program correctly retrieves DATABASE_URL from .env, used for testing, remove before live
+//Check that program correctly retrieves DATABASE_URL from .env
 const dbConnectionString = process.env.DATABASE_URL;
 
 // Start the server

@@ -1,4 +1,4 @@
-const bcrypt = require("bcryptjs"); //bcrypt resulted in a conflict with Windows OS this was the only solution that worked
+const bcrypt = require("bcryptjs"); 
 const jwt = require("jsonwebtoken");
 const {
   createUser,
