@@ -7,14 +7,14 @@ const {
 } = require("../models/authModel");
 
 const register = async (req, res) => {
-  const { email, password, role } = req.body;
+  const { email, password, role, firstName, lastName, gender} = req.body;
   try {
     const existingUser = await findUserByEmail(email);
     if (existingUser)
       return res.status(400).json({ error: "User already exists" });
 
     const passwordHash = await bcrypt.hash(password, 10);
-    const newUser = await createUser(email, passwordHash, role);
+    const newUser = await createUser(email, passwordHash, role, firstName, lastName, gender);
 
     res
       .status(201)
