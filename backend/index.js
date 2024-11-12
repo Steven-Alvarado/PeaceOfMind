@@ -18,7 +18,12 @@ app.use(express.json());
 // Mount the API routes under `/api`
 app.use("/api", apiRoutes);
 
+//Check that program correctly retrieves DATABASE_URL from .env
+const dbConnectionString = process.env.DATABASE_URL;
+
+
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+  console.log(dbConnectionString);
 });
