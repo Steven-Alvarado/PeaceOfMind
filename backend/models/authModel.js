@@ -2,10 +2,11 @@ const pool = require('../config/db'); // Pool instance for PostgreSQL
 
 
 // Create a new user in the auth table
-const createUser = async (email, passwordHash, role) => {
+const createUser = async (email, passwordHash, role, firstName, lastName, gender) => {
   const userResult = await pool.query(
-    `INSERT INTO users (role) VALUES ($1) RETURNING id`, 
-    [role]
+    `INSERT INTO users (role, first_name, last_name, gender) 
+     VALUES ($1, $2, $3, $4) RETURNING id, first_name, last_name, gender, role`, 
+    [role, firstName, lastName, gender]
   );
   const userId = userResult.rows[0].id;
 
@@ -13,8 +14,14 @@ const createUser = async (email, passwordHash, role) => {
     `INSERT INTO auth (email, password_hash, user_id) VALUES ($1, $2, $3) RETURNING email, user_id`,
     [email, passwordHash, userId]
   );
-
-  return {userId, email: authResult.rows[0].email };
+  return {
+    id: userId,
+    first_name: userResult.rows[0].first_name,
+    last_name: userResult.rows[0].last_name,
+    gender: userResult.rows[0].gender,
+    role: userResult.rows[0].role,
+    email: authResult.rows[0].email
+  };
 };
 
 
