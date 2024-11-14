@@ -4,6 +4,6 @@ commands = ["apt-get update && apt-get install -y caddy"]
 [phases.build]
 commands = ["npm install", "npm run build"]
 
-[phases.start]
-commands = ["caddy file-server --root ./dist --listen :${PORT}"]
+[start]
+cmd = "caddy file-server --root ./dist --listen :${PORT}"
 
