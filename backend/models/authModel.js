@@ -1,5 +1,6 @@
 const pool = require('../config/db'); // Pool instance for PostgreSQL
 
+
 // Create a new user in the auth table
 const createUser = async (email, passwordHash, role, firstName, lastName, gender) => {
   const userResult = await pool.query(
@@ -23,6 +24,7 @@ const createUser = async (email, passwordHash, role, firstName, lastName, gender
   };
 };
 
+
 // Find a user by email in the auth table
 const findUserByEmail = async (email) => {
   const result = await pool.query(`SELECT * FROM auth WHERE email = $1`, [email]);
@@ -34,5 +36,6 @@ const findUserById = async (userId) => {
   const result = await pool.query(`SELECT * FROM users WHERE id = $1`, [userId]);
   return result.rows[0];
 };
+
 
 module.exports = { createUser, findUserByEmail, findUserById };
