@@ -5,6 +5,6 @@ const { submitReview, fetchAllReviews, fetchReviewsByTherapist} = require('../co
 
 router.post('/submitReview', submitReview); // Submit a new review
 router.get('/', fetchAllReviews); // Get all reviews
-router.get('/:id', fetchReviewsByTherapist); // Get all reviews by therapist id
+router.get('/therapist/:id', fetchReviewsByTherapist); // Get all reviews by therapist id
 
 module.exports = router;
