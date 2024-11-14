@@ -1,8 +1,8 @@
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const {createTherapist,findTherapistById, getAvilableTherapists, isLicenseVerified } = require('../models/therapistModel');
 const {createUser, findUserByEmail} = require('../models/authModel');
 
-exports.registerTherapist = async (req, res) => {
+const registerTherapist = async (req, res) => {
     //Some validation result
     //const errors =
     const { email, password, firstName, lastName, address, licenseNumber, specialization, experienceYears, monthlyRate } = req.body;
@@ -50,7 +50,7 @@ exports.registerTherapist = async (req, res) => {
 
 };
 
-exports.getTherapistDetails = async (req, res) => {
+const getTherapistDetails = async (req, res) => {
     const therapistId = req.params.id;
     try{
         const therapist = await findTherapistById(therapistId);
@@ -65,7 +65,7 @@ exports.getTherapistDetails = async (req, res) => {
     }
 }
 
-exports.listAvailableTherapists = async (req, res) => {
+const listAvailableTherapists = async (req, res) => {
     try{
         const therapists = await getAvilableTherapists();
         if(therapists.length == 0){
@@ -81,4 +81,4 @@ exports.listAvailableTherapists = async (req, res) => {
 
 
 
-//module.exports = {registerTherapist, getTherapistDetails, listAvailableTherapists};
+module.exports  = {registerTherapist, getTherapistDetails, listAvailableTherapists};
