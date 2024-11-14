@@ -7,13 +7,17 @@ const authRoutes = require("./auth");
 const reviewRoutes = require("./reviews");
 const therapistRoutes = require("./therapists");
 const appointmentRoutes = require("./appointments"); 
-
+const conversationRoutes = require("./conversations");
+const messagesRoutes = require("./messages");
 
 // Mount routes on `/api`
 router.use("/users", userRoutes);
 router.use("/auth", authRoutes);
 router.use("/reviews", reviewRoutes);
-router.use("/therapists", therapistRoutes);
+//router.use("/therapists", therapistRoutes);
 router.use("/appointments", appointmentRoutes); 
+router.use("/conversations", conversationRoutes);
+router.use("/messages", messagesRoutes);
+
 
 module.exports = router;
