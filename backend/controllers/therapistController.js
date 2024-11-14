@@ -47,7 +47,7 @@ exports.registerTherapist = async (req, res) => {
         res.status(500).json({message:"Therapist registration failed", error: error.message});
     }
 
-    
+
 };
 
 exports.getTherapistDetails = async (req, res) => {

@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
+
 // Get all routees
 const userRoutes = require("./users");
 const authRoutes = require("./auth");
@@ -9,6 +10,7 @@ const therapistRoutes = require("./therapists");
 const appointmentRoutes = require("./appointments"); 
 const conversationRoutes = require("./conversations");
 const messagesRoutes = require("./messages");
+
 
 // Mount routes on `/api`
 router.use("/users", userRoutes);
