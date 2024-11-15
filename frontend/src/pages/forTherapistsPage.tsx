@@ -1,66 +1,22 @@
-import React, { useState } from "react";
+import React from "react";
 import HeaderLandingPage from "../components/headerLandingPage";
 import FooterLandingPage from "../components/footerLandingPage";
 import Lottie from "lottie-react";
 import SignUpPageAnimation from "../lotties/SignUpPageAnimation.json"; // Placeholder until another Lottie is found
-import { FaMale, FaFemale, FaGenderless } from 'react-icons/fa';
 
 const TherapistSignUp = () => {
-  const [form, setForm] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    licenseNumber: '',
-    gender: ''
-  });
-  const [error, setError] = useState('');
-
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleGenderSelect = (gender) => {
-    setForm({ ...form, gender });
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!form.firstName || !form.lastName || !form.email || !form.password || !form.confirmPassword || !form.licenseNumber || !form.gender) {
-      setError('Please fill in all fields');
-      return;
-    }
-    if (form.password !== form.confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-    if (form.password.length < 8) {
-      setError('Password must be at least 8 characters');
-      return;
-    }
-    setError('');
-    console.log('Submitted', form);
-  };
-
   return (
     <div style={{ position: 'relative', minHeight: '100vh' }}>
       <HeaderLandingPage />
       <div style={{ paddingBottom: '100px' }}>
-        <TherapistSignUpSection 
-          form={form}
-          handleChange={handleChange}
-          handleGenderSelect={handleGenderSelect}
-          handleSubmit={handleSubmit}
-          error={error}
-        />
+        <TherapistSignUpSection />
       </div>
       <FooterLandingPage style={{ position: 'absolute', bottom: 0, width: '100%' }} />
     </div>
   );
 };
 
-function TherapistSignUpSection({ form, handleChange, handleGenderSelect, handleSubmit, error }) {
+function TherapistSignUpSection() {
   return (
     <section className="flex flex-col items-center justify-center py-10 px-6 bg-white">
       <div className="flex flex-col md:flex-row items-center justify-center mb-10 w-full max-w-5xl">
@@ -79,6 +35,7 @@ function TherapistSignUpSection({ form, handleChange, handleGenderSelect, handle
             <li>🤝 Be part of a community of mental health professionals.</li>
           </ul>
         </div>
+
         <div className="md:w-1/2 w-3/4 max-w-sm mx-auto md:ml-8">
           <Lottie animationData={SignUpPageAnimation} loop={true} />
         </div>
@@ -86,81 +43,39 @@ function TherapistSignUpSection({ form, handleChange, handleGenderSelect, handle
 
       <div className="bg-blue-100 rounded-lg shadow-md p-6 w-full border border-[#5E9ED9] max-w-md text-center">
         <h2 className="text-3xl font-extrabold text-[#5E9ED9] mb-4">Sign Up as a Therapist</h2>
-        <form className="flex flex-col items-center" onSubmit={handleSubmit}>
-          <input
-            type="text"
-            name="firstName"
-            placeholder="First Name"
-            className="w-full p-3 mb-2 border border-[#5E9ED9] rounded-md"
-            value={form.firstName}
-            onChange={handleChange}
+        <form className="flex flex-col items-center">
+          <input 
+            type="text" 
+            placeholder="First Name" 
+            className="w-full p-3 mb-2 border border-[#5E9ED9] rounded-md" 
           />
-          <input
-            type="text"
-            name="lastName"
-            placeholder="Last Name"
-            className="w-full p-3 mb-2 border border-[#5E9ED9] rounded-md"
-            value={form.lastName}
-            onChange={handleChange}
+          <input 
+            type="text" 
+            placeholder="Last Name" 
+            className="w-full p-3 mb-2 border border-[#5E9ED9] rounded-md" 
           />
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            className="w-full p-3 mb-2 border border-[#5E9ED9] rounded-md"
-            value={form.email}
-            onChange={handleChange}
+          <input 
+            type="email" 
+            placeholder="Email" 
+            className="w-full p-3 mb-2 border border-[#5E9ED9] rounded-md" 
           />
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            className="w-full p-3 mb-2 border border-[#5E9ED9] rounded-md"
-            value={form.password}
-            onChange={handleChange}
+          <input 
+            type="password" 
+            placeholder="Password" 
+            className="w-full p-3 mb-2 border border-[#5E9ED9] rounded-md" 
           />
-          <input
-            type="password"
-            name="confirmPassword"
-            placeholder="Confirm Password"
-            className="w-full p-3 mb-2 border border-[#5E9ED9] rounded-md"
-            value={form.confirmPassword}
-            onChange={handleChange}
+          <input 
+            type="text" 
+            placeholder="Address" 
+            className="w-full p-3 mb-2 border border-[#5E9ED9] rounded-md" 
           />
-          <div className="w-full mb-4">
-            <label className="block mb-2 text-[#5E9ED9] font-semibold">Gender</label>
-            <div className="flex justify-around">
-              <GenderOption 
-                icon={<FaMale />} 
-                label="Male" 
-                isSelected={form.gender === 'male'} 
-                onClick={() => handleGenderSelect('male')} 
-                />
-              <GenderOption 
-                icon={<FaFemale />} 
-                label="Female" 
-                isSelected={form.gender === 'female'} 
-                onClick={() => handleGenderSelect('female')} 
-                />
-              <GenderOption 
-                icon={<FaGenderless />} 
-                label="Other" 
-                isSelected={form.gender === 'unspecified'} 
-                onClick={() => handleGenderSelect('unspecified')} 
-                />
-            </div>
-          </div>
-          <input
-            type="text"
-            name="licenseNumber"
-            placeholder="License Number"
-            className="w-full p-3 mb-4 border border-[#5E9ED9] rounded-md"
-            value={form.licenseNumber}
-            onChange={handleChange}
+          <input 
+            type="text" 
+            placeholder="License Number" 
+            className="w-full p-3 mb-4 border border-[#5E9ED9] rounded-md" 
           />
-          {error && <p className="text-red-500">{error}</p>}
-          <button
-            type="submit"
+          <button 
+            type="submit" 
             className="w-full bg-[#5E9ED9] text-white font-semibold p-3 rounded-md hover:bg-[#4a8ac9]"
           >
             Register
@@ -168,20 +83,6 @@ function TherapistSignUpSection({ form, handleChange, handleGenderSelect, handle
         </form>
       </div>
     </section>
-  );
-}
-
-function GenderOption({ icon, label, isSelected, onClick }) {
-  return (
-    <div
-      onClick={onClick}
-      className={`cursor-pointer flex flex-col items-center justify-center w-24 h-24 p-4 border rounded-md transition ${
-        isSelected ? 'bg-[#5E9ED9] text-white' : 'bg-white border-[#5E9ED9] text-[#5E9ED9]'
-      }`}
-    >
-      <div className="text-2xl mb-2">{icon}</div>
-      <span className="font-semibold">{label}</span>
-    </div>
   );
 }
 
