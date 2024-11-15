@@ -1,13 +1,13 @@
 import React from "react";
-import HeaderLandingPage from "../components/headerLandingPage";
+import HeaderSignUpLoginPage from "../components/headerSignUpLoginPage";
 import FooterLandingPage from "../components/footerLandingPage";
 
 const Login = () => {
   return (
     <div>
-      <HeaderLandingPage />
+      <HeaderSignUpLoginPage />
       <LoginSection />
-      <div className="w-full fixed bottom-0">
+      <div className="absolute bottom-0 w-full">
         <FooterLandingPage />
       </div>
     </div>

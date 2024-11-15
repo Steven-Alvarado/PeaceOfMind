@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 .slick-slide {
-  padding: 0 20px; /* Adjust for horizontal spacing */
+  padding: 0 20px;
 }
 
 .wave-background {
