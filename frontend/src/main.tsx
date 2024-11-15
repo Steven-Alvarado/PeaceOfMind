@@ -5,6 +5,7 @@ import LandingPage from '../src/pages/landingPage'
 import ForTherapists from '../src/pages/forTherapistsPage';
 import Login from '../src/pages/loginPage';
 import SignUp from '../src/pages/signUpPage';
+import TherapistDashboard from './pages/therapistDashboard';
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <BrowserRouter>
@@ -13,6 +14,7 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
       <Route path="/for-therapists" element={<ForTherapists />} />
       <Route path="/login" element={<Login />} />
       <Route path="/sign-up" element={<SignUp />} />
+      
     </Routes>
   </BrowserRouter>
 );
