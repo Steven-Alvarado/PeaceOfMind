@@ -1,4 +1,4 @@
-const { createJournalEntry, getJournalEntryById, updateJournalEntry } = require('../models/journalsModel');
+const { createJournalEntry, updateJournalEntry, getJournalById, getJournalsByUserId } = require('../models/journalsModel');
 
 // Create a new journal entry
 const createJournal = async (req, res) => {
@@ -10,35 +10,14 @@ const createJournal = async (req, res) => {
 
     try {
         const journal = await createJournalEntry(userId, mood, content);
-        res.status(201).json({
-            message: 'Journal entry created successfully',
-            journal
-        });
+        res.status(201).json({ message: 'Journal entry created successfully', journal });
     } catch (error) {
         console.error("Error creating journal entry:", error);
         res.status(500).json({ error: 'Failed to create journal entry' });
     }
 };
 
-// Retrieve a specific journal entry
-const getJournal = async (req, res) => {
-    const { id } = req.params;
-
-    try {
-        const journal = await getJournalEntryById(id);
-
-        if (!journal) {
-            return res.status(404).json({ error: 'Journal entry not found' });
-        }
-
-        res.status(200).json({ journal });
-    } catch (error) {
-        console.error("Error retrieving journal entry:", error);
-        res.status(500).json({ error: 'Failed to retrieve journal entry' });
-    }
-};
-
-// Update a journal entry by ID
+// Update a journal entry
 const updateJournal = async (req, res) => {
     const { id } = req.params;
     const { mood, content } = req.body;
@@ -49,19 +28,48 @@ const updateJournal = async (req, res) => {
 
     try {
         const updatedJournal = await updateJournalEntry(id, mood, content);
-
-        if (!updatedJournal) {
-            return res.status(404).json({ error: 'Journal entry not found' });
-        }
-
-        res.status(200).json({
-            message: 'Journal entry updated successfully',
-            journal: updatedJournal
-        });
+        res.status(200).json({ message: 'Journal entry updated successfully', journal: updatedJournal });
     } catch (error) {
         console.error("Error updating journal entry:", error);
         res.status(500).json({ error: 'Failed to update journal entry' });
     }
 };
 
-module.exports = { createJournal, getJournal, updateJournal };
+// Get a journal entry by ID
+const getJournal = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const journal = await getJournalById(id);
+
+        if (!journal) {
+            return res.status(404).json({ error: 'Journal entry not found' });
+        }
+
+        res.status(200).json({ journal });
+    } catch (error) {
+        console.error("Error fetching journal entry:", error);
+        res.status(500).json({ error: 'Failed to fetch journal entry' });
+    }
+};
+
+// Get all journals by userId
+const getJournals = async (req, res) => {
+    const { userId } = req.params;
+
+    try {
+        const journals = await getJournalsByUserId(userId);
+
+        if (journals.length === 0) {
+            return res.status(404).json({ error: 'No journals found for this user' });
+        }
+
+        res.status(200).json({ journals });
+    } catch (error) {
+        console.error("Error fetching journals:", error);
+        res.status(500).json({ error: 'Failed to fetch journals' });
+    }
+};
+
+module.exports = { createJournal, updateJournal, getJournal, getJournals };
+

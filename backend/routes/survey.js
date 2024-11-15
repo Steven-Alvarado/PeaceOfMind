@@ -1,9 +1,12 @@
 const express = require('express');
-const { submitSurvey, getSurvey, updateSurvey } = require('../controllers/surveyController');
+const { createSurvey, updateSurvey, getSurvey, getSurveys } = require('../controllers/surveyController');
 const router = express.Router();
 
-router.post('/', submitSurvey);
-router.get('/:id', getSurvey);
-router.put('/:id', updateSurvey);
+
+router.post('/', createSurvey); // Create a new survey response
+router.put('/:id', updateSurvey);// Update a survey response
+router.get('/:id', getSurvey); // Get a specific survey response by ID
+router.get('/user/:userId', getSurveys);// Get all survey responses by userId
 
 module.exports = router;
+
