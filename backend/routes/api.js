@@ -16,7 +16,7 @@ const messagesRoutes = require("./messages");
 router.use("/users", userRoutes);
 router.use("/auth", authRoutes);
 router.use("/reviews", reviewRoutes);
-//router.use("/therapists", therapistRoutes);
+router.use("/therapists", therapistRoutes);
 router.use("/appointments", appointmentRoutes); 
 router.use("/conversations", conversationRoutes);
 router.use("/messages", messagesRoutes);

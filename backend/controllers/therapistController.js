@@ -1,28 +1,39 @@
 const bcrypt = require('bcryptjs');
-const {createTherapist,findTherapistById, getAvilableTherapists, isLicenseVerified } = require('../models/therapistModel');
-const {createUser, findUserByEmail} = require('../models/authModel');
+const {
+    createTherapist,
+    findTherapistById,
+    getAvailableTherapists,
+    isLicenseVerified
+} = require('../models/therapistModel');
+const { createUser, findUserByEmail } = require('../models/authModel');
 
 const registerTherapist = async (req, res) => {
-    //Some validation result
-    //const errors =
-    const { email, password, firstName, lastName, address, licenseNumber, specialization, experienceYears, monthlyRate } = req.body;
-    if (!(email && password && licenseNumber && specialization && firstName && lastName && address)) {
+    const { email, password, firstName, lastName, gender, licenseNumber, specialization, experienceYears, monthlyRate } = req.body;
+
+    // Validate required fields
+    if (!(email && password && firstName && lastName && licenseNumber && specialization && gender)) {
         return res.status(400).json({ error: "Missing required fields" });
     }
-    //To resgiter as a therapist you need:
-    try{
-        if (!await isLicenseVerified(licenseNumber)) {
+
+    try {
+        // Verify therapist license
+        const licenseIsVerified = await isLicenseVerified(licenseNumber);
+        if (!licenseIsVerified) {
             return res.status(403).json({ error: "License number is not verified" });
         }
 
+        // Check if user already exists with the provided email
         const existingUser = await findUserByEmail(email);
         if (existingUser) {
             return res.status(409).json({ error: "User already exists with this email" });
         }
 
+        // Hash password and create user
         const passwordHash = await bcrypt.hash(password, 10);
-        const {userId} = await createUser(email, passwordHash, 'therapist');
-        const therapist = await createTherapist(userId, licenseNumber,specialization, experienceYears, monthlyRate);
+        const { id: userId } = await createUser(email, passwordHash, 'therapist', firstName, lastName, gender);
+
+        // Create therapist profile
+        const therapist = await createTherapist(userId, licenseNumber, specialization, experienceYears, monthlyRate);
 
         res.status(201).json({
             message: 'Therapist registered successfully',
@@ -32,7 +43,7 @@ const registerTherapist = async (req, res) => {
                 firstName,
                 lastName,
                 email,
-                address,
+                gender,
                 licenseNumber,
                 specialization,
                 experienceYears,
@@ -41,44 +52,38 @@ const registerTherapist = async (req, res) => {
                 updatedAt: therapist.updated_at
             }
         });
-    }
-    catch(error){
+    } catch (error) {
         console.error("Error registering therapist:", error);
-        res.status(500).json({message:"Therapist registration failed", error: error.message});
+        res.status(500).json({ message: "Therapist registration failed", error: error.message });
     }
-
-
 };
+
 
 const getTherapistDetails = async (req, res) => {
     const therapistId = req.params.id;
-    try{
+    try {
         const therapist = await findTherapistById(therapistId);
-        if(!therapist){
-            return res.status(404).json({error: "Therapist not found"});
+        if (!therapist) {
+            return res.status(404).json({ error: "Therapist not found" });
         }
-        res.json({message: "Therapist details success",therapist});
-    }
-    catch(error){
-        console.error("Error therapist details:", error);
-        res.status(500).json({error: "Failed to fetch therapisr details", message: error.message});
-    }
-}
-
-const listAvailableTherapists = async (req, res) => {
-    try{
-        const therapists = await getAvilableTherapists();
-        if(therapists.length == 0){
-            return res.status(404).json({message: "No available therapists found"});
-        }
-        res.json({message: "Available therapists retrieved successfully", therapists});
-    }
-    catch(error){
-        console.error("Error retrieving available therapists:", error)
-        res.status(500).json({error: "Failed to fetch available therapists", message: error.message});
+        res.json({ message: "Therapist details retrieved successfully", therapist });
+    } catch (error) {
+        console.error("Error retrieving therapist details:", error);
+        res.status(500).json({ error: "Failed to fetch therapist details", message: error.message });
     }
 };
 
+const listAvailableTherapists = async (req, res) => {
+    try {
+        const therapists = await getAvailableTherapists();
+        if (therapists.length === 0) {
+            return res.status(404).json({ message: "No available therapists found" });
+        }
+        res.json({ message: "Available therapists retrieved successfully", therapists });
+    } catch (error) {
+        console.error("Error retrieving available therapists:", error);
+        res.status(500).json({ error: "Failed to fetch available therapists", message: error.message });
+    }
+};
 
-
-module.exports  = {registerTherapist, getTherapistDetails, listAvailableTherapists};
+module.exports = { registerTherapist, getTherapistDetails, listAvailableTherapists };

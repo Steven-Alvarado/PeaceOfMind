@@ -1,13 +1,10 @@
 const express = require('express');
-const { registerTherapist, getTherapistDetails, listAvailableTherapists} = require('../controllers/therapistController');
-const {authenticateToken} = require('../middleware/authMiddleware');
+const { registerTherapist, getTherapistDetails, listAvailableTherapists } = require('../controllers/therapistController');
 const router = express.Router();
-const pool = require("../config/db");
 
-//Following ticket 3 API endpoints
-router.post('/', authenticateToken, registerTherapist);
-router.get('/available', authenticateToken, listAvailableTherapists);
-router.get('/:id', authenticateToken, getTherapistDetails);
 
+router.post('/register', registerTherapist); // Register new therapist
+router.get('/available', listAvailableTherapists); // Get available therapists
+router.get('/:id', getTherapistDetails); // Get therapist by id
 
 module.exports = router;
