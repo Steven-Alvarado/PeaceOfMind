@@ -12,5 +12,5 @@ commands = [
 commands = ["npm install", "npm run build"]
 
 [start]
-cmd = "caddy run --config ./Caddfile"
+cmd = "caddy run --config ./Caddyfile"
 
