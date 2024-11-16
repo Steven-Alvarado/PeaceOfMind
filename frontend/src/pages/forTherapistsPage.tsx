@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import HeaderLandingPage from "../components/headerLandingPage";
-import FooterLandingPage from "../components/footerLandingPage";
+import FooterLandingPage from "../components/Footer";
 import Lottie from "lottie-react";
-import SignUpPageAnimation from "../lotties/SignUpPageAnimation.json"; // Placeholder until another Lottie is found
+import SignUpPageAnimation from "../assets/lotties/SignUpPageAnimation.json"; // Placeholder until another Lottie is found
 import { FaMale, FaFemale, FaGenderless } from 'react-icons/fa';
 
 const TherapistSignUp = () => {

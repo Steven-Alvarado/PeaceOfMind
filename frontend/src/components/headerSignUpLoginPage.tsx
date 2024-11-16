@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { FaBars, FaTimes } from "react-icons/fa";
 import { Link } from "react-scroll";
-import Logo from "../Images/logobetter.png";
+import Logo from "../assets/images/logobetter.png";
 
 const HeaderSignUpLoginPage = () => {
   const [isOpen, setIsOpen] = useState(false);

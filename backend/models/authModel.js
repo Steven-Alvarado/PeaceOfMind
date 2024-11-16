@@ -27,7 +27,13 @@ const createUser = async (email, passwordHash, role, firstName, lastName, gender
 
 // Find a user by email in the auth table
 const findUserByEmail = async (email) => {
-  const result = await pool.query(`SELECT * FROM auth WHERE email = $1`, [email]);
+  const result = await pool.query(
+    `SELECT a.email, a.password_hash, u.role, u.id 
+     FROM auth a 
+     INNER JOIN users u ON a.user_id = u.id 
+     WHERE a.email = $1`,
+    [email]
+  );
   return result.rows[0];
 };
 
