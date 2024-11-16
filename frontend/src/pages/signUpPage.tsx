@@ -1,23 +1,36 @@
-import React from "react";
-import HeaderLandingPage from "../components/headerLandingPage";
+import React, { useState } from "react";
+import HeaderSignUpLoginPage from "../components/headerSignUpLoginPage";
 import FooterLandingPage from "../components/footerLandingPage";
+import { FaMale, FaFemale, FaGenderless } from 'react-icons/fa';
 
 import Lottie from "lottie-react";
 import SignUpPageAnimation from "../lotties/SignUpPageAnimation.json";
 
 const SignUp = () => {
   return (
-    <div>
-      <HeaderLandingPage />
-      <SignUpSection />
-      <div className=" md:w-full md:fixed md:bottom-0">
-        <FooterLandingPage />
+    <div style={{ position: 'relative', minHeight: '100vh' }}>
+      <HeaderSignUpLoginPage />
+      <div className="pb-36">
+        <SignUpSection />
       </div>
+      <div className="absolute bottom-0 w-full">
+        <FooterLandingPage />
+      </div> 
     </div>
   );
 };
-
+ 
+type GenderOptionType = 'male' | 'female' | 'unspecified' | '';
 function SignUpSection() {
+  const [gender, setGender] = useState<GenderOptionType>('');
+
+  const handleGenderSelect = (selectedGender: GenderOptionType) => setGender(selectedGender);
+
+  // const handleSubmit = (e) => {
+  //   e.preventDefault();
+  //   // We want the form logic here
+  // };
+  
   return (
     <section className="flex flex-col items-center justify-center py-10 px-6 bg-white">
       <div className="flex flex-col md:flex-row items-center justify-center mb-10 w-full max-w-5xl">
@@ -52,17 +65,60 @@ function SignUpSection() {
 
       <div className="bg-blue-100 rounded-lg shadow-md p-6 w-full border border-[#5E9ED9] max-w-md text-center">
         <h2 className="text-3xl font-extrabold text-[#5E9ED9] mb-4">Sign Up</h2>
-        <form className="flex flex-col items-center">
+         <form className="flex flex-col items-center"> {/* onSubmit={handleSubmit} */}
+          <input
+            type="text"
+            name="firstName"
+            placeholder="First Name"
+            className="w-full p-3 mb-4 border border-[#5E9ED9] rounded-md"
+            required
+          />
+          <input
+            type="text"
+            name="lastName"
+            placeholder="Last Name"
+            className="w-full p-3 mb-4 border border-[#5E9ED9] rounded-md"
+            required
+          />
           <input
             type="email"
+            name="email"
             placeholder="Email"
             className="w-full p-3 mb-4 border border-[#5E9ED9] rounded-md"
+            required
           />
           <input
             type="password"
+            name="password"
             placeholder="Password"
             className="w-full p-3 mb-6 border border-[#5E9ED9] rounded-md"
+            required
           />
+          
+          <div className="w-full mb-6">
+            <label className="block mb-2 text-[#5E9ED9] font-semibold">Gender</label>
+            <div className="flex justify-around">
+              <GenderOption
+                icon={<FaMale />}
+                label="Male"
+                isSelected={gender === 'male'}
+                onClick={() => handleGenderSelect('male')}
+              />
+              <GenderOption
+                icon={<FaFemale />}
+                label="Female"
+                isSelected={gender === 'female'}
+                onClick={() => handleGenderSelect('female')}
+              />
+              <GenderOption
+                icon={<FaGenderless />}
+                label="Other"
+                isSelected={gender === 'unspecified'}
+                onClick={() => handleGenderSelect('unspecified')}
+              />
+            </div>
+          </div>
+
           <button
             type="submit"
             className="w-full bg-[#5E9ED9] text-white font-semibold p-3 rounded-md hover:bg-[#4a8ac9]"
@@ -72,6 +128,27 @@ function SignUpSection() {
         </form>
       </div>
     </section>
+  );
+}
+
+interface GenderOptionProps {
+  icon: React.ReactNode;
+  label: string;
+  isSelected: boolean;
+  onClick: () => void;
+}
+
+function GenderOption({ icon, label, isSelected, onClick }: GenderOptionProps) {
+  return (
+    <div
+      onClick={onClick}
+      className={`cursor-pointer flex flex-col items-center justify-center w-24 h-24 p-4 border rounded-md transition ${
+        isSelected ? 'bg-[#5E9ED9] text-white' : 'bg-white border-[#5E9ED9] text-[#5E9ED9]'
+      }`}
+    >
+      <div className="text-2xl mb-2">{icon}</div>
+      <span className="font-semibold">{label}</span>
+    </div>
   );
 }
 
