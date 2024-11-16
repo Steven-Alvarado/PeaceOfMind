@@ -3,7 +3,7 @@ import { FaBars, FaTimes } from "react-icons/fa";
 import { Link } from "react-scroll";
 import Logo from "../assets/images/logobetter.png";
 
-const HeaderLandingPage = () => {
+const HeaderSignUpLoginPage = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleMenu = () => {
@@ -26,55 +26,18 @@ const HeaderLandingPage = () => {
 
         {/* Desktop Navigation */}
         <nav className="hidden font-bold md:flex space-x-1">
-          <Link
-            to="about"
-            smooth={true}
-            duration={500}
-            className="cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]"
-          >
-            About
-          </Link>
-          <Link
-            to="advice"
-            smooth={true}
-            duration={500}
-            className="cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]"
-          >
-            Advice
-          </Link>
-          <Link
-            to="faq"
-            smooth={true}
-            duration={500}
-            className="cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]"
-          >
-            FAQ
-          </Link>
-          <Link
-            to="reviews"
-            smooth={true}
-            duration={500}
-            className="cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]"
-          >
-            Reviews
-          </Link>
-          <Link
-            to="contact"
-            smooth={true}
-            duration={500}
-            className="cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]"
-          >
-            Contact Us
-          </Link>
-          <a href="/for-therapists" className="cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]">
-              For Therapists
-          </a>
-          <a href="/sign-up" className="cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]">
-              Sign Up
-          </a>
-          <a href="/login" className="cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]">
-              Login
-          </a>
+            <a href="/" className="cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]">
+                Home
+            </a>
+            <a href="/for-therapists" className="cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]">
+                For Therapists
+            </a>
+            <a href="/sign-up" className="cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]">
+                Sign Up
+            </a>
+            <a href="/login" className="cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]">
+                Login
+            </a>
         </nav>
 
         {/* Mobile Hamburger Icon */}
@@ -152,4 +115,4 @@ const HeaderLandingPage = () => {
   );
 };
 
-export default HeaderLandingPage;
+export default HeaderSignUpLoginPage;
