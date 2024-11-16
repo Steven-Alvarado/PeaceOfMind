@@ -7,7 +7,7 @@
 }
 
 .wave-background {
-  background-image: url('../src/Images/WaveLandingPage.svg');
+  background-image: url('../images/WaveLandingPage.svg');
   background-repeat: no-repeat;
   background-size: cover;
   background-position: bottom;

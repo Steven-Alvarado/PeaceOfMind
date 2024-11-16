@@ -1,10 +1,10 @@
 import { useState } from "react";
 
-import "../index.css";
+import "../assets/styles/index.css";
 import { Typewriter } from "react-simple-typewriter";
 import HeaderLandingPage from "../components/headerLandingPage";
-import FooterLandingPage from "../components/footerLandingPage";
-import Logo from "../Images/logobetter.png";
+import FooterLandingPage from "../components/Footer";
+import Logo from "../assets/images/logobetter.png";
 
 import { motion } from "framer-motion";
 
@@ -21,10 +21,10 @@ import {
 } from "react-icons/fa";
 
 import Lottie from "lottie-react";
-import AboutAnimation from "../lotties/AboutLandingPage.json";
-import Advice1 from "../lotties/AdviceSection1.json";
-import Advice2 from "../lotties/AdviceSection2.json";
-import Advice3 from "../lotties/AdviceSection3.json";
+import AboutAnimation from "../assets/lotties/AboutLandingPage.json";
+import Advice1 from "../assets/lotties/AdviceSection1.json";
+import Advice2 from "../assets/lotties/AdviceSection2.json";
+import Advice3 from "../assets/lotties/AdviceSection3.json";
 
 function LandingPage() {
   return (
@@ -40,14 +40,13 @@ function LandingPage() {
     </div>
   );
 }
-
 function IntroSection() {
   return (
     <section
       className="relative flex flex-col items-center overflow-hidden"
       style={{ minHeight: "90vh" }}
     >
-      <div className="wave-background absolute inset-0 w-full h-full bg-cover bg-bottom"></div>
+      <div className="wave-background absolute inset-0 w-full h-full bg-cover bg-bottom z-[-1]"></div>
 
       <div className="relative z-0 text-center flex flex-col items-center">
         <h1 className="text-7xl font-extrabold text-[#5E9ED9] mt-44">
@@ -81,6 +80,7 @@ function IntroSection() {
     </section>
   );
 }
+
 
 function AboutSection() {
   return (

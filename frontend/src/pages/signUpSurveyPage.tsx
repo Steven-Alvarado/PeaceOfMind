@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import HeaderSignUpLoginPage from "../components/headerSignUpLoginPage";
-import FooterLandingPage from "../components/footerLandingPage";
+import FooterLandingPage from "../components/Footer";
 
 type QuestionType = {
   id: number;

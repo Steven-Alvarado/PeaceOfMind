@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import HeaderSignUpLoginPage from "../components/headerSignUpLoginPage";
-import FooterLandingPage from "../components/footerLandingPage";
+import FooterLandingPage from "../components/Footer";
 import { FaMale, FaFemale, FaGenderless } from 'react-icons/fa';
 
 import Lottie from "lottie-react";
-import SignUpPageAnimation from "../lotties/SignUpPageAnimation.json";
+import SignUpPageAnimation from "../assets/lotties/SignUpPageAnimation.json";
 
 const SignUp = () => {
   return (
