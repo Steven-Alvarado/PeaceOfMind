@@ -12,5 +12,5 @@ commands = [
 commands = ["npm install", "npm run build"]
 
 [start]
-cmd = "caddy file-server --root ./dist --listen :${PORT}"
+cmd = "caddy run --config ./Caddfile"
 
