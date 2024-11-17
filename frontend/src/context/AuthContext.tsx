@@ -13,6 +13,14 @@ interface User {
 interface AuthContextProps {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
+  registerUser: (
+    firstName: string,
+    lastName: string,
+    gender: string,
+    email: string,
+    password: string,
+    role: string
+  ) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
 }
@@ -47,6 +55,33 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const registerUser = async (
+    firstName: string,
+    lastName: string,
+    gender: string,
+    email: string,
+    password: string,
+    role: string
+  ) => {
+    try {
+      const { data } = await axios.post("/api/auth/register", {
+        firstName,
+        lastName,
+        gender,
+        email,
+        password,
+        role,
+      });
+
+      console.log("Registration successful:", data.message);
+      // Redirect to login or perform another action after registration
+      navigate("/login");
+    } catch (error: any) {
+      console.error("Registration failed:", error.response?.data?.error || error.message);
+      throw new Error(error.response?.data?.error || "Registration failed");
+    }
+  };
+
   const login = async (email: string, password: string) => {
    
       try {
@@ -76,7 +111,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, login, registerUser, logout, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   );
