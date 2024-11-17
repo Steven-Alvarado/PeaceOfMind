@@ -1,6 +1,16 @@
 const express = require("express");
 const router = express.Router();
 
+<<<<<<< HEAD
+const userRoutes = require('./users');
+const authRoutes = require('./auth');
+const documentRoutes = require('./documents');
+
+// Mount routes on `/api`
+router.use('/users', userRoutes);
+router.use('/auth', authRoutes);
+router.use("/documents", documentRoutes);
+=======
 
 // Get all routees
 const userRoutes = require("./users");
@@ -24,5 +34,6 @@ router.use("/messages", messagesRoutes);
 router.use("/surveys", surveyRoutes);
 router.use("/journals", journalRoutes);
 
+>>>>>>> b01c046e1daf9e0756a9cd7801ccc53266fd1cbb
 
 module.exports = router;
