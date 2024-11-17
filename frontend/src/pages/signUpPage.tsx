@@ -73,7 +73,7 @@ function SignUpSection() {
       setError(null);
 
       // Delay navigation by 3 seconds
-      setTimeout(() => navigate("/login"), 3000);
+      setTimeout(() => 3000);
     } catch (err: any) {
       setError(err.message || "Registration failed. Please try again.");
     }

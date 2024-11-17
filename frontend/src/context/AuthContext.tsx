@@ -72,10 +72,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         password,
         role,
       });
+      localStorage.setItem("jwt", data.token);
+      setAxiosAuthHeader(data.token);
+      setUser(data.user);
+      navigate("/sign-up-survey");
 
       console.log("Registration successful:", data.message);
       // Redirect to login or perform another action after registration
-      navigate("/login");
+      
     } catch (error: any) {
       console.error("Registration failed:", error.response?.data?.error || error.message);
       throw new Error(error.response?.data?.error || "Registration failed");

@@ -41,6 +41,7 @@ const AppRouter: React.FC = () => {
         />
 
         {/* Fallback Route */}
+        
         <Route path="*" element={<ErrorPage />} />
       </Routes>
     </Suspense>
