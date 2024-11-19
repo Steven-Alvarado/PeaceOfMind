@@ -157,7 +157,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     localStorage.removeItem("jwt");
     delete axios.defaults.headers.common["Authorization"];
     setUser(null);
-    navigate("/login");
+    navigate("/");
   };
 
   return (
