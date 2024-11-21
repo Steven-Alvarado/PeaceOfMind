@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { FaBars, FaTimes } from "react-icons/fa";
-import { Link } from "react-scroll";
 import Logo from "../assets/images/logobetter.png";
 
 const HeaderSignUpLoginPage = () => {
@@ -49,47 +48,13 @@ const HeaderSignUpLoginPage = () => {
       {/* Mobile Menu */}
       {isOpen && (
         <nav className="md:hidden text-center font-bold bg-[#5E9ED9] text-white p-4 space-y-2">
-          <Link
-            to="about"
-            smooth={true}
-            duration={500}
-            className="block cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]"
-          >
-            About
-          </Link>
-          <Link
-            to="advice"
-            smooth={true}
-            duration={500}
-            className="block cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]"
-          >
-            Advice
-          </Link>
-          <Link
-            to="faq"
-            smooth={true}
-            duration={500}
-            className="block cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]"
-          >
-            FAQ
-          </Link>
-          <Link
-            to="reviews"
-            smooth={true}
-            duration={500}
-            className="block cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]"
-          >
-            Reviews
-          </Link>
-          <Link
-            to="contact"
-            smooth={true}
-            duration={500}
-            className="block cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]"
-          >
-            Contact Us
-          </Link>
           <div className="space-y-2">
+          <a
+              href="/"
+              className="block cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]"
+            >
+              Home
+            </a>
             <a
               href="/for-therapists"
               className="block cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]"
