@@ -53,8 +53,17 @@ const registerTherapist = async (req, res) => {
             }
         });
     } catch (error) {
-        console.error("Error registering therapist:", error);
-        res.status(500).json({ message: "Therapist registration failed", error: error.message });
+        if (error.code === '23505' && error.constraint === 'therapists_license_number_key') {
+            res.status(409).json({ 
+                error: 'Registration failed', 
+                message: 'A therapist with this license number is already registered' 
+            });
+        } else {
+            res.status(500).json({ 
+                error: 'Registration failed', 
+                message: 'An unexpected error occurred during registration' 
+            });
+        }
     }
 };
 

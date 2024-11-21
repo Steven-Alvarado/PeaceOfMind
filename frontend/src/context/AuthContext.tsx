@@ -21,6 +21,18 @@ interface AuthContextProps {
     password: string,
     role: string
   ) => Promise<void>;
+  //Changed in terms of registeringTherapist
+  registerTherapist: (
+    firstName: string,
+    lastName: string,
+    email: string,
+    password: string,
+    gender: string,
+    licenseNumber: string,
+    specialization: string,
+    experienceYears: number,
+    monthlyRate: number
+  ) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
 }
@@ -85,6 +97,40 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       throw new Error(error.response?.data?.error || "Registration failed");
     }
   };
+  const registerTherapist = async (
+    firstName: string,
+    lastName: string,
+    email: string,
+    password: string,
+    gender: string,
+    licenseNumber: string,
+    specialization: string,
+    experienceYears: number,
+    monthlyRate: number
+  ) => {
+    try {
+      const { data } = await axios.post("/api/therapists/register", {
+        firstName,
+        lastName,
+        email,
+        password,
+        gender,
+        licenseNumber,
+        specialization,
+        experienceYears,
+        monthlyRate
+      });
+      localStorage.setItem("jwt", data.token);
+      setAxiosAuthHeader(data.token);
+      setUser(data.user);
+      navigate("/therapist-dashboard");
+      console.log("Therapist registration successful:", data.message);
+    } catch (error: any) {
+      console.error("Therapist registration failed:", error.response?.data?.error || error.message);
+      throw new Error(error.response?.data?.error || "Therapist registration failed");
+    }
+  };
+  
 
   const login = async (email: string, password: string) => {
    
@@ -115,7 +161,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, registerUser, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, login, registerUser,registerTherapist, logout, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   );
