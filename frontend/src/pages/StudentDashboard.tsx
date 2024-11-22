@@ -24,18 +24,22 @@ import StudentDashboardAnimation from "../assets/lotties/StudentDashboardAnimati
 
 interface JournalEntry {
   id: number;
-  date: string;
-  content: string;
   mood: string;
+  content: string;
+  date: string;
 }
 
 const JournalingModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
-  const { user } = useAuth(); // Use `user` instead of `currentUser`
+  const { user } = useAuth(); // Get user from AuthContext
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [activeEntry, setActiveEntry] = useState<JournalEntry | null>(null);
   const [newEntry, setNewEntry] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const entriesPerPage = 4;
+  const totalPages = Math.ceil(entries.length / entriesPerPage);
+
 
   // Fetch journals when modal opens
   useEffect(() => {
@@ -46,89 +50,224 @@ const JournalingModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
 
   const fetchJournals = async () => {
     try {
-      const response = await axios.get(`/api/journal/user/${user.id}`);
-      setEntries(response.data.journals);
-      setActiveEntry(response.data.journals[response.data.journals.length - 1] || {});
+      const response = await axios.get(`/api/journals/user/${user?.id}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+        },
+      });
+  
+      // Extract the 'journals' array from the response
+      const fetchedJournals = response.data.journals.map((journal: any) => ({
+        id: journal.id,
+        mood: journal.mood,
+        content: journal.document_content.entry, // Adjust based on your data structure
+        date: journal.created_at,
+      }));
+  
+      if (fetchedJournals.length === 0) {
+        setErrorMessage("No journal entries found. Create your first entry!");
+      }
+  
+      setEntries(fetchedJournals);
+      setActiveEntry(fetchedJournals[fetchedJournals.length - 1] || null);
     } catch (error) {
       console.error("Error fetching journals:", error);
       setErrorMessage("Failed to fetch journal entries.");
     }
   };
-  
 
   const handleSave = async () => {
-    if (!activeEntry.content.trim()) {
+    if (!activeEntry?.content.trim()) {
       setErrorMessage("Entry cannot be blank.");
       return;
     }
+  
+    setErrorMessage("");
+    setSuccessMessage("");
+  
     try {
       if (newEntry) {
-        const response = await axios.post(`/api/journal/`, {
-          userId: user.id,
-          mood: activeEntry.mood || "Neutral",
-          content: activeEntry.content,
-        });
-        setEntries([...entries, response.data.journal]);
+        // POST: Create a new journal entry
+        const response = await axios.post(
+          `/api/journals/`,
+          {
+            userId: user?.id,
+            mood: activeEntry.mood || "Neutral",
+            content: { entry: activeEntry.content },
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+            },
+          }
+        );
+  
+        // Update state with the new journal entry
+        const newJournal = {
+          id: response.data.journal.id,
+          mood: response.data.journal.mood,
+          content: response.data.journal.document_content.entry || "",
+          date: response.data.journal.created_at,
+        };
+  
+        setEntries((prevEntries) => [...prevEntries, newJournal]);
+        setActiveEntry(newJournal);
         setNewEntry(false);
+        setSuccessMessage("New entry saved successfully.");
       } else {
-        const response = await axios.put(`/api/journal/${activeEntry.id}`, {
-          mood: activeEntry.mood || "Neutral",
+        // PUT: Update an existing journal entry
+        const response = await axios.put(
+          `/api/journals/${activeEntry.id}`,
+          {
+            mood: activeEntry.mood,
+            content: { entry: activeEntry.content },
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+            },
+          }
+        );
+  
+        // Update the entry in the state
+        const updatedJournal = {
+          id: response.data.journal.id,
+          mood: response.data.journal.mood,
           content: activeEntry.content,
-        });
-        setEntries(entries.map((entry) =>
-          entry.id === activeEntry.id ? response.data.journal : entry
-        ));
+          date: response.data.journal.updated_at,
+        };
+  
+        setEntries((prevEntries) =>
+          prevEntries.map((entry) =>
+            entry.id === updatedJournal.id ? updatedJournal : entry
+          )
+        );
+        setActiveEntry(updatedJournal);
+        setSuccessMessage("Entry updated successfully.");
       }
-      setSuccessMessage("Entry saved successfully.");
     } catch (error) {
       console.error("Error saving journal entry:", error);
       setErrorMessage("Failed to save journal entry.");
     }
   };
-  
 
-  const handleDelete = async () => {
-    if (window.confirm("Are you sure you want to delete this entry?")) {
-      try {
-        await axios.delete(`/api/journal/${activeEntry?.id}`);
-        setEntries(entries.filter((entry) => entry.id !== activeEntry?.id));
-        setActiveEntry(entries[0] || null);
-        setSuccessMessage("Entry deleted successfully.");
-      } catch (error) {
-        console.error("Error deleting journal entry:", error);
-        setErrorMessage("Failed to delete journal entry.");
+  const handleNewEntry = async () => {
+    setErrorMessage("");
+    setSuccessMessage("");
+  
+    try {
+      // POST: Create a new journal entry
+      const response = await axios.post(
+        `/api/journals/`,
+        {
+          userId: user?.id, // Send the user ID
+          mood: "Neutral", // Default mood
+          content: { entry: "This is a new journal entry." }, // Initial content
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+          },
+        }
+      );
+  
+      // Extract the new journal entry from the response
+      const newJournal = {
+        id: response.data.journal.id,
+        mood: response.data.journal.mood,
+        content: response.data.journal.document_content.entry || "",
+        date: response.data.journal.created_at,
+      };
+  
+      // Update state to include the new journal entry
+      setEntries((prevEntries) => [...prevEntries, newJournal]);
+      setActiveEntry(newJournal); // Set the active entry to the new journal
+      setNewEntry(false); // Exit "new entry" mode
+      setSuccessMessage("New entry created successfully.");
+    } catch (error: any) {
+      console.error("Error creating new journal entry:", error.response || error.message);
+  
+      // Log error details for debugging
+      if (error.response) {
+        console.error("Response Data:", error.response.data);
+        console.error("Response Status:", error.response.status);
       }
+  
+      // Handle any error by updating the error message
+      setErrorMessage("Failed to create a new journal entry.");
     }
   };
 
-  const handleNewEntry = () => {
-    setNewEntry(true);
-    setActiveEntry({ id: 0, date: new Date().toISOString().split("T")[0], content: "", mood: "" });
-    setErrorMessage("");
-    setSuccessMessage("");
+  const getCurrentPageEntries = () => {
+    const startIndex = (currentPage - 1) * entriesPerPage;
+    const endIndex = startIndex + entriesPerPage;
+    return entries.slice(startIndex, endIndex);
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) setCurrentPage((prev) => prev - 1);
   };
 
   return (
     isOpen && (
       <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
         <div className="bg-white rounded-lg shadow-lg w-3/4 max-w-4xl">
+          {/* Left Panel: Entry List */}
           <div className="flex">
-            {/* Left Panel: Entry List */}
             <div className="w-1/3 bg-blue-100 p-4 rounded-l-lg">
-              <h2 className="text-lg font-bold text-blue-600 mb-4">Previous Entries</h2>
-              <ul className="space-y-2">
-                {entries.map((entry) => (
-                  <li
-                    key={entry.id}
-                    className={`p-2 rounded cursor-pointer ${
-                      activeEntry?.id === entry.id ? "bg-blue-300" : "hover:bg-blue-200"
-                    }`}
-                    onClick={() => setActiveEntry(entry)}
+              <div className='flex space-x-5 mb-2'>
+                <button
+                    className=" text-black bg-red-400 rounded-md px-2 hover:bg-red-500"
+                    onClick={onClose}
                   >
-                    Journal Entry {entry.id}: {entry.date}
-                  </li>
-                ))}
-              </ul>
+                    X
+                </button>
+                <h2 className="text-lg font-bold text-[#5E9ED9] ">Previous Entries</h2>
+              </div>
+              {entries.length === 0 ? (
+                <p className="text-center text-gray-500">No journal entries available. Start a new one!</p>
+              ) : (
+                <ul className="space-y-2">
+                  {getCurrentPageEntries().map((entry) => (
+                    <li
+                      key={entry.id}
+                      className={`p-2 rounded cursor-pointer ${
+                        activeEntry?.id === entry.id
+                          ? "bg-blue-300"
+                          : "hover:bg-blue-200"
+                      }`}
+                      onClick={() => {
+                        setActiveEntry(entry);
+                        setNewEntry(false);
+                        setErrorMessage("");
+                        setSuccessMessage("");
+                      }}
+                    >
+                      Journal Entry {entry.id}: {entry.date}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <div className="flex justify-between mt-4">
+                <button
+                  className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                  onClick={handlePreviousPage}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </button>
+                <button
+                  className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                  onClick={handleNextPage}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </button>
+              </div>
               <button
                 className="mt-4 w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-500"
                 onClick={handleNewEntry}
@@ -155,33 +294,15 @@ const JournalingModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
                   {errorMessage && <p className="text-red-500 text-sm">{errorMessage}</p>}
                   {successMessage && <p className="text-green-500 text-sm">{successMessage}</p>}
                 </div>
-                <div className="space-x-4">
-                  {!newEntry && activeEntry && (
-                    <button
-                      className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-500"
-                      onClick={handleDelete}
-                    >
-                      Delete Entry
-                    </button>
-                  )}
-                  <button
-                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-500"
-                    onClick={handleSave}
-                  >
-                    Save Entry
-                  </button>
-                </div>
+                <button
+                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-500"
+                  onClick={handleSave}
+                >
+                  Save Entry
+                </button>
               </div>
             </div>
           </div>
-
-          {/* Close Button */}
-          <button
-            className="absolute top-2 right-2 text-gray-600 hover:text-gray-800"
-            onClick={onClose}
-          >
-            ✕
-          </button>
         </div>
       </div>
     )
