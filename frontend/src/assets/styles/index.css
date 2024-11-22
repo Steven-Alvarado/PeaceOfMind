@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.slick-slide {
+  padding: 0 20px;
+}
+
+.wave-background {
+  background-image: url('../images/WaveLandingPage.svg');
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: bottom;
+}
+
+html {
+    scroll-behavior: smooth;
+  }
+
+
+.fade-enter {
+  opacity: 0;
+  transform: translateY(20px);
+}
+.fade-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 300ms, transform 300ms;
+}
+.fade-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+.fade-exit-active {
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: opacity 300ms, transform 300ms;
+}

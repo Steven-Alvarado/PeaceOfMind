@@ -28,23 +28,36 @@ const register = async (req, res) => {
 const login = async (req, res) => {
   const { email, password } = req.body;
   try {
-    const user = await findUserByEmail(email);
+    const user = await findUserByEmail(email); // Now includes the `role`
     if (!user) return res.status(400).json({ error: "User not found" });
 
     const isPasswordValid = await bcrypt.compare(password, user.password_hash);
-    if (!isPasswordValid)
+    if (!isPasswordValid) {
       return res.status(401).json({ error: "Invalid password" });
+    }
 
     const token = jwt.sign(
-      { userId: user.user_id, role: user.role },
+      { userId: user.id, email: user.email, role: user.role }, // Include role in token
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRATION }
     );
-    res.json({ message: "Login successful", token });
+
+    res.json({
+      message: "Login successful",
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role, // Send role in response
+      },
+    });
   } catch (error) {
+    console.error("Login error:", error);
     res.status(500).json({ error: "Login failed" });
   }
 };
+
+
 
 const logout = (req, res) => {
   res.json({ message: "Logged out successfully" });

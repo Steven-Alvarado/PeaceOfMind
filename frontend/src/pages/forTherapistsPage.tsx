@@ -1,9 +1,11 @@
 import React, { useState } from "react";
-import HeaderLandingPage from "../components/headerLandingPage";
-import FooterLandingPage from "../components/footerLandingPage";
+import { useNavigate } from "react-router-dom";
+import FooterLandingPage from "../components/Footer";
+import HeaderSignUpLoginPage from "../components/headerSignUpLoginPage";
 import Lottie from "lottie-react";
-import SignUpPageAnimation from "../lotties/SignUpPageAnimation.json"; // Placeholder until another Lottie is found
+import SignUpPageAnimation from "../assets/lotties/SignUpPageAnimation.json"; // Placeholder until another Lottie is found
 import { FaMale, FaFemale, FaGenderless } from 'react-icons/fa';
+import { useAuth } from "../hooks/useAuth";
 
 const TherapistSignUp = () => {
   const [form, setForm] = useState({
@@ -13,9 +15,14 @@ const TherapistSignUp = () => {
     password: '',
     confirmPassword: '',
     licenseNumber: '',
-    gender: ''
+    gender: '',
+    specialization: '',
+    experienceYears: '',
+    monthlyRate: ''
   });
   const [error, setError] = useState('');
+  const { registerTherapist} = useAuth();
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -25,11 +32,15 @@ const TherapistSignUp = () => {
     setForm({ ...form, gender });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.firstName || !form.lastName || !form.email || !form.password || !form.confirmPassword || !form.licenseNumber || !form.gender) {
       setError('Please fill in all fields');
       return;
+    }
+    {/*Not sure if needed*/}
+    if (!/\S+@\S+\.\S+/.test(form.email)) {
+      return 'Please enter a valid email';
     }
     if (form.password !== form.confirmPassword) {
       setError('Passwords do not match');
@@ -40,13 +51,43 @@ const TherapistSignUp = () => {
       return;
     }
     setError('');
-    console.log('Submitted', form);
+
+    try{
+      await registerTherapist(
+        form.firstName,
+        form.lastName,
+        form.email,
+        form.password,
+        form.gender,
+        form.licenseNumber,
+        form.specialization,
+        parseInt(form.experienceYears),
+        parseFloat(form.monthlyRate)
+      );
+      // Delay navigation by 3 seconds
+      setTimeout(() => 3000);
+      navigate('/therapist-dashboard')
+    }
+    //Errors to check if everything goes smoothly
+    catch (error) {
+      if (error.response) {
+        // Handling errors from server response
+        setError(error.response.data.error || 'An error occurred during registration');
+      } else if (error.request) {
+        // The request was made but no response was received
+        setError('No response from server. Please try again later.');
+      } else {
+        // Something happened in setting up the request and triggered an Error
+        setError('Error: ' + error.message);
+      }
+      console.error('Registration error:', error.config);
+    }
   };
 
   return (
     <div style={{ position: 'relative', minHeight: '100vh' }}>
-      <HeaderLandingPage />
-      <div style={{ paddingBottom: '100px' }}>
+      <HeaderSignUpLoginPage />
+      <div className="pb-36">
         <TherapistSignUpSection 
           form={form}
           handleChange={handleChange}
@@ -55,7 +96,9 @@ const TherapistSignUp = () => {
           error={error}
         />
       </div>
-      <FooterLandingPage style={{ position: 'absolute', bottom: 0, width: '100%' }} />
+      <div className="absolute bottom-0 w-full">
+          <FooterLandingPage />
+        </div>
     </div>
   );
 };
@@ -156,6 +199,31 @@ function TherapistSignUpSection({ form, handleChange, handleGenderSelect, handle
             placeholder="License Number"
             className="w-full p-3 mb-4 border border-[#5E9ED9] rounded-md"
             value={form.licenseNumber}
+            onChange={handleChange}
+          />
+          <input
+            type="text"
+            name="specialization"
+            placeholder="Specialization"
+            className="w-full p-3 mb-2 border border-[#5E9ED9] rounded-md"
+            value={form.specialization}
+            onChange={handleChange}
+          />
+          {/*Fix gap, not sure why*/}
+          <input
+            type="number"
+            name="experienceYears"
+            placeholder="Experience Years"
+            className="w-full p-3 mb-2 border border-[#5E9ED9] rounded-md"
+            value={form.experienceYears}
+            onChange={handleChange}
+          />
+          <input
+            type="number"
+            name="monthlyRate"
+            placeholder="Monthly Rate"
+            className="w-full p-3 mb-4 border border-[#5E9ED9] rounded-md"
+            value={form.monthlyRate}
             onChange={handleChange}
           />
           {error && <p className="text-red-500">{error}</p>}
