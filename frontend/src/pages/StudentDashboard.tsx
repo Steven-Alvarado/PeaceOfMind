@@ -22,6 +22,9 @@ import { FaClipboardQuestion } from "react-icons/fa6";
 
 import Lottie from "lottie-react";
 import StudentDashboardAnimation from "../assets/lotties/StudentDashboardAnimation.json";
+import WeeklySurvey from "../components/weeklySurvey";
+import NameOfPerson from "../components/nameOfPerson";
+import { useAuth } from "../hooks/useAuth";
 
 // Help Modal Component
 const HelpModal = ({
@@ -35,7 +38,13 @@ const HelpModal = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-lg outline outline-white outline-2 outline-offset-2">
+      <div className="relative bg-white rounded-lg p-6 w-full max-w-lg outline outline-white outline-2 outline-offset-2">
+        <button
+          onClick={onClose}
+          className="absolute top-0 right-0 text-black text-lg p-2 m-2 hover:text-gray-900"
+        >
+          &#x2715;
+        </button>
         <h2 className="text-3xl font-extrabold text-center text-[#5E9ED9] mb-4">
           Help
         </h2>
@@ -307,7 +316,8 @@ const TherapistSection = () => {
   );
 };
 
-const MenuSection = () => {
+// Menu Section Component
+const MenuSection = ({ onSurveyClick }: { onSurveyClick: () => void }) => {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isTherListOpen, setIsTherListOpen] = useState(false);
 
@@ -342,7 +352,10 @@ const MenuSection = () => {
         <button className="w-full bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center">
           <FaChartBar className="mr-3" /> Analytics
         </button>
-        <button className="w-full bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center">
+        <button
+          className="w-full bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center"
+          onClick={onSurveyClick}
+        >
           <FaClipboardQuestion className="mr-3" /> Surveys
         </button>
         <button className="w-full bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center">
@@ -359,20 +372,28 @@ const MenuSection = () => {
 };
 
 // Main Dashboard Component
-const StudentDashboard = () => {
+const StudentDashboard: React.FC = () => {
+  const [isSurveyOpen, setIsSurveyOpen] = useState(false);
+  const { user } = useAuth();
+
   return (
     <div className="student-dashboard flex flex-col min-h-screen">
       <HeaderStudentDashboard />
       <header>
         <h1 className="text-4xl font-bold text-center text-blue-500">
-          Welcome, [Patient's Name]
+          <NameOfPerson userId={user?.id || null} />
         </h1>
       </header>
       <div className="flex-grow grid grid-cols-1 md:grid-cols-2 gap-6 px-6 py-10">
         <TherapistSection />
-        <MenuSection />
+        <MenuSection onSurveyClick={() => setIsSurveyOpen(true)} />
       </div>
       <Footer />
+      <WeeklySurvey
+        isOpen={isSurveyOpen}
+        onClose={() => setIsSurveyOpen(false)}
+        user={user}
+      />
     </div>
   );
 };

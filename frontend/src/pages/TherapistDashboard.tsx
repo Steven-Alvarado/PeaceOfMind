@@ -15,6 +15,8 @@ import {
 import Lottie from "lottie-react";
 import TherapistDashboardAnimation from "../assets/lotties/TherapistDashboardAnimation.json";
 import Switch from "@mui/material/Switch";
+import NameOfPerson from "../components/nameOfPerson";
+import { useAuth } from "../hooks/useAuth";
 
 // Help Modal Component
 const HelpModal = ({
@@ -28,7 +30,13 @@ const HelpModal = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md outline outline-white outline-2 outline-offset-2">
+      <div className="relative bg-white rounded-lg p-6 w-full max-w-md outline outline-white outline-2 outline-offset-2">
+        <button
+          onClick={onClose}
+          className="absolute top-0 right-0 text-black text-lg p-2 m-2 hover:text-gray-900"
+        >
+          &#x2715;
+        </button>
         <h2 className="text-3xl font-extrabold text-center text-[#5E9ED9] mb-4">
           Help
         </h2>
@@ -188,6 +196,7 @@ const PatientSection = () => {
 const TherapistDashboard = () => {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isAvailable, setIsAvailable] = useState(true);
+  const { user } = useAuth();
   const [isRequestOpen, setIsRequestOpen] = useState(false);
 
   const toggleAvailability = () => {
@@ -199,7 +208,7 @@ const TherapistDashboard = () => {
       <HeaderTherapistDashboard />
       <header>
         <h1 className="text-4xl font-bold text-center text-blue-500">
-          Welcome, [Patient's Name]
+          <NameOfPerson userId={user?.id || null} />
         </h1>
       </header>
       <div className="flex-grow grid grid-cols-1 md:grid-cols-2 gap-6 px-6 py-10">
