@@ -3,7 +3,6 @@ import { FaBars, FaTimes, FaHome } from "react-icons/fa";
 import { IoIosNotifications, IoMdSettings } from "react-icons/io";
 import Logo from "../assets/images/logobetter.png";
 
-
 const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -154,7 +153,7 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
 
 const HeaderTherapistDashboard = () => {
   const [isOpen, setIsOpen] = useState(false);
-
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const toggleMenu = () => {
     setIsOpen(!isOpen);
   };
@@ -189,9 +188,13 @@ const HeaderTherapistDashboard = () => {
             </div>
             <div className="justify-center flex cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4] space-x-1">
                 <IoMdSettings className="mt-1" />
-                <a href="Link for settings" className="cursor-pointer rounded hover:bg-[#4b8cc4]">
+                <button 
+                  className="cursor-pointer rounded hover:bg-[#4b8cc4]"
+                  onClick={() => setIsSettingsOpen(true)}
+                >
                     Settings
-                </a>
+                </button>
+                <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
             </div>
         </nav>
 
