@@ -1,3 +1,6 @@
+
+import axios from "axios";
+import { useAuth } from "../hooks/useAuth";
 import React, { useState, useEffect } from "react";
 import HeaderStudentDashboard from "../components/headerStudentDashboard";
 import Footer from "../components/Footer";
@@ -19,12 +22,298 @@ import {
 } from "react-icons/fa";
 import { FaArrowRightArrowLeft } from "react-icons/fa6";
 import { FaClipboardQuestion } from "react-icons/fa6";
-
-import Lottie from "lottie-react";
-import StudentDashboardAnimation from "../assets/lotties/StudentDashboardAnimation.json";
 import WeeklySurvey from "../components/weeklySurvey";
 import NameOfPerson from "../components/nameOfPerson";
-import { useAuth } from "../hooks/useAuth";
+import Lottie from "lottie-react";
+import StudentDashboardAnimation from "../assets/lotties/StudentDashboardAnimation.json";
+
+
+interface JournalEntry {
+  id: number;
+  mood: string;
+  content: string;
+  date: string;
+}
+
+const JournalingModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+  const { user } = useAuth(); // Get user from AuthContext
+  const [entries, setEntries] = useState<JournalEntry[]>([]);
+  const [activeEntry, setActiveEntry] = useState<JournalEntry | null>(null);
+  const [newEntry, setNewEntry] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const entriesPerPage = 4;
+  const totalPages = Math.ceil(entries.length / entriesPerPage);
+
+
+  // Fetch journals when modal opens
+  useEffect(() => {
+    if (isOpen && user?.id) {
+      fetchJournals();
+    }
+  }, [isOpen, user?.id]);
+
+  const fetchJournals = async () => {
+    try {
+      const response = await axios.get(`/api/journals/user/${user?.id}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+        },
+      });
+  
+      // Extract the 'journals' array from the response
+      const fetchedJournals = response.data.journals.map((journal: any) => ({
+        id: journal.id,
+        mood: journal.mood,
+        content: journal.document_content.entry, // Adjust based on your data structure
+        date: journal.created_at,
+      }));
+  
+      if (fetchedJournals.length === 0) {
+        setErrorMessage("No journal entries found. Create your first entry!");
+      }
+  
+      setEntries(fetchedJournals);
+      setActiveEntry(fetchedJournals[fetchedJournals.length - 1] || null);
+    } catch (error) {
+      console.error("Error fetching journals:", error);
+      setErrorMessage("Failed to fetch journal entries.");
+    }
+  };
+
+  const handleSave = async () => {
+    if (!activeEntry?.content.trim()) {
+      setErrorMessage("Entry cannot be blank.");
+      return;
+    }
+  
+    setErrorMessage("");
+    setSuccessMessage("");
+  
+    try {
+      if (newEntry) {
+        // POST: Create a new journal entry
+        const response = await axios.post(
+          `/api/journals/`,
+          {
+            userId: user?.id,
+            mood: activeEntry.mood || "Neutral",
+            content: { entry: activeEntry.content },
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+            },
+          }
+        );
+  
+        // Update state with the new journal entry
+        const newJournal = {
+          id: response.data.journal.id,
+          mood: response.data.journal.mood,
+          content: response.data.journal.document_content.entry || "",
+          date: response.data.journal.created_at,
+        };
+  
+        setEntries((prevEntries) => [...prevEntries, newJournal]);
+        setActiveEntry(newJournal);
+        setNewEntry(false);
+        setSuccessMessage("New entry saved successfully.");
+      } else {
+        // PUT: Update an existing journal entry
+        const response = await axios.put(
+          `/api/journals/${activeEntry.id}`,
+          {
+            mood: activeEntry.mood,
+            content: { entry: activeEntry.content },
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+            },
+          }
+        );
+  
+        // Update the entry in the state
+        const updatedJournal = {
+          id: response.data.journal.id,
+          mood: response.data.journal.mood,
+          content: activeEntry.content,
+          date: response.data.journal.updated_at,
+        };
+  
+        setEntries((prevEntries) =>
+          prevEntries.map((entry) =>
+            entry.id === updatedJournal.id ? updatedJournal : entry
+          )
+        );
+        setActiveEntry(updatedJournal);
+        setSuccessMessage("Entry updated successfully.");
+      }
+    } catch (error) {
+      console.error("Error saving journal entry:", error);
+      setErrorMessage("Failed to save journal entry.");
+    }
+  };
+
+  const handleNewEntry = async () => {
+    setErrorMessage("");
+    setSuccessMessage("");
+  
+    try {
+      // POST: Create a new journal entry
+      const response = await axios.post(
+        `/api/journals/`,
+        {
+          userId: user?.id, // Send the user ID
+          mood: "Neutral", // Default mood
+          content: { entry: "This is a new journal entry." }, // Initial content
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+          },
+        }
+      );
+  
+      // Extract the new journal entry from the response
+      const newJournal = {
+        id: response.data.journal.id,
+        mood: response.data.journal.mood,
+        content: response.data.journal.document_content.entry || "",
+        date: response.data.journal.created_at,
+      };
+  
+      // Update state to include the new journal entry
+      setEntries((prevEntries) => [...prevEntries, newJournal]);
+      setActiveEntry(newJournal); // Set the active entry to the new journal
+      setNewEntry(false); // Exit "new entry" mode
+      setSuccessMessage("New entry created successfully.");
+    } catch (error: any) {
+      console.error("Error creating new journal entry:", error.response || error.message);
+  
+      // Log error details for debugging
+      if (error.response) {
+        console.error("Response Data:", error.response.data);
+        console.error("Response Status:", error.response.status);
+      }
+  
+      // Handle any error by updating the error message
+      setErrorMessage("Failed to create a new journal entry.");
+    }
+  };
+
+  const getCurrentPageEntries = () => {
+    const startIndex = (currentPage - 1) * entriesPerPage;
+    const endIndex = startIndex + entriesPerPage;
+    return entries.slice(startIndex, endIndex);
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) setCurrentPage((prev) => prev - 1);
+  };
+
+  return (
+    isOpen && (
+      <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
+        <div className="bg-white rounded-lg shadow-lg w-3/4 max-w-4xl">
+          {/* Left Panel: Entry List */}
+          <div className="flex">
+            <div className="w-1/3 bg-blue-100 p-4 rounded-l-lg">
+              <div className='flex space-x-5 mb-2'>
+                <button
+                    className=" text-black bg-red-400 rounded-md px-2 hover:bg-red-500"
+                    onClick={onClose}
+                  >
+                    X
+                </button>
+                <h2 className="text-lg font-bold text-[#5E9ED9] ">Previous Entries</h2>
+              </div>
+              {entries.length === 0 ? (
+                <p className="text-center text-gray-500">No journal entries available. Start a new one!</p>
+              ) : (
+                <ul className="space-y-2">
+                  {getCurrentPageEntries().map((entry) => (
+                    <li
+                      key={entry.id}
+                      className={`p-2 rounded cursor-pointer ${
+                        activeEntry?.id === entry.id
+                          ? "bg-blue-300"
+                          : "hover:bg-blue-200"
+                      }`}
+                      onClick={() => {
+                        setActiveEntry(entry);
+                        setNewEntry(false);
+                        setErrorMessage("");
+                        setSuccessMessage("");
+                      }}
+                    >
+                      Journal Entry {entry.id}: {entry.date}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <div className="flex justify-between mt-4">
+                <button
+                  className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                  onClick={handlePreviousPage}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </button>
+                <button
+                  className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                  onClick={handleNextPage}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </button>
+              </div>
+              <button
+                className="mt-4 w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-500"
+                onClick={handleNewEntry}
+              >
+                New Entry
+              </button>
+            </div>
+
+            {/* Right Panel: Entry Editor */}
+            <div className="w-2/3 p-4">
+              <h2 className="text-lg font-bold text-blue-600 mb-2">
+                {newEntry ? "New Journal Entry" : `Journal Entry ${activeEntry?.id}`}
+              </h2>
+              <p className="text-sm text-gray-500 mb-4">{activeEntry?.date}</p>
+              <textarea
+                className="w-full h-64 border border-gray-300 rounded p-2"
+                value={activeEntry?.content || ""}
+                onChange={(e) =>
+                  setActiveEntry({ ...activeEntry, content: e.target.value } as JournalEntry)
+                }
+              />
+              <div className="flex justify-between items-center mt-4">
+                <div>
+                  {errorMessage && <p className="text-red-500 text-sm">{errorMessage}</p>}
+                  {successMessage && <p className="text-green-500 text-sm">{successMessage}</p>}
+                </div>
+                <button
+                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-500"
+                  onClick={handleSave}
+                >
+                  Save Entry
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  );
+};
 
 // Help Modal Component
 const HelpModal = ({
@@ -319,6 +608,7 @@ const TherapistSection = () => {
 // Menu Section Component
 const MenuSection = ({ onSurveyClick }: { onSurveyClick: () => void }) => {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [isJournalOpen, setIsJornalOpen] = useState(false);
   const [isTherListOpen, setIsTherListOpen] = useState(false);
 
   return (
@@ -340,7 +630,10 @@ const MenuSection = ({ onSurveyClick }: { onSurveyClick: () => void }) => {
         </div>
       </div>
       <div className="space-y-6">
-        <button className="w-full bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center">
+        <button 
+          className="w-full bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center"
+          onClick={() => setIsJornalOpen(true)}
+        >
           <FaBook className="mr-3" /> Journal
         </button>
         <button
@@ -363,18 +656,24 @@ const MenuSection = ({ onSurveyClick }: { onSurveyClick: () => void }) => {
         </button>
       </div>
       <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
+
+      <JournalingModal isOpen={isJournalOpen} onClose={() => setIsJornalOpen(false)} />
+
       <TherapistModal
         isOpen={isTherListOpen}
         onClose={() => setIsTherListOpen(false)} // Pass studentId to fetch the therapist list
       />
+
     </div>
   );
 };
 
 // Main Dashboard Component
+
 const StudentDashboard: React.FC = () => {
   const [isSurveyOpen, setIsSurveyOpen] = useState(false);
   const { user } = useAuth();
+
 
   return (
     <div className="student-dashboard flex flex-col min-h-screen">
