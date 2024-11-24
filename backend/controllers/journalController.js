@@ -1,4 +1,10 @@
-const { createJournalEntry, updateJournalEntry, getJournalById, getJournalsByUserId } = require('../models/journalsModel');
+const { 
+    createJournalEntry, 
+    updateJournalEntry, 
+    getJournalById, 
+    getJournalsByUserId, 
+    deleteJournalEntry 
+} = require('../models/journalsModel');
 
 // Create a new journal entry
 const createJournal = async (req, res) => {
@@ -71,5 +77,27 @@ const getJournals = async (req, res) => {
     }
 };
 
-module.exports = { createJournal, updateJournal, getJournal, getJournals };
+// Delete a journal entry
+const deleteJournal = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const deletedJournal = await deleteJournalEntry(id);
+        if (!deletedJournal) {
+            return res.status(404).json({ message: "Journal entry not found." });
+        }
+        res.status(200).json({ message: "Journal entry deleted successfully.", id: deletedJournal.id });
+    } catch (error) {
+        console.error("Error deleting journal entry:", error);
+        res.status(500).json({ message: "Failed to delete journal entry." });
+    }
+};
+
+module.exports = { 
+    createJournal, 
+    updateJournal, 
+    getJournal, 
+    getJournals,
+    deleteJournal
+};
 
