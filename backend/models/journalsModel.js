@@ -59,5 +59,21 @@ const getJournalsByUserId = async (userId) => {
     return result.rows;
 };
 
-module.exports = { createJournalEntry, updateJournalEntry, getJournalById, getJournalsByUserId };
+// Delete a journal entry
+const deleteJournalEntry = async (journalId) => {
+    const result = await pool.query(
+        `DELETE FROM journals 
+         WHERE id = $1 RETURNING id`,
+        [journalId]
+    );
 
+    return result.rows[0];
+};
+
+module.exports = { 
+    createJournalEntry, 
+    updateJournalEntry, 
+    getJournalById, 
+    getJournalsByUserId, 
+    deleteJournalEntry 
+};

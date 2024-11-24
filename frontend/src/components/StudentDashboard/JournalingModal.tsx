@@ -22,7 +22,7 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const entriesPerPage = 4;
+  const entriesPerPage = 9;
 
   const totalPages = Math.ceil(entries.length / entriesPerPage);
 
@@ -37,6 +37,8 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
       setErrorMessage("User ID is not available.");
       return;
     }
+
+    console.log('this is the userid: ', user.id);
 
     try {
       const response = await axios.get(`/api/journals/user/${user.id}`, {
@@ -84,9 +86,45 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
     }
   };
 
+  const handleDelete = async () => {
+    if (!activeEntry) {
+      setErrorMessage("No journal entry selected to delete.");
+      return;
+    }
+  
+    const confirmDelete = window.confirm("Are you sure you want to delete this entry?");
+    if (!confirmDelete) return;
+  
+    try {
+      // Make the DELETE request
+      await axios.delete(`/api/journals/delete/${activeEntry.id}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+        },
+      });
+  
+      // Update state: Remove deleted entry
+      const updatedEntries = entries.filter((entry) => entry.id !== activeEntry.id);
+      setEntries(updatedEntries);
+  
+      // Set new active entry or clear the active entry
+      if (updatedEntries.length > 0) {
+        setActiveEntry(updatedEntries[updatedEntries.length - 1]);
+      } else {
+        setActiveEntry(null);
+      }
+  
+      setSuccessMessage("Journal entry deleted successfully.");
+      setErrorMessage("");
+    } catch (error: any) {
+      console.error("Error deleting journal entry:", error.message);
+      setErrorMessage(error.response?.data?.error || "Failed to delete journal entry.");
+    }
+  };
+
   const createJournalEntry = async () => {
     const response = await axios.post(
-      `/api/journals/`,
+      `/api/journals`,
       {
         userId: user?.id,
         mood: activeEntry?.mood || "Neutral",
@@ -164,27 +202,21 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
   return (
     isOpen && (
       <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
-        <div className="bg-white rounded-lg shadow-lg w-3/4 max-w-4xl">
-          <div className="flex">
+        <div className="bg-white rounded-lg shadow-lg w-4/5 h-4/5 max-w-6xl max-h-[90vh]">
+          <div className="flex h-full">
             {/* Left Panel: Entry List */}
-            <div className="w-1/3 bg-blue-100 p-4 rounded-l-lg">
-              <div className="flex justify-between mb-2">
-                <h2 className="text-lg font-bold text-blue-600">Journal Entries</h2>
-                <button
-                  className="bg-red-400 text-white px-2 rounded hover:bg-red-500"
-                  onClick={onClose}
-                >
-                  X
-                </button>
+            <div className="w-1/4 bg-blue-100 p-4 rounded-l-lg flex flex-col">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-bold mt-2 text-[#5E9ED9]">Journal Entries</h2>
               </div>
               {entries.length === 0 ? (
-                <p className="text-center text-gray-500">No journal entries available.</p>
+                <p className="text-center text-gray-500 flex-grow">No journal entries available.</p>
               ) : (
-                <ul>
+                <ul className="flex-grow overflow-y-auto space-y-2">
                   {getCurrentPageEntries().map((entry) => (
                     <li
                       key={entry.id}
-                      className={`p-2 cursor-pointer ${
+                      className={`p-2 rounded cursor-pointer ${
                         activeEntry?.id === entry.id ? "bg-blue-300" : "hover:bg-blue-200"
                       }`}
                       onClick={() => {
@@ -200,55 +232,93 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
                   ))}
                 </ul>
               )}
-              <div className="flex justify-between mt-4">
+              <div className="flex mb-2 flex-col space-y-2">
+                <div className="flex justify-between">
+                  <button
+                    className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                    onClick={handlePreviousPage}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </button>
+                  <button
+                    className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </button>
+                </div>
                 <button
-                  className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
-                  onClick={handlePreviousPage}
-                  disabled={currentPage === 1}
+                  className="mt-2 w-full bg-[#5E9ED9] text-white py-2 rounded hover:bg-[#4a7caa]"
+                  onClick={handleNewEntry}
                 >
-                  Previous
-                </button>
-                <button
-                  className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
-                  onClick={handleNextPage}
-                  disabled={currentPage === totalPages}
-                >
-                  Next
+                  + New Entry
                 </button>
               </div>
-              <button
-                className="mt-4 w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-500"
-                onClick={handleNewEntry}
-              >
-                New Entry
-              </button>
             </div>
-
+  
             {/* Right Panel: Entry Editor */}
-            <div className="w-2/3 p-4">
-              <h2 className="text-lg font-bold text-blue-600 mb-2">
-                {newEntry ? "New Journal Entry" : `Journal Entry ${activeEntry?.id}`}
-              </h2>
+            <div className="w-3/4 p-6 flex flex-col">
+              <div className="flex justify-between items-center">
+                <h2 className="text-lg font-bold text-[#5E9ED9]">
+                  {newEntry ? "New Journal Entry" : `Journal Entry ${activeEntry?.id}`}
+                </h2>
+                <button
+                  className="bg-red-500 text-white px-2 rounded hover:bg-red-600"
+                  onClick={onClose}
+                >
+                  X
+                </button>
+              </div>
               {activeEntry && (
-                <p className="text-sm text-gray-500 mb-4">
-                  Created on: {new Date(activeEntry.date).toLocaleString()}
-                </p>
+                <div className=" mb-4">
+                  <p className="text-sm text-gray-500 mb-4">
+                    Created on: {new Date(activeEntry.date).toLocaleString()}
+                  </p>
+                  <div className="flex space-x-7 bg-[#5E9ED9] rounded-lg p-2 w-80">
+                    <p className="text-white">How are you feeling today? </p>
+                    <select
+                      value={activeEntry.mood}
+                      onChange={(e) =>
+                        setActiveEntry((prev) => ({ ...prev!, mood: e.target.value }))
+                      }
+                      className=" border border-blue-100 bg-[#5E9ED9] text-white rounded"
+                    >
+                      <option value="Happy">Happy</option>
+                      <option value="Neutral">Neutral</option>
+                      <option value="Sad">Sad</option>
+                    </select>
+                  </div>
+                </div>
               )}
               <textarea
-                className="w-full h-64 border rounded p-2"
+                className="flex-grow border-[#5E9ED9] border-2 rounded p-2"
                 value={activeEntry?.content || ""}
                 onChange={(e) =>
                   setActiveEntry((prev) => ({ ...prev!, content: e.target.value }))
                 }
               />
-              <button
-                className="bg-blue-600 text-white px-4 py-2 rounded mt-4"
-                onClick={handleSave}
-              >
-                Save
-              </button>
-              {successMessage && <p className="text-green-500 mt-2">{successMessage}</p>}
-              {errorMessage && <p className="text-red-500 mt-2">{errorMessage}</p>}
+              <div className="flex justify-between items-center mt-4">
+                <div>
+                  {errorMessage && <p className="text-red-500 text-sm">{errorMessage}</p>}
+                  {successMessage && <p className="text-green-500 text-sm">{successMessage}</p>}
+                </div>
+                <div className="space-x-4">
+                  <button
+                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                    onClick={handleDelete}
+                  >
+                    Delete
+                  </button>
+                  <button
+                    className="bg-[#5E9ED9] text-white px-4 py-2 rounded hover:bg-[#4879a7]"
+                    onClick={handleSave}
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
