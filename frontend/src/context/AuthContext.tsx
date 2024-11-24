@@ -7,6 +7,9 @@ interface User {
   id: string;
   email: string;
   role: "student" | "therapist";
+  firstName: string;
+  lastName: string;
+  token: string;
 }
 
 // Define the AuthContext properties
@@ -21,7 +24,6 @@ interface AuthContextProps {
     password: string,
     role: string
   ) => Promise<void>;
-  //Changed in terms of registeringTherapist
   registerTherapist: (
     firstName: string,
     lastName: string,
@@ -35,6 +37,7 @@ interface AuthContextProps {
   ) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
+  fetchUser: () => Promise<void>;
 }
 
 // Create AuthContext
@@ -138,12 +141,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const { data } = await axios.post("/api/auth/login", { email, password });
         const { token, user } = data; // Include user in the response
     
+        // Set the user directly
+        setUser({ ...user, token});
+
         // Store token and set Authorization header
         localStorage.setItem("jwt", token);
         setAxiosAuthHeader(token);
     
-        // Set the user directly
-        setUser(user);
+    
+        
     
         // Redirect based on user role
         navigate(user.role === "student" ? "/student-dashboard" : "/therapist-dashboard");
@@ -151,6 +157,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         console.error("Login failed", error);
         throw new Error("Invalid email or password");
       }   
+  };
+
+  const fetchUser = async () => {
+    try {
+      const { data } = await axios.get("/api/auth/me");
+      const token = localStorage.getItem("jwt") || ""; // Retrieve token
+      setUser({ ...data.user, token }); // Include token in user object
+    } catch (error) {
+      console.error("Failed to fetch user profile", error);
+      logout(); // Clear state if token is invalid
+    }
   };
 
   const logout = () => {
@@ -161,7 +178,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, registerUser,registerTherapist, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      login, 
+      registerUser,
+      registerTherapist, 
+      logout, 
+      isAuthenticated: !!user, 
+      fetchUser,
+      }}
+      >
       {children}
     </AuthContext.Provider>
   );

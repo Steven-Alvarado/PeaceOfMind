@@ -2,7 +2,7 @@ import { useState } from "react";
 
 import "../assets/styles/index.css";
 import { Typewriter } from "react-simple-typewriter";
-import HeaderLandingPage from "../components/headerLandingPage";
+import HeaderLandingPage from "../components/HeaderLandingPage";
 import FooterLandingPage from "../components/Footer";
 import Logo from "../assets/images/logobetter.png";
 

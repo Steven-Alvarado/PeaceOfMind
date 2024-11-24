@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth.ts"; // Custom hook for accessing AuthContext
-import HeaderSignUpLoginPage from "../components/headerSignUpLoginPage";
+import HeaderSignUpLoginPage from "../components/HeaderSignUpLoginPage.tsx";
 import FooterLandingPage from "../components/Footer";
 
 const Login = () => {
