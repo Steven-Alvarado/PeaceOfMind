@@ -1,122 +1,218 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaBars, FaTimes, FaHome } from "react-icons/fa";
 import { IoIosNotifications, IoMdSettings } from "react-icons/io";
 import Logo from "../assets/images/logobetter.png";
-const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+import { useAuth } from "../hooks/useAuth";
 
-  if (!isOpen) return null;
+interface UserSettings {
+  fname: string;
+  last_name: string;
+  email: string;
+  newPassword: string;
+  confirmPassword: string;
+}
 
-  const handleDeleteAccount = () => {
-    // Logic to delete account
-    console.log('Account deleted');
+interface SettingsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
+  const { user } = useAuth();
+  const [userSettings, setUserSettings] = useState<UserSettings | null>(null);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
+  // Fetch settings when the modal is opened and the user ID is available
+  useEffect(() => {
+    if (isOpen && user?.id) {
+      fetchSettings();
+    }
+  }, [isOpen, user?.id]);
+
+  const fetchSettings = async () => {
+    if (!user?.id) {
+      setErrorMessage("User ID is not available.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/users/${user.id}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+
+      // Log the response data for debugging
+      console.log("Response Data:", data);
+
+      // Ensure the response contains the necessary fields
+      if (data && data.first_name && data.last_name && data.email) {
+        setUserSettings({
+          fname: data.first_name || "",
+          last_name: data.last_name || "",
+          email: data.email || "",
+          newPassword: "",
+          confirmPassword: "",
+        });
+      } else {
+        setErrorMessage("Failed to fetch user settings.");
+      }
+    } catch (error) {
+      console.error("Error fetching user settings:", error);
+      setErrorMessage(error.message || "Failed to fetch user settings.");
+    }
   };
 
-  const handleUpdate = () => {
-    // Logic to update user details
-    console.log('User details updated');
+  const handleSave = async () => {
+    if (!userSettings) {
+      setErrorMessage("User settings are not loaded.");
+      return;
+    }
+
+    if (userSettings.newPassword !== userSettings.confirmPassword) {
+      setErrorMessage("Passwords do not match.");
+      return;
+    }
+
+    try {
+      // You can update the settings here if necessary (e.g., via a PUT request)
+      
+      // Show success message if the data is saved successfully
+      setSuccessMessage("Settings saved successfully.");
+      setErrorMessage("");
+    } catch (error) {
+      setErrorMessage("Failed to save settings.");
+      console.error(error);
+    }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-lg outline outline-white outline-2 outline-offset-2">
-        <h2 className="text-3xl font-extrabold text-center text-[#5E9ED9] mb-4">Student Settings</h2>
+    isOpen && (
+      <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
+        <div className="bg-white rounded-lg shadow-lg w-3/4 max-w-4xl">
+          <div className="flex">
+            {/* Left Panel: User Info Form */}
+            <div className="w-full p-8">
+              <div className="flex justify-between mb-4">
+                <h2 className="text-2xl font-bold text-blue-600">User Settings</h2>
+                <button
+                  className="bg-red-400 text-white px-4 py-2 rounded-full hover:bg-red-500"
+                  onClick={onClose}
+                >
+                  <FaTimes size={20} />
+                </button>
+              </div>
 
-        {/* First Name and Last Name on the same line */}
-        <div className="flex space-x-4">
-          <div className="w-full">
-            <label htmlFor="firstName" className="block text-gray-700 font-bold mb-2">First Name</label>
-            <input
-              id="firstName"
-              type="text"
-              className="w-full p-2 border border-gray-300 rounded text-black"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              placeholder="Enter your first name"
-            />
-          </div>
-          <div className="w-full">
-            <label htmlFor="lastName" className="block text-gray-700 font-bold mb-2">Last Name</label>
-            <input
-              id="lastName"
-              type="text"
-              className="w-full p-2 border border-gray-300 rounded text-black"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-              placeholder="Enter your last name"
-            />
-          </div>
-        </div>
+              {/* Form to display and edit user settings */}
+              {userSettings ? (
+                <div>
+                  <div className="mb-6">
+                    <label className="block text-sm font-bold text-gray-700">First Name</label>
+                    <input
+                      type="text"
+                      className="w-full p-3 border rounded-lg text-black"
+                      value={userSettings.fname}
+                      onChange={(e) =>
+                        setUserSettings((prev) => ({
+                          ...prev!,
+                          fname: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
 
-        {/* Email Address */}
-        <div className="mt-4">
-          <label htmlFor="email" className="block text-gray-700 font-bold mb-2">Email Address</label>
-          <input
-            id="email"
-            type="email"
-            className="w-full p-2 border border-gray-300 rounded text-black"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Enter your email"
-          />
-        </div>
+                  <div className="mb-6">
+                    <label className="block text-sm font-bold text-gray-700">Last Name</label>
+                    <input
+                      type="text"
+                      className="w-full p-3 border rounded-lg text-black"
+                      value={userSettings.last_name}
+                      onChange={(e) =>
+                        setUserSettings((prev) => ({
+                          ...prev!,
+                          last_name: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
 
-        {/* New Password and Confirm Password */}
-        <div className="flex space-x-4 mt-4">
-          <div className="w-full">
-            <label htmlFor="newPassword" className="block text-gray-700 font-bold mb-2">New Password</label>
-            <input
-              id="newPassword"
-              type="password"
-              className="w-full p-2 border border-gray-300 rounded text-black"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="Enter your new password"
-            />
-          </div>
-          <div className="w-full">
-            <label htmlFor="confirmPassword" className="block text-gray-700 font-bold mb-2">Confirm Password</label>
-            <input
-              id="confirmPassword"
-              type="password"
-              className="w-full p-2 border border-gray-300 rounded text-black"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Confirm your password"
-            />
-          </div>
-        </div>
+                  <div className="mb-6">
+                    <label className="block text-sm font-bold text-gray-700">Email</label>
+                    <input
+                      type="email"
+                      className="w-full p-3 border rounded-lg text-black"
+                      value={userSettings.email}
+                      onChange={(e) =>
+                        setUserSettings((prev) => ({
+                          ...prev!,
+                          email: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
 
-        {/* Delete Account, Update, and Close buttons on the same level */}
-        <div className="mt-6 flex justify-between">
-          <button
-            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-400"
-            onClick={handleDeleteAccount}
-          >
-            Delete Account
-          </button>
-          <button
-            className="bg-[#5E9ED9] text-white px-4 py-2 rounded hover:bg-[#4a8ac9]"
-            onClick={handleUpdate}
-          >
-            Update
-          </button>
-          <button
-            className="bg-[#5E9ED9] text-white px-4 py-2 rounded hover:bg-[#4a8ac9]"
-            onClick={onClose}
-          >
-            Close
-          </button>
+                  {/* New Password */}
+                  <div className="mb-6">
+                    <label className="block text-sm font-bold text-gray-700">New Password</label>
+                    <input
+                      type="password"
+                      className="w-full p-3 border rounded-lg text-black"
+                      value={userSettings.newPassword}
+                      onChange={(e) =>
+                        setUserSettings((prev) => ({
+                          ...prev!,
+                          newPassword: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+
+                  {/* Confirm Password */}
+                  <div className="mb-6">
+                    <label className="block text-sm font-bold text-gray-700">Confirm Password</label>
+                    <input
+                      type="password"
+                      className="w-full p-3 border rounded-lg text-black"
+                      value={userSettings.confirmPassword}
+                      onChange={(e) =>
+                        setUserSettings((prev) => ({
+                          ...prev!,
+                          confirmPassword: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+
+                  <div className="flex justify-between">
+                    <button
+                      className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-500"
+                      onClick={handleSave}
+                    >
+                      Save
+                    </button>
+                    {errorMessage && (
+                      <p className="text-red-500 mt-2 text-sm">{errorMessage}</p>
+                    )}
+                    {successMessage && (
+                      <p className="text-green-500 mt-2 text-sm">{successMessage}</p>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-center text-gray-500">Loading user settings...</p>
+              )}
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    )
   );
 };
-
 const HeaderStudentDashboard = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
