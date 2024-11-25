@@ -1,10 +1,17 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { User } from "../context/AuthContext"; // Use the User type from AuthContext
 
 type QuestionType = {
   id: number;
   question: string;
   answer: boolean | null;
+};
+
+type WeeklySurveyProps = {
+  isOpen: boolean;
+  onClose: () => void;
+  user: User | null; // Use the User type from AuthContext
 };
 
 const weeklyQuestions: QuestionType[] = [
@@ -14,12 +21,6 @@ const weeklyQuestions: QuestionType[] = [
   { id: 4, question: "Are you able to focus on your tasks?", answer: null },
   { id: 5, question: "Do you feel motivated to achieve your goals?", answer: null },
 ];
-
-type WeeklySurveyProps = {
-  isOpen: boolean;
-  onClose: () => void;
-  user: { id: number; token: string } | null;
-};
 
 const WeeklySurvey: React.FC<WeeklySurveyProps> = ({ isOpen, onClose, user }) => {
   const [questions, setQuestions] = useState<QuestionType[]>(weeklyQuestions);
@@ -46,9 +47,9 @@ const WeeklySurvey: React.FC<WeeklySurveyProps> = ({ isOpen, onClose, user }) =>
 
     // Prepare survey content for submission
     const surveyContent = questions.reduce((content, q) => {
-        content[`question${q.id}`] = q.answer ? "Yes" : "No";
-        return content;
-      }, {} as Record<string, string>);
+      content[`question${q.id}`] = q.answer ? "Yes" : "No";
+      return content;
+    }, {} as Record<string, string>);
 
     try {
       setIsSubmitting(true);
@@ -66,8 +67,8 @@ const WeeklySurvey: React.FC<WeeklySurveyProps> = ({ isOpen, onClose, user }) =>
       );
       alert("Survey submitted successfully!");
       onClose();
-    } catch (err) {
-      setError("Failed to submit survey. Please try again.");
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Failed to submit survey. Please try again.");
     } finally {
       setIsSubmitting(false);
     }

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-import HeaderSignUpLoginPage from "../components/headerSignUpLoginPage";
+import HeaderSignUpLoginPage from "../components/HeaderSignUpLoginPage";
 import FooterLandingPage from "../components/Footer";
 import { FaMale, FaFemale, FaGenderless } from "react-icons/fa";
 import Lottie from "lottie-react";

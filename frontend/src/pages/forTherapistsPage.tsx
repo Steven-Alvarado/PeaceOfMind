@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import FooterLandingPage from "../components/Footer";
-import HeaderSignUpLoginPage from "../components/headerSignUpLoginPage";
+import HeaderSignUpLoginPage from "../components/HeaderSignUpLoginPage";
 import Lottie from "lottie-react";
 import SignUpPageAnimation from "../assets/lotties/SignUpPageAnimation.json"; // Placeholder until another Lottie is found
 import { FaMale, FaFemale, FaGenderless } from 'react-icons/fa';

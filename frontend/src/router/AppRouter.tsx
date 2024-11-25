@@ -1,15 +1,15 @@
-import React, { Suspense, lazy } from 'react';
-import { Routes, Route } from 'react-router-dom';
-import PrivateRoute from './PrivateRoute';
+import React, { Suspense, lazy } from "react";
+import { Routes, Route } from "react-router-dom";
+import PrivateRoute from "./PrivateRoute";
 
-const LandingPage = lazy(() => import('../pages/landingPage'));
-const ForTherapists = lazy(() => import('../pages/forTherapistsPage'));
-const Login = lazy(() => import('../pages/loginPage'));
-const SignUp = lazy(() => import('../pages/signUpPage'));
-const SignUpSurveyPage = lazy(() => import('../pages/signUpSurveyPage'));
-const ErrorPage = lazy(() => import('../pages/ErrorPage'));
-const StudentDashboard = lazy(() => import('../pages/StudentDashboard'));
-const TherapistDashboard = lazy(() => import('../pages/TherapistDashboard'));
+const LandingPage = lazy(() => import("../pages/landingPage"));
+const ForTherapists = lazy(() => import("../pages/forTherapistsPage"));
+const Login = lazy(() => import("../pages/loginPage"));
+const SignUp = lazy(() => import("../pages/signUpPage"));
+const SignUpSurveyPage = lazy(() => import("../pages/signUpSurveyPage"));
+const ErrorPage = lazy(() => import("../pages/ErrorPage"));
+const StudentDashboard = lazy(() => import("../pages/StudentDashboard"));
+const TherapistDashboard = lazy(() => import("../pages/TherapistDashboard"));
 
 const AppRouter: React.FC = () => {
   return (
@@ -42,7 +42,7 @@ const AppRouter: React.FC = () => {
         />
 
         {/* Fallback Route */}
-        
+
         <Route path="*" element={<ErrorPage />} />
       </Routes>
     </Suspense>
