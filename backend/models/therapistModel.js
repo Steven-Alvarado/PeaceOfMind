@@ -95,7 +95,6 @@ const getTherapistByUserId = async (userId) => {
 
 
 module.exports = {
-
     createTherapist,
     findTherapistById,
     getAvailableTherapists,
