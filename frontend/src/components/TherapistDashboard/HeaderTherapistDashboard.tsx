@@ -27,7 +27,8 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-lg outline outline-white outline-2 outline-offset-2">
-        <h2 className="text-3xl font-extrabold text-center text-[#5E9ED9] mb-4">Settings</h2>
+        <h2 className="text-3xl font-extrabold text-center text-[#5E9ED9] mb-4">Student Settings</h2>
+
 
         {/* First Name and Last Name on the same line */}
         <div className="flex space-x-4">
