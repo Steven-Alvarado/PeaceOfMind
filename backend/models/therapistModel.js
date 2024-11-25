@@ -95,16 +95,10 @@ const getTherapistByUserId = async (userId) => {
 
 
 module.exports = {
-<<<<<<< HEAD
     createTherapist,
     findTherapistById,
     getAvailableTherapists,
     isLicenseVerified,
     getTherapistByUserId
-=======
-  createTherapist,
-  findTherapistById,
-  getAvailableTherapists,
-  isLicenseVerified,
->>>>>>> 5fda040f2d42062d25d6644e2e995202ed1ae51f
+
 };
