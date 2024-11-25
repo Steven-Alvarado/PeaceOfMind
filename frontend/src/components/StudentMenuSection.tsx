@@ -4,8 +4,14 @@ import { FaQuestionCircle } from "react-icons/fa";
 import HelpModal from "./StudentHelpModal";
 import JournalingModal from "./JournalingModal";
 import TherapistModal from "./TherapistModal";
+import {User} from "../context/AuthContext";
 
-const StudentMenuSection: React.FC<{ onSurveyClick: () => void }> = ({ onSurveyClick }) => {
+interface StudentMenuSectionProps {
+    user: User;
+    onSurveyClick: () => void; // Ensure other props are also typed
+};
+  
+const StudentMenuSection: React.FC<StudentMenuSectionProps> = ({ user, onSurveyClick }) => {
     const [isHelpOpen, setIsHelpOpen] = useState(false);
     const [isJournalOpen, setIsJournalOpen] = useState(false);
     const [isTherListOpen, setIsTherListOpen] = useState(false);
