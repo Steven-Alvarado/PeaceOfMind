@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const {
     createTherapist,
+    getTherapistByUserId,
     findTherapistById,
     getAvailableTherapists,
     isLicenseVerified
@@ -95,4 +96,25 @@ const listAvailableTherapists = async (req, res) => {
     }
 };
 
-module.exports = { registerTherapist, getTherapistDetails, listAvailableTherapists };
+// Get therapist details by user ID
+const getTherapistDetailsByUserId = async (req, res) => {
+    const userId = parseInt(req.params.id, 10); // Use req.params.id instead of userId
+
+    if (isNaN(userId)) {
+        return res.status(400).json({ error: "Invalid user ID" });
+    }
+
+    try {
+        const therapist = await getTherapistByUserId(userId);
+        if (!therapist) {
+            return res.status(404).json({ error: "Therapist not found" });
+        }
+        res.json({ message: "Therapist details retrieved successfully", therapist });
+    } catch (error) {
+        console.error("Error retrieving therapist details:", error);
+        res.status(500).json({ error: "Failed to fetch therapist details", message: error.message });
+    }
+};
+
+
+module.exports = { registerTherapist,getTherapistDetailsByUserId, getTherapistDetails, listAvailableTherapists };
