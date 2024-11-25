@@ -1,7 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaBars, FaTimes, FaHome } from "react-icons/fa";
 import { IoIosNotifications, IoMdSettings } from "react-icons/io";
+
 import Logo from "../../assets/images/logobetter.png";
+
+
+
 
 const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
   const [firstName, setFirstName] = useState('');
@@ -11,24 +15,66 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [monthlyRate, setMonthlyRate] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  
+  const user = { id: 1 };  // Replace with actual user data (useAuth hook or props)
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (isOpen && user?.id) {
+      fetchTherapistDetails();
+    }
+  }, [isOpen, user?.id]);
 
-  const handleDeleteAccount = () => {
-    // Logic to delete account
-    console.log('Account deleted');
+  const fetchTherapistDetails = async () => {
+    if (!user?.id) {
+      setErrorMessage("User ID is not available.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/therapists/user/${user.id}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+      console.log("API Response:", data);
+
+      if (response.ok) {
+        // Populate form fields with the fetched data
+        setFirstName(data.therapist.first_name || '');
+        setLastName(data.therapist.last_name || '');
+        setEmail(data.therapist.email || '');
+        setExperienceYears(data.therapist.experience_years ? data.therapist.experience_years.toString() : '');
+        setMonthlyRate(data.therapist.monthly_rate || '');
+      } else {
+        setErrorMessage(data.message || "Failed to fetch therapist details.");
+      }
+    } catch (error) {
+      console.error("Error fetching therapist details:", error);
+      setErrorMessage(error.message || "Error fetching therapist details.");
+    }
   };
 
   const handleUpdate = () => {
-    // Logic to update user details
-    console.log('User details updated');
+    // Logic to update therapist details (you can implement a PUT request here if needed)
+    console.log("Therapist details updated");
   };
+
+  const handleDeleteAccount = () => {
+    // Logic to delete account
+    console.log("Account deleted");
+  };
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-lg outline outline-white outline-2 outline-offset-2">
-        <h2 className="text-3xl font-extrabold text-center text-[#5E9ED9] mb-4">Student Settings</h2>
-
+        <h2 className="text-3xl font-extrabold text-center text-[#5E9ED9] mb-4">Therapist Settings</h2>
 
         {/* First Name and Last Name on the same line */}
         <div className="flex space-x-4">
@@ -79,8 +125,8 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
               value={experienceYears}
               onChange={(e) => setExperienceYears(e.target.value)}
               placeholder="Enter years of experience"
-          />
-        </div>
+            />
+          </div>
         </div>
 
         {/* New Password and Confirm Password */}
@@ -111,17 +157,17 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
 
         {/* Monthly Rate */}
         <div className="mt-4">
-        <label htmlFor="monthlyRate" className="block text-gray-700 font-bold mb-2">Monthly Rate</label>
-        <input
-          id="monthlyRate"
-          type="number"
-          min="0" // Prevent negative values
-          className="w-full p-2 border border-gray-300 rounded text-black"
-          value={monthlyRate}
-          onChange={(e) => setMonthlyRate(e.target.value)}
-          placeholder="Enter your monthly rate"
-        />
-          </div>
+          <label htmlFor="monthlyRate" className="block text-gray-700 font-bold mb-2">Monthly Rate</label>
+          <input
+            id="monthlyRate"
+            type="number"
+            min="0" // Prevent negative values
+            className="w-full p-2 border border-gray-300 rounded text-black"
+            value={monthlyRate}
+            onChange={(e) => setMonthlyRate(e.target.value)}
+            placeholder="Enter your monthly rate"
+          />
+        </div>
 
         {/* Update, Delete Account, and Close buttons in the same row */}
         <div className="mt-6 flex justify-between">
@@ -146,11 +192,13 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
             Close
           </button>
         </div>
+
+        {/* Error Message */}
+        {errorMessage && <p className="text-red-500 mt-4">{errorMessage}</p>}
       </div>
     </div>
   );
 };
-
 
 const HeaderTherapistDashboard = () => {
   const [isOpen, setIsOpen] = useState(false);
