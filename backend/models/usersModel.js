@@ -8,7 +8,21 @@ const getAllUsers = async () => {
 
 // Retrieve a specific user by ID
 const getUserById = async (id) => {
-  const result = await pool.query(`SELECT * FROM users WHERE id = $1`, [id]);
+  const result = await pool.query(
+    `SELECT 
+        u.id, 
+        u.first_name, 
+        u.last_name, 
+        u.gender, 
+        u.role, 
+        u.created_at, 
+        u.updated_at, 
+        a.email 
+     FROM users u
+     LEFT JOIN auth a ON u.id = a.user_id
+     WHERE u.id = $1`,
+    [id]
+  );
   return result.rows[0];
 };
 

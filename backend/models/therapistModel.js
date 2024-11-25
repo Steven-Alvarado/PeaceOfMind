@@ -70,9 +70,36 @@ const isLicenseVerified = async (licenseNumber) => {
   }
 };
 
+// Retrieve a therapist's details by user ID
+const getTherapistByUserId = async (userId) => {
+    try {
+        const query = `
+            SELECT u.first_name, u.last_name, a.email, t.experience_years, t.monthly_rate
+            FROM therapists t
+            INNER JOIN users u ON t.user_id = u.id
+            INNER JOIN auth a ON u.id = a.user_id
+            WHERE t.user_id = $1;
+        `;
+        const result = await pool.query(query, [userId]);
+
+        if (result.rows.length === 0) {
+            throw new Error("Therapist not found for this user ID");
+        }
+
+        return result.rows[0]; // Return the therapist's details
+    } catch (error) {
+        console.error("Error retrieving therapist details:", error);
+        throw error; // Rethrow error to be handled in the controller
+    }
+};
+
+
 module.exports = {
-  createTherapist,
-  findTherapistById,
-  getAvailableTherapists,
-  isLicenseVerified,
+
+    createTherapist,
+    findTherapistById,
+    getAvailableTherapists,
+    isLicenseVerified,
+    getTherapistByUserId
+
 };
