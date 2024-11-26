@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Lottie from "lottie-react";
-import StudentDashboardAnimation from "../assets/lotties/StudentDashboardAnimation.json";
+import StudentDashboardAnimation from "../../assets/lotties/StudentDashboardAnimation.json";
 import {
   FaChevronDown,
   FaUser,
@@ -12,7 +12,7 @@ import {
 import axios from "axios";
 
 
-import { User } from "../context/AuthContext"; // Ensure you import the correct User type
+import { User } from "../../context/AuthContext"; // Ensure you import the correct User type
 
 interface TherapistSectionProps {
   user: User; // Define that user prop is of type User

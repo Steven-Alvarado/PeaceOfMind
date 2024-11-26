@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
-import HeaderStudentDashboard from "../components/HeaderStudentDashboard";
+import HeaderStudentDashboard from "../components/StudentDashboard/HeaderStudentDashboard";
 import Footer from "../components/Footer";
-import StudentMenuSection from "../components/StudentMenuSection";
-import TherapistSection from "../components/TherapistSection";
-import WeeklySurvey from "../components/WeeklySurvey";
+import StudentMenuSection from "../components/StudentDashboard/StudentMenuSection";
+import TherapistSection from "../components/StudentDashboard/TherapistSection";
+import WeeklySurvey from "../components/StudentDashboard/WeeklySurvey";
 
 const StudentDashboard: React.FC = () => {
   const { user, fetchUser } = useAuth();
