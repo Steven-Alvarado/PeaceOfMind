@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { User } from "../context/AuthContext"; // Use the User type from AuthContext
+import { User } from "../../context/AuthContext"; // Use the User type from AuthContext
 
 type QuestionType = {
   id: number;

@@ -4,7 +4,7 @@ import { FaQuestionCircle } from "react-icons/fa";
 import HelpModal from "./StudentHelpModal";
 import JournalingModal from "./JournalingModal";
 import TherapistModal from "./TherapistModal";
-import {User} from "../context/AuthContext";
+import {User} from "../../context/AuthContext";
 
 interface StudentMenuSectionProps {
     user: User;

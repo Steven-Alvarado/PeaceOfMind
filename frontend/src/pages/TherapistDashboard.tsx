@@ -1,12 +1,12 @@
 import React, { useState } from "react";
-import HeaderTherapistDashboard from "../components/HeaderTherapistDashboard";
+import HeaderTherapistDashboard from "../components/TherapistDashboard/HeaderTherapistDashboard";
 import Footer from "../components/Footer";
-import PatientSection from "../components/PatientSection";
+import PatientSection from "../components/TherapistDashboard/PatientSection";
 import Lottie from "lottie-react";
 import TherapistDashboardAnimation from "../assets/lotties/TherapistDashboardAnimation.json";
 import Switch from "@mui/material/Switch";
 import { useAuth } from "../hooks/useAuth";
-import TherapistHelpModal from "../components/TherapistHelpModal"; // Import your existing TherapistHelpModal component
+import TherapistHelpModal from "../components/TherapistDashboard/TherapistHelpModal"; // Import your existing TherapistHelpModal component
 import {
   FaUserPlus,
   FaTasks,
