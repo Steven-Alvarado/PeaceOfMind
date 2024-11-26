@@ -14,7 +14,8 @@ const messagesRoutes = require("./messages");
 const surveyRoutes = require("./survey");
 const journalRoutes = require("./journal");
 const documentRoutes = require("./documents");
-const relationshipRoutes = require("./relationships")
+const relationshipRoutes = require("./relationships");
+const invoiceRoutes = require("./invoices");
 
 // Mount routes on `/api`
 router.use("/users", userRoutes);
@@ -27,7 +28,7 @@ router.use("/messages", messagesRoutes);
 router.use("/surveys", surveyRoutes);
 router.use("/journals", journalRoutes);
 router.use("/documents", documentRoutes);
-router.use("/relationships", relationshipRoutes)
-
+router.use("/relationships", relationshipRoutes);
+router.use("/invoices", invoiceRoutes);
 
 module.exports = router;

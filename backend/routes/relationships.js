@@ -1,15 +1,22 @@
 const express = require("express");
+const router = express.Router();
 const {
-  getTherapistsForStudent,
-  getStudentsForTherapist
+  assignTherapist,
+  getRelationshipByStudentId,
+  getAllStudentTherapistRelationships,
+  getTherapistRelationships,
+  requestTherapistSwitchHandler,
+  approveTherapistSwitchHandler,
+  endRelationshipHandler,
 } = require("../controllers/relationshipController");
 
-const router = express.Router();
 
-// Route to get all therapists assigned to a specific student
-router.get("/students/:id/listTherapists", getTherapistsForStudent);
-
-// Route to get all students assigned to a specific therapist
-router.get("/therapists/:id/listStudents", getStudentsForTherapist);
+router.get("/", getAllStudentTherapistRelationships);// Get all relationships
+router.get("/:studentId", getRelationshipByStudentId);// Get relationship by student ID
+router.post("/", assignTherapist); // Assign a therapist to a student
+router.put("/:studentId/request-switch", requestTherapistSwitchHandler);//Request a therapist switch
+router.put("/:studentId/approve-switch", approveTherapistSwitchHandler); //Approve a therapist switch
+router.get("/therapist/:therapistId", getTherapistRelationships);// Get relationships by therapist ID
+router.delete("/:studentId", endRelationshipHandler); //End a student-therapist relationship
 
 module.exports = router;
