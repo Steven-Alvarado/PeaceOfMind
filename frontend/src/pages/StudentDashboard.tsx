@@ -31,7 +31,7 @@ const StudentDashboard: React.FC = () => {
   if (!user) {
     return <div>Error: Unable to load user data</div>;
   }
-  console.log("User:", user); // Debugging line
+
   return (
     <div className="student-dashboard flex flex-col min-h-screen">
       <HeaderStudentDashboard />
