@@ -118,42 +118,6 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
     }
   };
 
-  const handleDelete = async () => {
-    if (!activeEntry) {
-      setErrorMessage("No journal entry selected to delete.");
-      return;
-    }
-  
-    const confirmDelete = window.confirm("Are you sure you want to delete this entry?");
-    if (!confirmDelete) return;
-  
-    try {
-      // Make the DELETE request
-      await axios.delete(`/api/journals/delete/${activeEntry.id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("jwt")}`,
-        },
-      });
-  
-      // Update state: Remove deleted entry
-      const updatedEntries = entries.filter((entry) => entry.id !== activeEntry.id);
-      setEntries(updatedEntries);
-  
-      // Set new active entry or clear the active entry
-      if (updatedEntries.length > 0) {
-        setActiveEntry(updatedEntries[updatedEntries.length - 1]);
-      } else {
-        setActiveEntry(null);
-      }
-  
-      setSuccessMessage("Journal entry deleted successfully.");
-      setErrorMessage("");
-    } catch (error: any) {
-      console.error("Error deleting journal entry:", error.message);
-      setErrorMessage(error.response?.data?.error || "Failed to delete journal entry.");
-    }
-  };
-
   const createJournalEntry = async () => {
     try {
       const response = await axios.post(
