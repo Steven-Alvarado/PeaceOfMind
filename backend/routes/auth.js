@@ -10,3 +10,4 @@ router.post('/logout', authenticateToken, logout); // Log out the current user
 router.get('/me', authenticateToken, getProfile); // Fetch the current user’s profile
 
 module.exports = router;
+module.exports = router;
