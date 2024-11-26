@@ -1,0 +1,235 @@
+openapi: 3.0.0
+info:
+  title: API Documentation
+  version: 1.0.0
+  description: Comprehensive documentation for all API endpoints.
+
+servers:
+  - url: http://localhost:5000/api
+    description: Local development server
+
+tags:
+  - name: Relationships
+    description: Endpoints for managing student-therapist relationships
+
+paths:
+  /relationships:
+    get:
+      tags:
+        - Relationships
+      summary: Get all relationships
+      description: Retrieve all student-therapist relationships.
+      responses:
+        200:
+          description: A list of all relationships
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Relationship'
+        500:
+          description: Internal server error
+
+    post:
+      tags:
+        - Relationships
+      summary: Assign a therapist to a student
+      description: Create a new student-therapist relationship or update an existing one.
+      requestBody:
+        description: Student and therapist information
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                studentId:
+                  type: integer
+                  example: 1
+                therapistId:
+                  type: integer
+                  example: 2
+      responses:
+        201:
+          description: Relationship created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Relationship'
+        409:
+          description: Relationship already exists
+        500:
+          description: Internal server error
+
+  /relationships/{studentId}:
+    get:
+      tags:
+        - Relationships
+      summary: Get relationship by student ID
+      description: Retrieve a relationship for a specific student.
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          description: The ID of the student
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Relationship found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Relationship'
+        404:
+          description: Relationship not found
+        500:
+          description: Internal server error
+
+    delete:
+      tags:
+        - Relationships
+      summary: End a student-therapist relationship
+      description: Remove the current therapist for a student.
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          description: The ID of the student
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Relationship ended successfully
+        500:
+          description: Internal server error
+
+  /relationships/{studentId}/request-switch:
+    put:
+      tags:
+        - Relationships
+      summary: Request a therapist switch
+      description: Request to switch to a new therapist for a student.
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          description: The ID of the student
+          schema:
+            type: integer
+      requestBody:
+        description: New therapist details
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                requestedTherapistId:
+                  type: integer
+                  example: 3
+      responses:
+        200:
+          description: Therapist switch requested
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Relationship'
+        404:
+          description: Relationship not found
+        500:
+          description: Internal server error
+
+  /relationships/{studentId}/approve-switch:
+    put:
+      tags:
+        - Relationships
+      summary: Approve a therapist switch
+      description: Approve the requested therapist switch for a student.
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          description: The ID of the student
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Therapist switch approved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Relationship'
+        404:
+          description: No pending therapist switch found
+        500:
+          description: Internal server error
+
+  /relationships/therapist/{therapistId}:
+    get:
+      tags:
+        - Relationships
+      summary: Get relationships by therapist ID
+      description: Retrieve all relationships for a specific therapist.
+      parameters:
+        - name: therapistId
+          in: path
+          required: true
+          description: The ID of the therapist
+          schema:
+            type: integer
+      responses:
+        200:
+          description: List of relationships for the therapist
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Relationship'
+        500:
+          description: Internal server error
+
+components:
+  schemas:
+    Relationship:
+      type: object
+      properties:
+        student_id:
+          type: integer
+          example: 1
+        current_therapist_id:
+          type: integer
+          example: 2
+        requested_therapist_id:
+          type: integer
+          nullable: true
+          example: 3
+        status:
+          type: string
+          example: active
+        updated_at:
+          type: string
+          format: date-time
+          example: "2024-11-25T12:34:56Z"
+        student_first_name:
+          type: string
+          example: John
+        student_last_name:
+          type: string
+          example: Doe
+        current_therapist_first_name:
+          type: string
+          example: Alice
+        current_therapist_last_name:
+          type: string
+          example: Smith
+        requested_therapist_first_name:
+          type: string
+          nullable: true
+          example: Bob
+        requested_therapist_last_name:
+          type: string
+          nullable: true
+          example: Johnson
