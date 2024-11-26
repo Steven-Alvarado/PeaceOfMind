@@ -16,13 +16,20 @@ interface JournalingModalProps {
 
 const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) => {
   const { user } = useAuth();
+
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [activeEntry, setActiveEntry] = useState<JournalEntry | null>(null);
   const [newEntry, setNewEntry] = useState(false);
+
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+
   const [currentPage, setCurrentPage] = useState(1);
   const entriesPerPage = 9;
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterBy, setFilterBy] = useState("date");
+  const [filteredEntries, setFilteredEntries] = useState<JournalEntry[]>(entries);  
 
   const totalPages = Math.ceil(entries.length / entriesPerPage);
 
@@ -32,14 +39,34 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
     }
   }, [isOpen, user?.id]);
 
+  useEffect(() => {
+    if (searchQuery.trim() === "") {
+      setFilteredEntries(entries);
+      return;
+    }
+  
+    const query = searchQuery.toLowerCase();
+  
+    const filtered = entries.filter((entry) => {
+      if (filterBy === "date") {
+        const entryDate = new Date(entry.date).toLocaleDateString().toLowerCase();
+        return entryDate.includes(query);
+      }
+      if (filterBy === "entry") {
+        return entry.entryNumber.toString().includes(query);
+      }
+      return false;
+    });
+  
+    setFilteredEntries(filtered);
+  }, [searchQuery, filterBy, entries]);
+
   const fetchJournals = async () => {
     if (!user?.id) {
       setErrorMessage("User ID is not available.");
       return;
     }
-
-    console.log('this is the userid: ', user.id);
-
+  
     try {
       const response = await axios.get(`/api/journals/user/${user.id}`, {
         headers: {
@@ -47,21 +74,24 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
         },
       });
 
-      const fetchedJournals = response.data.journals.map((journal: any) => ({
-        id: journal.id,
-        mood: journal.mood,
-        content: journal.document_content?.entry || "",
-        date: journal.created_at,
-      }));
-
+      const fetchedJournals = response.data.journals
+        .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .map((journal: any, index: number, arr: any[]) => ({
+          id: journal.id,
+          mood: journal.mood,
+          content: journal.document_content?.entry || "",
+          date: journal.created_at,
+          entryNumber: arr.length - index,
+        }));
+  
       if (fetchedJournals.length === 0) {
         setErrorMessage("No journal entries found. Create your first entry!");
       } else {
         setErrorMessage("");
       }
-
+  
       setEntries(fetchedJournals);
-      setActiveEntry(fetchedJournals[fetchedJournals.length - 1] || null);
+      setActiveEntry(fetchedJournals[0] || null);
     } catch (error: any) {
       console.error("Error fetching journals:", error.message);
       setErrorMessage(error.response?.data?.error || "Failed to fetch journal entries.");
@@ -73,11 +103,13 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
       setErrorMessage("Entry content cannot be blank.");
       return;
     }
-
+  
     try {
       if (newEntry) {
+        console.log("Saving a new entry:", activeEntry);
         await createJournalEntry();
       } else {
+        console.log("Updating an existing entry:", activeEntry);
         await updateJournalEntry();
       }
     } catch (error: any) {
@@ -86,6 +118,41 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
     }
   };
 
+  const createJournalEntry = async () => {
+    try {
+      const response = await axios.post(
+        `/api/journals`,
+        {
+          userId: user?.id,
+          mood: activeEntry?.mood || "Neutral",
+          content: { entry: activeEntry?.content || "" },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+          },
+        }
+      );
+  
+      const newJournal = {
+        id: response.data.journal.id,
+        mood: response.data.journal.mood,
+        content: activeEntry?.content || "",
+        date: response.data.journal.created_at,
+        entryNumber: entries.length > 0 ? entries[0].entryNumber + 1 : 1,
+      };
+  
+      setEntries([newJournal, ...entries]);
+      setActiveEntry(newJournal);
+      setNewEntry(false);
+      setSuccessMessage("New entry created successfully.");
+      setErrorMessage("");
+    } catch (error) {
+      console.error("Error creating journal entry:", error);
+      setErrorMessage("Failed to create a new journal entry.");
+    }
+  };
+  
   const handleDelete = async () => {
     if (!activeEntry) {
       setErrorMessage("No journal entry selected to delete.");
@@ -96,23 +163,16 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
     if (!confirmDelete) return;
   
     try {
-      // Make the DELETE request
       await axios.delete(`/api/journals/delete/${activeEntry.id}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("jwt")}`,
         },
       });
   
-      // Update state: Remove deleted entry
       const updatedEntries = entries.filter((entry) => entry.id !== activeEntry.id);
       setEntries(updatedEntries);
   
-      // Set new active entry or clear the active entry
-      if (updatedEntries.length > 0) {
-        setActiveEntry(updatedEntries[updatedEntries.length - 1]);
-      } else {
-        setActiveEntry(null);
-      }
+      setActiveEntry(updatedEntries.length > 0 ? updatedEntries[0] : null);
   
       setSuccessMessage("Journal entry deleted successfully.");
       setErrorMessage("");
@@ -122,73 +182,54 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
     }
   };
 
-  const createJournalEntry = async () => {
-    const response = await axios.post(
-      `/api/journals`,
-      {
-        userId: user?.id,
-        mood: activeEntry?.mood || "Neutral",
-        content: { entry: activeEntry?.content },
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("jwt")}`,
-        },
-      }
-    );
-
-    const newJournal = {
-      id: response.data.journal.id,
-      mood: response.data.journal.mood,
-      content: response.data.journal.document_content?.entry || "",
-      date: response.data.journal.created_at,
-    };
-
-    setEntries((prev) => [...prev, newJournal]);
-    setActiveEntry(newJournal);
-    setNewEntry(false);
-    setSuccessMessage("New entry created successfully.");
-    setErrorMessage("");
-  };
-
   const updateJournalEntry = async () => {
-    const response = await axios.put(
-      `/api/journals/${activeEntry?.id}`,
-      {
-        mood: activeEntry?.mood,
-        content: { entry: activeEntry?.content },
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+    try {
+      const response = await axios.put(
+        `/api/journals/${activeEntry?.id}`,
+        {
+          mood: activeEntry?.mood,
+          content: { entry: activeEntry?.content },
         },
-      }
-    );
-
-    const updatedJournal = {
-      id: response.data.journal.id,
-      mood: response.data.journal.mood,
-      content: activeEntry?.content || "",
-      date: response.data.journal.updated_at,
-    };
-
-    setEntries((prev) =>
-      prev.map((entry) => (entry.id === updatedJournal.id ? updatedJournal : entry))
-    );
-    setActiveEntry(updatedJournal);
-    setSuccessMessage("Entry updated successfully.");
-    setErrorMessage("");
-  };
-
-  const getCurrentPageEntries = () => {
-    const startIndex = (currentPage - 1) * entriesPerPage;
-    const endIndex = startIndex + entriesPerPage;
-    return entries.slice(startIndex, endIndex);
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+          },
+        }
+      );
+  
+      const updatedJournal = {
+        id: response.data.journal.id,
+        mood: response.data.journal.mood,
+        content: activeEntry?.content || "",
+        date: response.data.journal.updated_at,
+        entryNumber: activeEntry.entryNumber,
+      };
+  
+      setEntries((prev) =>
+        prev.map((entry) => (entry.id === updatedJournal.id ? updatedJournal : entry))
+      );
+      setActiveEntry(updatedJournal);
+      setSuccessMessage("Entry updated successfully.");
+      setErrorMessage("");
+    } catch (error: any) {
+      console.error("Error updating journal entry:", error.message);
+      setErrorMessage(error.response?.data?.error || "Failed to update journal entry.");
+    }
   };
 
   const handleNewEntry = () => {
-    setActiveEntry({ id: 0, mood: "Neutral", content: "", date: new Date().toISOString() });
+    const newEntryData = {
+      id: 0,
+      mood: "Neutral",
+      content: "",
+      date: new Date().toISOString(),
+    };
+    setActiveEntry(newEntryData);
     setNewEntry(true);
+    setErrorMessage("");
+    setSuccessMessage("");
+  
+    console.log("New entry initialized:", newEntryData);
   };
 
   const handleNextPage = () => {
@@ -204,65 +245,92 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
       <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
         <div className="bg-white rounded-lg shadow-lg w-4/5 h-4/5 max-w-6xl max-h-[90vh]">
           <div className="flex h-full">
-            {/* Left Panel: Entry List */}
             <div className="w-1/4 bg-blue-100 p-4 rounded-l-lg flex flex-col">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-bold mt-2 text-[#5E9ED9]">Journal Entries</h2>
+              <h2 className="text-lg font-bold mt-2 text-[#5E9ED9]">Journal Entries</h2>
+              <div className="mb-4 mt-2 flex space-x-1">
+                <select
+                  value={filterBy}
+                  onChange={(e) => setFilterBy(e.target.value)}
+                  className="p-2 border border-[#5E9ED9] rounded"
+                >
+                  <option value="date">Date</option>
+                  <option value="entry">Entry</option>
+                </select>
+                <input
+                  type="text"
+                  placeholder={`${filterBy === "date" ? "Date (MM/DD/YYYY)" : "Entry number"}`}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className=" w-44 p-2 border border-[#5E9ED9] rounded"
+                />
               </div>
               {entries.length === 0 ? (
                 <p className="text-center text-gray-500 flex-grow">No journal entries available.</p>
               ) : (
                 <ul className="flex-grow overflow-y-auto space-y-2">
-                  {getCurrentPageEntries().map((entry) => (
-                    <li
-                      key={entry.id}
-                      className={`p-2 rounded cursor-pointer ${
-                        activeEntry?.id === entry.id ? "bg-blue-300" : "hover:bg-blue-200"
-                      }`}
-                      onClick={() => {
-                        setActiveEntry(entry);
-                        setNewEntry(false);
-                      }}
-                    >
-                      <p className="font-bold">{new Date(entry.date).toLocaleDateString()}</p>
-                      <p className="text-sm text-gray-600">
-                        {new Date(entry.date).toLocaleTimeString()}
-                      </p>
-                    </li>
-                  ))}
+                  {filteredEntries
+                    .slice((currentPage - 1) * entriesPerPage, currentPage * entriesPerPage)
+                    .map((entry) => (
+                      <li
+                        key={entry.id}
+                        className={`p-2 rounded cursor-pointer text-black border shadow-lg border-[#5E9ED9]
+                        ${activeEntry?.id === entry.id ? "bg-[#5E9ED9]" : "hover:bg-[#90bce5]"}`}
+                        onClick={() => {
+                          setActiveEntry(entry);
+                          setNewEntry(false);
+                        }}
+                      >
+                        <div>
+                          <div className="flex justify-between">
+                            <p>
+                              <strong>Journal Entry {entry.entryNumber}</strong>
+                            </p>
+                            <p>{new Date(entry.date).toLocaleDateString()}</p>
+                          </div>
+                          <div className="flex justify-between">
+                            <p>
+                              <strong>{entry.mood}</strong>
+                            </p>
+                            <p>{new Date(entry.date).toLocaleTimeString()}</p>
+                          </div>
+                        </div>
+                      </li>
+                    ))}
                 </ul>
               )}
-              <div className="flex mb-2 flex-col space-y-2">
-                <div className="flex justify-between">
+              <div className="flex mb-2 mt-2 flex-col space-y-2">
+                <div className="flex justify-between space-x-2">
                   <button
-                    className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                    className="px-4 py-2 bg-white shadow-lg rounded hover:bg-gray-100"
                     onClick={handlePreviousPage}
                     disabled={currentPage === 1}
                   >
-                    Previous
+                    ←
                   </button>
                   <button
-                    className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                    className=" px-4 py-2 shadow-lg bg-[#5E9ED9] text-white rounded hover:bg-[#4a7caa]"
+                    onClick={handleNewEntry}
+                  >
+                    + New Entry
+                  </button>
+                  <button
+                    className="px-4 py-2 bg-white shadow-lg rounded hover:bg-gray-100"
                     onClick={handleNextPage}
                     disabled={currentPage === totalPages}
                   >
-                    Next
+                    →
                   </button>
+              
                 </div>
-                <button
-                  className="mt-2 w-full bg-[#5E9ED9] text-white py-2 rounded hover:bg-[#4a7caa]"
-                  onClick={handleNewEntry}
-                >
-                  + New Entry
-                </button>
               </div>
             </div>
   
-            {/* Right Panel: Entry Editor */}
             <div className="w-3/4 p-6 flex flex-col">
               <div className="flex justify-between items-center">
                 <h2 className="text-lg font-bold text-[#5E9ED9]">
-                  {newEntry ? "New Journal Entry" : `Journal Entry ${activeEntry?.id}`}
+                  {newEntry
+                    ? "New Journal Entry"
+                    : `Journal Entry ${activeEntry?.entryNumber}`}
                 </h2>
                 <button
                   className="bg-red-500 text-white px-2 rounded hover:bg-red-600"
@@ -274,9 +342,9 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
               {activeEntry && (
                 <div className=" mb-4">
                   <p className="text-sm text-gray-500 mb-4">
-                    Created on: {new Date(activeEntry.date).toLocaleString()}
+                    {new Date(activeEntry.date).toLocaleString()}
                   </p>
-                  <div className="flex space-x-7 bg-[#5E9ED9] rounded-lg p-2 w-80">
+                  <div className="flex space-x-7 bg-[#5E9ED9] rounded-lg p-2 w-80 shadow-lg">
                     <p className="text-white">How are you feeling today? </p>
                     <select
                       value={activeEntry.mood}
@@ -286,14 +354,16 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
                       className=" border border-blue-100 bg-[#5E9ED9] text-white rounded"
                     >
                       <option value="Happy">Happy</option>
+                      <option value="Anxious">Anxious</option>
                       <option value="Neutral">Neutral</option>
+                      <option value="Angry">Angry</option>
                       <option value="Sad">Sad</option>
                     </select>
                   </div>
                 </div>
               )}
               <textarea
-                className="flex-grow border-[#5E9ED9] border-2 rounded p-2"
+                className="flex-grow shadow-lg border-[#5E9ED9] border-2 rounded p-2"
                 value={activeEntry?.content || ""}
                 onChange={(e) =>
                   setActiveEntry((prev) => ({ ...prev!, content: e.target.value }))
@@ -306,13 +376,13 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
                 </div>
                 <div className="space-x-4">
                   <button
-                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                    className="bg-red-500 shadow-lg text-white px-4 py-2 rounded hover:bg-red-600"
                     onClick={handleDelete}
                   >
                     Delete
                   </button>
                   <button
-                    className="bg-[#5E9ED9] text-white px-4 py-2 rounded hover:bg-[#4879a7]"
+                    className="bg-[#5E9ED9] shadow-lg text-white px-4 py-2 rounded hover:bg-[#4879a7]"
                     onClick={handleSave}
                   >
                     Save
