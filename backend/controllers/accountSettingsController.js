@@ -1,4 +1,5 @@
-const { updateUserAccountSettings } = require('../models/accountSettingsModel');
+const bcrypt = require('bcrypt');
+const { updateUserAccountSettings, updateTherapistAccountSettings  } = require('../models/accountSettingsModel');
 
 const updateUser = async (req, res) => {
   const { userid } = req.params;
@@ -18,4 +19,23 @@ const updateUser = async (req, res) => {
   }
 };
 
-module.exports = { updateUser };
+
+const updateTherapist = async (req, res) => {
+  const { userid } = req.params;
+  const { first_name, last_name, email, password, experience_years, monthly_rate } = req.body;
+
+  try {
+    const updatedTherapist = await updateTherapistAccountSettings(userid, first_name, last_name, email, password, experience_years, monthly_rate);
+
+    if (!updatedTherapist) {
+      return res.status(404).json({ error: 'Therapist not found' });
+    }
+
+    res.status(200).json({ message: 'Therapist updated successfully', therapist: updatedTherapist });
+  } catch (error) {
+    console.error('Error updating therapist:', error);
+    res.status(500).json({ error: 'An error occurred while updating the therapist' });
+  }
+};
+ 
+module.exports = { updateUser, updateTherapist};

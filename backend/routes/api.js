@@ -33,17 +33,12 @@ router.use("/messages", messagesRoutes);
 router.use("/surveys", surveyRoutes);
 router.use("/journals", journalRoutes);
 router.use("/documents", documentRoutes);
-<<<<<<< HEAD
-
 router.use("/relationships", relationshipRoutes);
 router.use("/invoices", invoiceRoutes);
-
-
-=======
-router.use("/relationships", relationshipRoutes);
 router.use("/accountSettings", accountSettingsRoutes );
+
+
  
->>>>>>> 19bc8c4 (endpoint for student patch account settings.)
 
 
 module.exports = router;
