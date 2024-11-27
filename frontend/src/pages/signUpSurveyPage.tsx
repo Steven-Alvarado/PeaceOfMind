@@ -83,7 +83,9 @@ const SurveySection = ({
   error: string | null;
 }) => {
   return (
-    <section className="bg-blue-100 p-6 rounded-lg shadow-md w-full max-w-3xl">
+    <section className="bg-blue-100 p-6 rounded-lg shadow-md w-full max-w-3xl"
+    style={{ scrollBehavior: "smooth" }} //Fixed so it does not start page at bottom
+    >
       <h2 className="text-3xl font-semibold text-center text-[#5E9ED9] mb-6">
         New User - Survey
       </h2>

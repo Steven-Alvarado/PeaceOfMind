@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import FooterLandingPage from "../components/Footer";
 import HeaderSignUpLoginPage from "../components/HeaderSignUpLoginPage";
 import Lottie from "lottie-react";
-import SignUpPageAnimation from "../assets/lotties/SignUpPageAnimation.json"; // Placeholder until another Lottie is found
+import ForTherapistAnimation from "../assets/lotties/ForTherapistAnimation.json";
 import { FaMale, FaFemale, FaGenderless } from 'react-icons/fa';
 import { useAuth } from "../hooks/useAuth";
 
@@ -123,7 +123,7 @@ function TherapistSignUpSection({ form, handleChange, handleGenderSelect, handle
           </ul>
         </div>
         <div className="md:w-1/2 w-3/4 max-w-sm mx-auto md:ml-8">
-          <Lottie animationData={SignUpPageAnimation} loop={true} />
+          <Lottie animationData={ForTherapistAnimation} loop={true} />
         </div>
       </div>
 
