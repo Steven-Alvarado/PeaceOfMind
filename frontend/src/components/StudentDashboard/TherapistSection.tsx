@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react"; 
 import Lottie from "lottie-react";
 import StudentDashboardAnimation from "../../assets/lotties/StudentDashboardAnimation.json";
 import {
@@ -101,7 +101,7 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
           </button>
           <button
             className="bg-[#5E9ED9] text-white px-4 py-2 rounded hover:bg-[#4a8ac9] transition"
-            onClick={() => setIsChatOpen(!isChatOpen)} // Toggle chat interface
+            onClick={() => setIsChatOpen(true)} // Open chat modal
           >
             <FaComments className="inline mr-2" /> Chat
           </button>
@@ -112,13 +112,12 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
       {isChatOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="relative bg-white rounded-lg p-6 w-full max-w-3xl shadow-lg">
-            <button
-              onClick={() => setIsChatOpen(false)}
-              className="absolute top-0 right-0 text-black text-lg p-2 m-2 hover:text-gray-900"
-            >
-              &#x2715;
-            </button>
-            <MessagingInterface userId={user.id} userRole={user.role}/>
+            
+            <MessagingInterface
+              userId={user.id}
+              userRole={user.role}
+              onClose={() => setIsChatOpen(false)}
+            />
           </div>
         </div>
       )}
