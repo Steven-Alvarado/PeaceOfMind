@@ -12,19 +12,25 @@ const MessagingInterface: React.FC<MessagingInterfaceProps> = ({ userId, userRol
     currentConversation,
     messages,
     fetchConversations,
+    fetchMessages,
     setCurrentConversation,
     sendMessage,
   } = useMessaging();
 
   const [newMessage, setNewMessage] = useState("");
 
+  // Fetch conversations on mount
   useEffect(() => {
-    if (userId && userRole) {
-      fetchConversations(userId, userRole);
-    } else {
-      console.error("userId or userRole is undefined");
+    fetchConversations(userId, userRole);
+  }, [userId, userRole]);
+
+  // Fetch messages when a conversation is selected
+  useEffect(() => {
+    if (currentConversation?.id) {
+      console.log("Fetching messages for conversation:", currentConversation.id);
+      fetchMessages(currentConversation.id);
     }
-  }, [userId, userRole, fetchConversations]);
+  }, [currentConversation]);
 
   const handleSendMessage = () => {
     if (newMessage.trim() && currentConversation) {
@@ -32,22 +38,25 @@ const MessagingInterface: React.FC<MessagingInterfaceProps> = ({ userId, userRol
         userRole === "student"
           ? currentConversation.therapist_id
           : currentConversation.student_id;
-
-      sendMessage({
+  
+      const payload = {
         conversationId: currentConversation.id,
         senderId: userId,
         receiverId,
         messageContent: newMessage,
-      });
-      setNewMessage("");
+      };
+  
+      console.log("Sending message payload:", payload);
+  
+      sendMessage(payload); // Call the sendMessage function
+      setNewMessage(""); // Clear the input field
     }
   };
-
   return (
     <div className="messaging-interface">
+      {/* List of Conversations */}
       <div className="conversations">
-        <h3>Conversations</h3>
-        {conversations?.length > 0 ? (
+        {Array.isArray(conversations) && conversations.length > 0 ? (
           conversations.map((conversation) => (
             <div
               key={conversation.id}
@@ -56,29 +65,43 @@ const MessagingInterface: React.FC<MessagingInterfaceProps> = ({ userId, userRol
                 currentConversation?.id === conversation.id ? "active" : ""
               }`}
             >
-              {userRole === "student"
-                ? `Therapist ID: ${conversation.therapist_id}`
-                : `Student ID: ${conversation.student_id}`}
+              {userRole === "student" ? (
+                <>
+                  {conversation.therapist_first_name} {conversation.therapist_last_name} <br />
+                  <small>{conversation.specialization}</small>
+                </>
+              ) : (
+                <>
+                  Student ID: {conversation.student_id}
+                </>
+              )}
             </div>
           ))
         ) : (
-          <p>No conversations available</p>
+          <div>No conversations available.</div>
         )}
       </div>
 
+      {/* Messages for Selected Conversation */}
       {currentConversation && (
         <div className="messages">
           <div className="messages-list">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`message ${message.sender_id === userId ? "sent" : "received"}`}
-              >
-                {message.message_content}
-              </div>
-            ))}
+            {messages.length > 0 ? (
+              messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`message ${message.sender_id === userId ? "sent" : "received"}`}
+                >
+                  <p>{message.message_content}</p>
+                  <small>{new Date(message.sent_at).toLocaleString()}</small>
+                </div>
+              ))
+            ) : (
+              <p>No messages yet. Start the conversation!</p>
+            )}
           </div>
 
+          {/* Input for New Messages */}
           <div className="message-input">
             <input
               type="text"
