@@ -42,7 +42,7 @@ const StudentDashboard: React.FC = () => {
           Welcome, {user.first_name} {user.last_name}!
         </h1>
       </header>
-      <main className="flex flex-col items-center justify-center px-6 py-10 space-y-6">
+      <main className="flex flex-col-1 items-center justify-center px-6 py-10 space-y-6">
         <div className="w-full max-w-2xl">
           <TherapistSection user={user} /> {/* Pass user as a prop */}
         </div>
