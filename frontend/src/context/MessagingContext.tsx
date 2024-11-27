@@ -15,6 +15,7 @@ interface MessagingContextType {
   currentConversation: Conversation | null;
   messages: Message[];
   fetchConversations: (userId: number, role: "student" | "therapist") => void;
+  fetchMessages: (conversationId: number) => void; // Added fetchMessages here
   setCurrentConversation: (conversation: Conversation) => void;
   sendMessage: (payload: MessagePayload) => void;
   createConversation: (student_id: number, therapist_id: number) => Promise<void>;
@@ -36,28 +37,35 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [messages, setMessages] = useState<Message[]>([]);
 
   useEffect(() => {
-    if (currentConversation) {
-      fetchMessages(currentConversation.id);
-      socket.emit("joinConversation", currentConversation.id);
-    }
+    // Listen for new messages
+    socket.on("receiveMessage", (message) => {
+      if (message.conversation_id === currentConversation?.id) {
+        setMessages((prev) => [...prev, message]);
+      }
+    });
+  
+    // Clean up when the component is unmounted
+    return () => {
+      socket.off("receiveMessage");
+    };
   }, [currentConversation]);
-
   /**
    * Fetch all conversations for a user based on their role.
    * @param userId The user ID.
    * @param role The role of the user ("student" or "therapist").
    */
-  const fetchConversations = async (userId: number, role: string) => {
+  const fetchConversations = async (userId: number, role: "student" | "therapist") => {
     try {
-      const { data } = await axios.get(
+      const response = await axios.get(
         `http://localhost:5000/api/conversations/${userId}?role=${role}`
       );
-      setConversations(data.conversations);
+      console.log("Fetched conversations from API:", response.data);
+      setConversations(response.data); // Use the direct array from backend
     } catch (error) {
       console.error("Failed to fetch conversations:", error);
+      setConversations([]); // Reset conversations on failure
     }
   };
-  
 
   /**
    * Fetch all messages for a specific conversation.
@@ -65,12 +73,21 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
    */
   const fetchMessages = async (conversationId: number) => {
     try {
-      const { data } = await axios.get(`http://localhost:5000/api/messages/${conversationId}`);
-      setMessages(data.messages);
+      const { data } = await axios.get<Message[]>(`http://localhost:5000/api/messages/${conversationId}`);
+      console.log("Fetched messages:", data); // Debugging log
+      setMessages(data); // Update the messages state
     } catch (error) {
       console.error("Failed to fetch messages:", error);
+      setMessages([]); // Prevent undefined issues by setting an empty array
     }
   };
+
+  useEffect(() => {
+    if (currentConversation?.id) {
+      fetchMessages(currentConversation.id);
+      socket.emit("joinConversation", currentConversation.id);
+    }
+  }, [currentConversation]);
 
   /**
    * Send a new message using the WebSocket connection.
@@ -78,12 +95,45 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
    */
   const sendMessage = async (payload: MessagePayload) => {
     try {
-      await axios.post(`http://localhost:5000/api/messages/send`, payload);
-      socket.emit("sendMessage", payload); // Emit socket event for real-time update
+      const { conversationId, senderId, receiverId, messageContent } = payload;
+  
+      // Ensure all required fields are present
+      if (!conversationId || !senderId || !receiverId || !messageContent) {
+        console.error("Missing required fields in payload:", payload);
+        return;
+      }
+  
+      // Optimistic update
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now(), // Temporary ID for optimistic rendering
+          conversation_id: conversationId,
+          sender_id: senderId,
+          receiver_id: receiverId,
+          message_content: messageContent,
+          sent_at: new Date().toISOString(), // Timestamp
+          is_read: false, // Default read status
+        },
+      ]);
+  
+      // API request to send the message
+      await axios.post("http://localhost:5000/api/messages/send", {
+        conversation_id: conversationId,
+        sender_id: senderId,
+        receiver_id: receiverId,
+        message_content: messageContent,
+      });
+  
+      // Emit the WebSocket event for real-time updates
+      socket.emit("sendMessage", payload);
     } catch (error) {
       console.error("Failed to send message:", error);
     }
   };
+  
+  
+  
 
   /**
    * Create a new conversation between a student and a therapist.
@@ -96,7 +146,7 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         `http://localhost:5000/api/conversations/create`,
         { student_id, therapist_id }
       );
-      setConversations((prev) => [...prev, data.conversations]);
+      setConversations((prev) => [...prev, data]);
     } catch (error) {
       console.error("Failed to create conversation:", error);
     }
@@ -121,6 +171,7 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         currentConversation,
         messages,
         fetchConversations,
+        fetchMessages, 
         setCurrentConversation,
         sendMessage,
         createConversation,
