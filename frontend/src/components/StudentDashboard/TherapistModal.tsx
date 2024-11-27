@@ -53,8 +53,11 @@ const TherapistModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
     startIndex + itemsPerPage
   );
 
-  const requestStatus = () => {
-    if (relations.requested_therapist_id != null) {
+  const requestStatus = (therapistId: number) => {
+    if (
+      relations.requested_therapist_id != null &&
+      therapistId === relations.requested_therapist_id
+    ) {
       return <h1>Request Status: {relations.status}</h1>;
     } else {
       return <div></div>;
@@ -87,6 +90,14 @@ const TherapistModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
     }
   };
 
+  const checkPending = () => {
+    if (relations.status === "pending") {
+      return true;
+    } else {
+      return false;
+    }
+  };
+
   return (
     isOpen && (
       <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
@@ -113,9 +124,13 @@ const TherapistModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                   </li>
                   {relations.current_therapist_id != null ? (
                     <div className="w-80 flex flex-row items-center justify-between">
-                      {requestStatus()}
+                      {requestStatus(therapist.id)}
                       <button
-                        onClick={() => switchTherapist(user.id, therapist.id)}
+                        disabled={checkPending()}
+                        onClick={() => {
+                          switchTherapist(user.id, therapist.id);
+                          onClose();
+                        }}
                         className="mt-4 w-40 bg-blue-600 text-white py-2 rounded hover:bg-blue-500"
                       >
                         <div className="flex justify-center items-center space-x-2 p-1">
@@ -126,9 +141,12 @@ const TherapistModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                     </div>
                   ) : (
                     <div className="w-80 flex flex-row items-center justify-between">
-                      {requestStatus()}
+                      {requestStatus(therapist.id)}
                       <button
-                        onClick={() => requestTherapist(user.id, therapist.id)}
+                        onClick={() => {
+                          requestTherapist(user.id, therapist.id);
+                          onClose();
+                        }}
                         className="mt-4 w-60 bg-blue-600 text-white py-2 rounded hover:bg-blue-500"
                       >
                         <div className="flex justify-center items-center space-x-2 p-1">
