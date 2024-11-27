@@ -141,6 +141,7 @@ const HeaderStudentDashboard = () => {
       logout();
     }
 
+  
     navigate("/login");
   };
 

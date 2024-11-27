@@ -2,27 +2,14 @@ import React, { useState } from "react";
 import HeaderTherapistDashboard from "../components/TherapistDashboard/HeaderTherapistDashboard";
 import Footer from "../components/Footer";
 import PatientSection from "../components/TherapistDashboard/PatientSection";
-import Lottie from "lottie-react";
-import TherapistDashboardAnimation from "../assets/lotties/TherapistDashboardAnimation.json";
+//import Lottie from "lottie-react";
 import Switch from "@mui/material/Switch";
 import { useAuth } from "../hooks/useAuth";
 import TherapistHelpModal from "../components/TherapistDashboard/TherapistHelpModal"; // Import your existing TherapistHelpModal component
 import RequestList from "../components/TherapistDashboard/RequestList";
 import { FaUserPlus, FaTasks, FaFileInvoice } from "react-icons/fa";
 
-// Lottie Animation Component
-const LottieAnimation: React.FC = () => (
-  <div
-    className="bg-blue-100 rounded-lg shadow-lg mb-4 border border-[#5E9ED9] p-2"
-    style={{ height: "300px" }}
-  >
-    <Lottie
-      animationData={TherapistDashboardAnimation}
-      loop={true}
-      style={{ width: "100%", height: "100%" }}
-    />
-  </div>
-);
+
 
 const TherapistDashboard: React.FC = () => {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
@@ -44,7 +31,7 @@ const TherapistDashboard: React.FC = () => {
       </header>
       <div className="flex-grow grid grid-cols-1 md:grid-cols-2 gap-6 px-6 py-10">
         <div className="col-span-1">
-          <LottieAnimation />
+        
           <PatientSection />
         </div>
         <div className="col-span-1 bg-blue-100 rounded-lg shadow-lg p-6 border border-[#5E9ED9]">
