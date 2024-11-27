@@ -57,7 +57,7 @@ function IntroSection() {
           <img
             src={Logo}
             alt="Peace of Mind Logo"
-            className="w-full h-full object-cover shadow-lg hover:scale-105 rounded-full"
+            className="w-full h-full object-contain hover:scale-175 scale-150 rounded-full"
           />
         </div>
 

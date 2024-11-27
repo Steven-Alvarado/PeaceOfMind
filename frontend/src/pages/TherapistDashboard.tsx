@@ -7,11 +7,8 @@ import TherapistDashboardAnimation from "../assets/lotties/TherapistDashboardAni
 import Switch from "@mui/material/Switch";
 import { useAuth } from "../hooks/useAuth";
 import TherapistHelpModal from "../components/TherapistDashboard/TherapistHelpModal"; // Import your existing TherapistHelpModal component
-import {
-  FaUserPlus,
-  FaTasks,
-  FaFileInvoice,
-} from "react-icons/fa";
+import RequestList from "../components/TherapistDashboard/RequestList";
+import { FaUserPlus, FaTasks, FaFileInvoice } from "react-icons/fa";
 
 // Lottie Animation Component
 const LottieAnimation: React.FC = () => (
@@ -29,6 +26,7 @@ const LottieAnimation: React.FC = () => (
 
 const TherapistDashboard: React.FC = () => {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [isRequestOpen, setIsRequestOpen] = useState(false);
   const [isAvailable, setIsAvailable] = useState(true);
   const { user } = useAuth();
 
@@ -69,6 +67,7 @@ const TherapistDashboard: React.FC = () => {
             </div>
             <button
               className="w-full bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center"
+              onClick={() => setIsRequestOpen(true)}
             >
               <FaUserPlus className="mr-3" /> View New Patient Requests
             </button>
@@ -82,7 +81,14 @@ const TherapistDashboard: React.FC = () => {
         </div>
       </div>
       <Footer />
-      <TherapistHelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
+      <TherapistHelpModal
+        isOpen={isHelpOpen}
+        onClose={() => setIsHelpOpen(false)}
+      />
+      <RequestList
+        isOpen={isRequestOpen}
+        onClose={() => setIsRequestOpen(false)}
+      />
     </div>
   );
 };
