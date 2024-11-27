@@ -1,10 +1,17 @@
-const express = require('express');
+const express = require("express");
+const {
+  createMessage,
+  getMessagesByConversation,
+  markMessageAsRead,
+  getUnreadMessagesCount,
+} = require("../controllers/messagesController");
+
 const router = express.Router();
-const { sendMessage, getMessages, markAsRead } = require('../controllers/messagesController');
 
 
-router.post('/send', sendMessage); // Send a new message within a conversation
-router.get('/conversations/:id/allMessages', getMessages); // Retrieve all messages in a conversation
-router.put('/:id', markAsRead); // Mark a message as read
+router.post("/send", createMessage); // Send a new message
+router.get("/:conversationId", getMessagesByConversation); // Get messages for a conversation
+router.put("/:messageId/read", markMessageAsRead); // Mark a message as read
+router.get("/:userId/unread", getUnreadMessagesCount); // Get unread messages count for a user
 
 module.exports = router;
