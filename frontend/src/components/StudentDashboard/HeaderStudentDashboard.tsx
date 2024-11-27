@@ -2,17 +2,7 @@ import React, { useState, useEffect } from "react";
 import { FaBars, FaTimes, FaHome } from "react-icons/fa";
 import { IoIosNotifications, IoMdSettings } from "react-icons/io";
 import Logo from "../../assets/images/logobetter.png";
-const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-
-import Logo from "../assets/images/logobetter.png";
-import { useAuth } from "../hooks/useAuth";
-
-
+import { useAuth } from "../../hooks/useAuth";
 interface UserSettings {
   fname: string;
   last_name: string;
@@ -82,24 +72,43 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
       setErrorMessage("User settings are not loaded.");
       return;
     }
-
+  
     if (userSettings.newPassword !== userSettings.confirmPassword) {
       setErrorMessage("Passwords do not match.");
       return;
     }
-
+  
     try {
-      // You can update the settings here if necessary (e.g., via a PUT request)
-      
-      // Show success message if the data is saved successfully
-      setSuccessMessage("Settings saved successfully.");
-      setErrorMessage("");
+      const response = await fetch(`/api/accountSettings/student/${user.id}`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          first_name: userSettings.fname,
+          last_name: userSettings.last_name,
+          email: userSettings.email,
+          ...(userSettings.newPassword && { newPassword: userSettings.newPassword }), // Include new password if provided
+        }),
+      });
+  
+      // Log the response data for debugging
+      const data = await response.json();
+      console.log("Response Data:", data);
+  
+      if (response.ok) {
+        setSuccessMessage("Settings saved successfully.");
+        setErrorMessage("");
+      } else {
+        setErrorMessage(data.error || "Failed to save settings.");
+      }
     } catch (error) {
-      setErrorMessage("Failed to save settings.");
-      console.error(error);
+      console.error("Error saving user settings:", error);
+      setErrorMessage(error.message || "Failed to save settings.");
     }
   };
-
+  
   return (
     isOpen && (
       <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">

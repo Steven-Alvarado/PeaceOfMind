@@ -3,8 +3,7 @@ import { FaBars, FaTimes, FaHome } from "react-icons/fa";
 import { IoIosNotifications, IoMdSettings } from "react-icons/io";
 
 import Logo from "../../assets/images/logobetter.png";
-
-
+import { useAuth } from "../../hooks/useAuth";
 
 
 const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
@@ -17,7 +16,7 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
   const [monthlyRate, setMonthlyRate] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   
-  const user = { id: 1 };  // Replace with actual user data (useAuth hook or props)
+  const { user } = useAuth();  // Get user data from useAuth hook
 
   useEffect(() => {
     if (isOpen && user?.id) {
@@ -41,14 +40,12 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
       });
 
       const data = await response.json();
-      console.log("API Response:", data);
 
       if (response.ok) {
-        // Populate form fields with the fetched data
         setFirstName(data.therapist.first_name || '');
         setLastName(data.therapist.last_name || '');
         setEmail(data.therapist.email || '');
-        setExperienceYears(data.therapist.experience_years ? data.therapist.experience_years.toString() : '');
+        setExperienceYears(data.therapist.experience_years || '');
         setMonthlyRate(data.therapist.monthly_rate || '');
       } else {
         setErrorMessage(data.message || "Failed to fetch therapist details.");
@@ -59,14 +56,65 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
     }
   };
 
-  const handleUpdate = () => {
-    // Logic to update therapist details (you can implement a PUT request here if needed)
-    console.log("Therapist details updated");
+  const handleUpdate = async () => {
+    if (newPassword !== confirmPassword) {
+      setErrorMessage("Passwords do not match.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/accountSettings/therapist/${user.id}`, {
+        method: "PATCH", // Use PATCH to update the therapist details
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          first_name: firstName,
+          last_name: lastName,
+          email,
+          experience_years: experienceYears,
+          new_password: newPassword,
+          monthly_rate: monthlyRate,
+        }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        alert("Details updated successfully.");
+        onClose(); // Close the modal after successful update
+      } else {
+        setErrorMessage(data.message || "Failed to update details.");
+      }
+    } catch (error) {
+      console.error("Error updating therapist details:", error);
+      setErrorMessage(error.message || "Error updating therapist details.");
+    }
   };
 
-  const handleDeleteAccount = () => {
-    // Logic to delete account
-    console.log("Account deleted");
+  const handleDeleteAccount = async () => {
+    if (window.confirm("Are you sure you want to delete your account?")) {
+      try {
+        const response = await fetch(`/api/therapists/user/${user.id}`, {
+          method: "DELETE", // Use DELETE for account deletion
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+          alert("Account deleted successfully.");
+          onClose(); // Close the modal after successful deletion
+        } else {
+          setErrorMessage(data.message || "Failed to delete account.");
+        }
+      } catch (error) {
+        console.error("Error deleting account:", error);
+        setErrorMessage(error.message || "Error deleting account.");
+      }
+    }
   };
 
   if (!isOpen) return null;
@@ -120,7 +168,7 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
             <input
               id="experienceYears"
               type="number"
-              min="0" // Prevent negative values
+              min="0"
               className="w-full p-2 border border-gray-300 rounded text-black"
               value={experienceYears}
               onChange={(e) => setExperienceYears(e.target.value)}
@@ -161,7 +209,7 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
           <input
             id="monthlyRate"
             type="number"
-            min="0" // Prevent negative values
+            min="0"
             className="w-full p-2 border border-gray-300 rounded text-black"
             value={monthlyRate}
             onChange={(e) => setMonthlyRate(e.target.value)}
@@ -169,36 +217,33 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
           />
         </div>
 
-        {/* Update, Delete Account, and Close buttons in the same row */}
-        <div className="mt-6 flex justify-between">
-          <button
-            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-400"
-            onClick={handleDeleteAccount}
-          >
-            Delete Account
-          </button>
+        {/* Error Message */}
+        {errorMessage && (
+          <div className="text-red-500 text-center mt-4">
+            <p>{errorMessage}</p>
+          </div>
+        )}
 
-          <button
-            className="bg-[#5E9ED9] text-white px-4 py-2 rounded hover:bg-[#4a8ac9]"
-            onClick={handleUpdate}
-          >
-            Update
-          </button>
-
-          <button
-            className="bg-[#5E9ED9] text-white px-4 py-2 rounded hover:bg-[#4a8ac9]"
-            onClick={onClose}
-          >
+        <div className="flex justify-between mt-4">
+          <button onClick={onClose} className="bg-gray-300 p-2 rounded-md hover:bg-gray-400">
             Close
           </button>
+          <div className="flex space-x-4">
+            <button onClick={handleDeleteAccount} className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600">
+              Delete Account
+            </button>
+            <button onClick={handleUpdate} className="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600">
+              Save Changes
+            </button>
+          </div>
         </div>
-
-        {/* Error Message */}
-        {errorMessage && <p className="text-red-500 mt-4">{errorMessage}</p>}
       </div>
     </div>
   );
 };
+
+
+
 
 const HeaderTherapistDashboard = () => {
   const [isOpen, setIsOpen] = useState(false);
