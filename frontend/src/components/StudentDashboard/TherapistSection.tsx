@@ -10,20 +10,19 @@ import {
   FaComments,
 } from "react-icons/fa";
 import axios from "axios";
-
-
-import { User } from "../../context/AuthContext"; // Ensure you import the correct User type
+import { User } from "../../context/AuthContext";
+import MessagingInterface from "../Messaging/MessagingInterface";
 
 interface TherapistSectionProps {
   user: User; // Define that user prop is of type User
 }
-
 
 const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
   const [therapist, setTherapist] = useState<any | null>(null); // State for therapist details
   const [isExpanded, setIsExpanded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isChatOpen, setIsChatOpen] = useState(false); // State to toggle chat interface
 
   useEffect(() => {
     const fetchTherapistDetails = async () => {
@@ -73,9 +72,7 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
           >
             View Details
             <FaChevronDown
-              className={`ml-2 transition-transform ${
-                isExpanded ? "rotate-180" : ""
-              }`}
+              className={`ml-2 transition-transform ${isExpanded ? "rotate-180" : ""}`}
             />
           </button>
           {isExpanded && therapist && (
@@ -102,11 +99,29 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
           <button className="bg-[#5E9ED9] text-white px-4 py-2 rounded hover:bg-[#4a8ac9] transition">
             <FaCalendar className="inline mr-2" /> Schedule Appointment
           </button>
-          <button className="bg-[#5E9ED9] text-white px-4 py-2 rounded hover:bg-[#4a8ac9] transition">
+          <button
+            className="bg-[#5E9ED9] text-white px-4 py-2 rounded hover:bg-[#4a8ac9] transition"
+            onClick={() => setIsChatOpen(!isChatOpen)} // Toggle chat interface
+          >
             <FaComments className="inline mr-2" /> Chat
           </button>
         </div>
       </div>
+
+      {/* Chat Interface */}
+      {isChatOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="relative bg-white rounded-lg p-6 w-full max-w-3xl shadow-lg">
+            <button
+              onClick={() => setIsChatOpen(false)}
+              className="absolute top-0 right-0 text-black text-lg p-2 m-2 hover:text-gray-900"
+            >
+              &#x2715;
+            </button>
+            <MessagingInterface userId={user.id} userRole={user.role}/>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
