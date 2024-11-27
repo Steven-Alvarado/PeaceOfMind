@@ -7,6 +7,7 @@ interface JournalEntry {
   mood: string;
   content: string;
   date: string;
+  entryNumber: number;
 }
 
 interface JournalingModalProps {
@@ -32,6 +33,8 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
   const [filteredEntries, setFilteredEntries] = useState<JournalEntry[]>(entries);  
 
   const totalPages = Math.ceil(entries.length / entriesPerPage);
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);  
 
   useEffect(() => {
     if (isOpen && user?.id) {
@@ -153,14 +156,16 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
     }
   };
   
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!activeEntry) {
       setErrorMessage("No journal entry selected to delete.");
       return;
     }
+    setIsDeleteModalOpen(true);
+  };
   
-    const confirmDelete = window.confirm("Are you sure you want to delete this entry?");
-    if (!confirmDelete) return;
+  const confirmDelete = async () => {
+    if (!activeEntry) return;
   
     try {
       await axios.delete(`/api/journals/delete/${activeEntry.id}`, {
@@ -169,17 +174,37 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
         },
       });
   
-      const updatedEntries = entries.filter((entry) => entry.id !== activeEntry.id);
+      const updatedEntries = entries
+        .filter((entry) => entry.id !== activeEntry.id)
+        .map((entry, index, arr) => ({
+          ...entry,
+          entryNumber: arr.length - index,
+        }));
+  
       setEntries(updatedEntries);
   
-      setActiveEntry(updatedEntries.length > 0 ? updatedEntries[0] : null);
+      if (updatedEntries.length > 0) {
+        setActiveEntry(updatedEntries[0]);
+      } else {
+        setActiveEntry(null);
+      }
   
       setSuccessMessage("Journal entry deleted successfully.");
       setErrorMessage("");
-    } catch (error: any) {
-      console.error("Error deleting journal entry:", error.message);
-      setErrorMessage(error.response?.data?.error || "Failed to delete journal entry.");
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error("Error deleting journal entry:", error.message);
+      } else {
+        console.error("Error deleting journal entry:", error);
+      }
+      setErrorMessage("Failed to delete journal entry.");
+    } finally {
+      setIsDeleteModalOpen(false);
     }
+  };
+  
+  const cancelDelete = () => {
+    setIsDeleteModalOpen(false);
   };
 
   const updateJournalEntry = async () => {
@@ -202,7 +227,7 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
         mood: response.data.journal.mood,
         content: activeEntry?.content || "",
         date: response.data.journal.updated_at,
-        entryNumber: activeEntry.entryNumber,
+        entryNumber: activeEntry?.entryNumber || 0,
       };
   
       setEntries((prev) =>
@@ -223,6 +248,7 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
       mood: "Neutral",
       content: "",
       date: new Date().toISOString(),
+      entryNumber: entries.length > 0 ? entries[0].entryNumber + 1 : 1,
     };
     setActiveEntry(newEntryData);
     setNewEntry(true);
@@ -265,7 +291,8 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
                 />
               </div>
               {entries.length === 0 ? (
-                <p className="text-center text-gray-500 flex-grow">No journal entries available.</p>
+                <p className="text-center text-sm text-gray-500 flex-grow">
+                  Click on <button disabled className="bg-[#5E9ED9] p-2 text-white rounded-lg text-sm">+ New Entry</button> to add a new journal entry.</p>
               ) : (
                 <ul className="flex-grow overflow-y-auto space-y-2">
                   {filteredEntries
@@ -291,7 +318,9 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
                             <p>
                               <strong>{entry.mood}</strong>
                             </p>
-                            <p>{new Date(entry.date).toLocaleTimeString()}</p>
+                            {/* <p>
+                              {new Date(entry.date).toLocaleTimeString("en-US", { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone })}
+                            </p>*/}
                           </div>
                         </div>
                       </li>
@@ -326,11 +355,11 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
             </div>
   
             <div className="w-3/4 p-6 flex flex-col">
-              <div className="flex justify-between items-center">
+              <div className={`flex justify-between items-center mb-4`}>
                 <h2 className="text-lg font-bold text-[#5E9ED9]">
-                  {newEntry
-                    ? "New Journal Entry"
-                    : `Journal Entry ${activeEntry?.entryNumber}`}
+                  {activeEntry
+                    ? `Journal Entry ${activeEntry.entryNumber}`
+                    : "No Journal Entries Available."}
                 </h2>
                 <button
                   className="bg-red-500 text-white px-2 rounded hover:bg-red-600"
@@ -342,7 +371,7 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
               {activeEntry && (
                 <div className=" mb-4">
                   <p className="text-sm text-gray-500 mb-4">
-                    {new Date(activeEntry.date).toLocaleString()}
+                    {new Date(activeEntry.date).toLocaleDateString()}
                   </p>
                   <div className="flex space-x-7 bg-[#5E9ED9] rounded-lg p-2 w-80 shadow-lg">
                     <p className="text-white">How are you feeling today? </p>
@@ -375,6 +404,33 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
                   {successMessage && <p className="text-green-500 text-sm">{successMessage}</p>}
                 </div>
                 <div className="space-x-4">
+                  {isDeleteModalOpen && (
+                    <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
+                      <div className="bg-white rounded-lg shadow-lg text-center p-6 w-2/12">
+                        <h2 className="text-lg font-extrabold text-red-500">Confirm Deletion</h2>
+                        <p className=" my-4">
+                          Are you sure you want to delete this journal entry?
+                        </p>
+                        <p className="text-black font-extrabold my-4 mb-5">
+                          This action cannot be undone.
+                        </p>
+                        <div className="flex justify-center space-x-4">
+                          <button
+                            className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                            onClick={cancelDelete}
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                            onClick={confirmDelete}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   <button
                     className="bg-red-500 shadow-lg text-white px-4 py-2 rounded hover:bg-red-600"
                     onClick={handleDelete}
