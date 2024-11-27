@@ -1,10 +1,10 @@
+
 import React, { useState } from "react";
 import { User, ClipboardList, MessageCircle, FileText, X } from "lucide-react";
 
 const PatientSection: React.FC = () => {
   const [selectedPatient, setSelectedPatient] = useState<any | null>(null);
 
-  // Sample patients list
   const patients = Array.from({ length: 5 }, (_, i) => ({
     id: i + 1,
     name: `FirstName LastName ${i + 1}`,
@@ -14,12 +14,28 @@ const PatientSection: React.FC = () => {
   }));
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="bg-white rounded-lg shadow-lg p-6">
+    <div className="flex flex-row w-full h-full p-6 space-x-4">
+      <div className="flex-grow bg-blue-100 border-2 border-[#5E9ED9] rounded-lg p-6">
         <h2 className="text-3xl font-semibold text-center text-[#5E9ED9] mb-6">
           My Patients
         </h2>
-        <div className="space-y-4">
+        <div className="flex items-center justify-center space-x-4 mb-6">
+          <select
+            className="border border-[#5E9ED9] rounded-md p-2.5 text-black focus:outline-none focus:ring-2 focus:ring-[#5E9ED9]"
+            defaultValue="firstName"
+          >
+            <option value="null">Select</option>
+            <option value="firstName">First Name</option>
+            <option value="lastName">Last Name</option>
+          </select>
+          <input
+            type="text"
+            placeholder="Search..."
+            className="w-2/3 border border-[#5E9ED9] rounded-md p-2.5 text-black focus:outline-none focus:ring-2 focus:ring-[#5E9ED9]"
+          />
+        </div>
+
+        <div className="space-y-4 mb-5">
           {patients.map((patient) => (
             <div
               key={patient.id}
@@ -29,9 +45,7 @@ const PatientSection: React.FC = () => {
                 <h3 className="text-lg font-semibold text-gray-800">
                   {patient.name}
                 </h3>
-                <p className="text-sm text-gray-600">
-                  {patient.email}
-                </p>
+                <p className="text-sm text-gray-600">{patient.email}</p>
               </div>
               <button
                 className="flex items-center space-x-2 bg-[#5E9ED9] text-white px-4 py-2 rounded-lg hover:bg-[#4b8bc4] transition"
@@ -91,4 +105,5 @@ const PatientSection: React.FC = () => {
 };
 
 export default PatientSection;
+
 

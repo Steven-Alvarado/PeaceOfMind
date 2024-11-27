@@ -66,8 +66,8 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
   if (error) return <div className="text-red-500">Error: {error}</div>;
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="bg-white rounded-lg shadow-lg p-6">
+    <div className="p-6 mt-4">
+      <div className="bg-white border-2 border-[#5E9ED9] rounded-lg shadow-lg p-12">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Therapist Image Section */}
           <div className="flex flex-col items-center justify-center">

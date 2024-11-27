@@ -15,7 +15,7 @@ const StudentMenuSection: React.FC<StudentMenuSectionProps> = ({ user, onSurveyC
     const [isJournalOpen, setIsJournalOpen] = useState(false);
 
     return (
-        <div className="bg-blue-100 border border-[#5E9ED9] rounded-lg p-6 shadow-lg">
+        <div className="bg-blue-100 border border-[#5E9ED9] flex-grow rounded-lg p-6 shadow-lg">
             <div className="items-center justify-between mb-6">
                 <h2 className="text-2xl text-center font-bold text-[#5E9ED9] mt-2">Menu</h2>
                 <div className="flex justify-center md:mt-5 md:mb-5">
@@ -31,28 +31,32 @@ const StudentMenuSection: React.FC<StudentMenuSectionProps> = ({ user, onSurveyC
                 </div>
             </div>
             <div className="space-y-6">
-                <div className="flex justify-center space-x-2">
+                <div className="justify-center flex">
                     <button
-                        className=" w-2/4 bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center"
+                        className=" w-full bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center"
                         onClick={() => setIsJournalOpen(true)}
                     >
                         <FaBook className="mr-3" /> Journal
                     </button>
+                </div>
+                <div className="justify-center flex">
                     <button
-                        className=" w-2/4 bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center"
+                        className=" w-full bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center"
                     >
                         <FaBook className="mr-3" /> Analytics
                     </button>
                 </div>
-                <div className="flex justify-center space-x-2">
+                <div className="justify-center flex">
                     <button
-                        className="w-2/4 bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center"
+                        className="w-full bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center"
                         onClick={onSurveyClick}
                     >
                         <FaClipboardQuestion className="mr-3" /> Surveys
                     </button>
+                </div>
+                <div className="justify-center flex">
                     <button
-                        className=" w-2/4 bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center"
+                        className=" w-full bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center"
                     >
                         <FaBook className="mr-3" /> Invoices
                     </button>

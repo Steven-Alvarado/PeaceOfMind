@@ -10,6 +10,7 @@ export interface User {
   firstName: string;
   lastName: string;
   token: string;
+  therapistId?: number;
 }
 
 // Define the AuthContext properties
@@ -202,6 +203,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         firstName: data.user.first_name || "Unknown",
         lastName: data.user.last_name || "User",
         token,
+        therapistId: data.user.therapist_id || "Unknown",
       });
     } catch (error) {
       console.error("Failed to fetch user profile:", error);
