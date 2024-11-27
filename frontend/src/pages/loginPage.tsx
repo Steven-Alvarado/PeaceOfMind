@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth.ts"; // Custom hook for accessing AuthContext
-import HeaderSignUpLoginPage from "../components/headerSignUpLoginPage";
+import HeaderSignUpLoginPage from "../components/HeaderSignUpLoginPage.tsx";
 import FooterLandingPage from "../components/Footer";
 
-const Login = () => {
+const Login: React.FC = () => {
   return (
     <div>
       <HeaderSignUpLoginPage />
@@ -16,20 +16,29 @@ const Login = () => {
   );
 };
 
-function LoginSection() {
-  const { login } = useAuth(); // Access the login function from AuthContext 
+const LoginSection: React.FC = () => {
+  const { login } = useAuth(); // Access the login function from AuthContext
   const [email, setEmail] = useState(""); // State for email input
   const [password, setPassword] = useState(""); // State for password input
   const [error, setError] = useState<string | null>(null); // State for error messages
+  const [loading, setLoading] = useState(false); // State for showing loading spinner
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); // Prevent form reload
 
+    if (!email || !password) {
+      setError("Please provide both email and password.");
+      return;
+    }
+
+    setLoading(true); // Set loading to true during login process
+    setError(null); // Clear any previous errors
+
     try {
       await login(email, password); // Call the login function
-      setError(null); // Clear any existing error
-      // Redirect to dashboard based on role, handled in AuthContext
+      setLoading(false); // Reset loading state
     } catch (err) {
+      setLoading(false); // Reset loading state
       setError("Invalid email or password"); // Display error message
     }
   };
@@ -58,14 +67,17 @@ function LoginSection() {
           />
           <button
             type="submit"
-            className="w-full bg-[#5E9ED9] text-white font-semibold p-3 rounded-md hover:bg-[#4a8ac9]"
+            className={`w-full bg-[#5E9ED9] text-white font-semibold p-3 rounded-md ${
+              loading ? "cursor-not-allowed opacity-75" : "hover:bg-[#4a8ac9]"
+            }`}
+            disabled={loading}
           >
-            Log in
+            {loading ? "Logging in..." : "Log in"}
           </button>
         </form>
       </div>
     </section>
   );
-}
+};
 
 export default Login;

@@ -3,10 +3,13 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 // Define User interface
-interface User {
-  id: string;
+export interface User {
+  id: number;
   email: string;
   role: "student" | "therapist";
+  firstName: string;
+  lastName: string;
+  token: string;
 }
 
 // Define the AuthContext properties
@@ -21,7 +24,6 @@ interface AuthContextProps {
     password: string,
     role: string
   ) => Promise<void>;
-  //Changed in terms of registeringTherapist
   registerTherapist: (
     firstName: string,
     lastName: string,
@@ -35,6 +37,7 @@ interface AuthContextProps {
   ) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
+  fetchUser: () => Promise<void>;
 }
 
 // Create AuthContext
@@ -133,25 +136,41 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   
 
   const login = async (email: string, password: string) => {
-   
-      try {
-        const { data } = await axios.post("/api/auth/login", { email, password });
-        const { token, user } = data; // Include user in the response
-    
-        // Store token and set Authorization header
-        localStorage.setItem("jwt", token);
-        setAxiosAuthHeader(token);
-    
-        // Set the user directly
-        setUser(user);
-    
-        // Redirect based on user role
-        navigate(user.role === "student" ? "/student-dashboard" : "/therapist-dashboard");
-      } catch (error) {
-        console.error("Login failed", error);
-        throw new Error("Invalid email or password");
-      }   
+    try {
+      const { data } = await axios.post("/api/auth/login", { email, password });
+      const { token, user } = data;
+  
+      if (!token || !user) {
+        throw new Error("Invalid response from the server.");
+      }
+  
+      // Store token and set Authorization header
+      localStorage.setItem("jwt", token);
+      setAxiosAuthHeader(token);
+  
+      // Fetch full user details from /api/auth/me
+      const profileResponse = await axios.get("/api/auth/me");
+      const fullUser = {
+        ...profileResponse.data.user, // Merge additional user details
+        token,
+      };
+  
+      setUser(fullUser);
+  
+      // Redirect based on role
+      navigate(fullUser.role === "student" ? "/student-dashboard" : "/therapist-dashboard");
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        console.error("Login failed:", error.response.data.message);
+      } else {
+        console.error("Login failed:", error.message);
+      }
+      throw new Error("Invalid email or password. Please try again.");
+    }
   };
+  
+  
+ 
 
   const logout = () => {
     localStorage.removeItem("jwt");
@@ -160,8 +179,48 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     navigate("/");
   };
 
+  const fetchUser = async () => {
+    const token = localStorage.getItem("jwt");
+  
+    if (!token) {
+      console.warn("No token found. Please log in.");
+      return;
+    }
+  
+    setAxiosAuthHeader(token);
+  
+    try {
+      const { data } = await axios.get("/api/auth/me");
+      if (!data.user) {
+        throw new Error("Invalid user data from the server.");
+      }
+  
+      setUser({
+        id: data.user.id,
+        email: data.user.email,
+        role: data.user.role || "student",
+        firstName: data.user.first_name || "Unknown",
+        lastName: data.user.last_name || "User",
+        token,
+      });
+    } catch (error) {
+      console.error("Failed to fetch user profile:", error);
+      logout();
+    }
+  };
+  
+
   return (
-    <AuthContext.Provider value={{ user, login, registerUser,registerTherapist, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{  
+      user, 
+      login, 
+      registerUser,
+      registerTherapist, 
+      logout, 
+      isAuthenticated: !!user, 
+      fetchUser,
+      }}
+      >
       {children}
     </AuthContext.Provider>
   );

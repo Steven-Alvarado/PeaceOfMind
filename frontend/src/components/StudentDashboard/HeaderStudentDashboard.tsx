@@ -1,16 +1,13 @@
 import React, { useState } from "react";
 import { FaBars, FaTimes, FaHome } from "react-icons/fa";
 import { IoIosNotifications, IoMdSettings } from "react-icons/io";
-import Logo from "../assets/images/logobetter.png";
-
+import Logo from "../../assets/images/logobetter.png";
 const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
-  const [experienceYears, setExperienceYears] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [monthlyRate, setMonthlyRate] = useState('');
 
   if (!isOpen) return null;
 
@@ -27,7 +24,7 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-lg outline outline-white outline-2 outline-offset-2">
-        <h2 className="text-3xl font-extrabold text-center text-[#5E9ED9] mb-4">Settings</h2>
+        <h2 className="text-3xl font-extrabold text-center text-[#5E9ED9] mb-4">Student Settings</h2>
 
         {/* First Name and Last Name on the same line */}
         <div className="flex space-x-4">
@@ -55,31 +52,17 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
           </div>
         </div>
 
-        {/* Email Address and Experience (Years) */}
-        <div className="flex space-x-4 mt-4">
-          <div className="w-full">
-            <label htmlFor="email" className="block text-gray-700 font-bold mb-2">Email Address</label>
-            <input
-              id="email"
-              type="email"
-              className="w-full p-2 border border-gray-300 rounded text-black"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
-            />
-          </div>
-          <div className="w-full">
-            <label htmlFor="experienceYears" className="block text-gray-700 font-bold mb-2">Experience (Years)</label>
-            <input
-              id="experienceYears"
-              type="number"
-              min="0" // Prevent negative values
-              className="w-full p-2 border border-gray-300 rounded text-black"
-              value={experienceYears}
-              onChange={(e) => setExperienceYears(e.target.value)}
-              placeholder="Enter years of experience"
+        {/* Email Address */}
+        <div className="mt-4">
+          <label htmlFor="email" className="block text-gray-700 font-bold mb-2">Email Address</label>
+          <input
+            id="email"
+            type="email"
+            className="w-full p-2 border border-gray-300 rounded text-black"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Enter your email"
           />
-        </div>
         </div>
 
         {/* New Password and Confirm Password */}
@@ -108,21 +91,7 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
           </div>
         </div>
 
-        {/* Monthly Rate */}
-        <div className="mt-4">
-        <label htmlFor="monthlyRate" className="block text-gray-700 font-bold mb-2">Monthly Rate</label>
-        <input
-          id="monthlyRate"
-          type="number"
-          min="0" // Prevent negative values
-          className="w-full p-2 border border-gray-300 rounded text-black"
-          value={monthlyRate}
-          onChange={(e) => setMonthlyRate(e.target.value)}
-          placeholder="Enter your monthly rate"
-        />
-          </div>
-
-        {/* Update, Delete Account, and Close buttons in the same row */}
+        {/* Delete Account, Update, and Close buttons on the same level */}
         <div className="mt-6 flex justify-between">
           <button
             className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-400"
@@ -130,14 +99,12 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
           >
             Delete Account
           </button>
-
           <button
             className="bg-[#5E9ED9] text-white px-4 py-2 rounded hover:bg-[#4a8ac9]"
             onClick={handleUpdate}
           >
             Update
           </button>
-
           <button
             className="bg-[#5E9ED9] text-white px-4 py-2 rounded hover:bg-[#4a8ac9]"
             onClick={onClose}
@@ -150,8 +117,7 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
   );
 };
 
-
-const HeaderTherapistDashboard = () => {
+const HeaderStudentDashboard = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const toggleMenu = () => {
@@ -227,4 +193,4 @@ const HeaderTherapistDashboard = () => {
   );
 };
 
-export default HeaderTherapistDashboard;
+export default HeaderStudentDashboard;
