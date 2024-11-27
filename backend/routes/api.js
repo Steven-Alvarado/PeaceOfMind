@@ -28,7 +28,11 @@ router.use("/messages", messagesRoutes);
 router.use("/surveys", surveyRoutes);
 router.use("/journals", journalRoutes);
 router.use("/documents", documentRoutes);
+
 router.use("/relationships", relationshipRoutes);
 router.use("/invoices", invoiceRoutes);
+
+
+
 
 module.exports = router;
