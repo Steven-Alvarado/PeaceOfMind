@@ -1,128 +1,158 @@
-import React, { useState, useEffect } from "react"; 
+import React, { useState, useEffect } from "react";
+
+import { FaCalendar, FaComments } from "react-icons/fa";
+import { FaClipboardList } from "react-icons/fa6";
+
+import TherapistModal from "./TherapistModal";
+
 import Lottie from "lottie-react";
 import StudentDashboardAnimation from "../../assets/lotties/StudentDashboardAnimation.json";
-import {
-  FaChevronDown,
-  FaUser,
-  FaBriefcase,
-  FaMapMarkerAlt,
-  FaCalendar,
-  FaComments,
-} from "react-icons/fa";
 import axios from "axios";
 import { User } from "../../context/AuthContext";
 import MessagingInterface from "../Messaging/MessagingInterface";
 
+import { CiStar, CiBadgeDollar } from "react-icons/ci";
+import { MdOutlineWorkHistory, MdOutlineMail } from "react-icons/md";
+
+
 interface TherapistSectionProps {
-  user: User; // Define that user prop is of type User
+  user: User;
 }
 
 const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
-  const [therapist, setTherapist] = useState<any | null>(null); // State for therapist details
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [therapistName, setTherapistName] = useState<string | null>(null);
+  const [therapistDetails, setTherapistDetails] = useState<any>(null); // State for therapist details
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isChatOpen, setIsChatOpen] = useState(false); // State to toggle chat interface
+  const [error] = useState<string | null>(null);
+
+  const [isTherListOpen, setIsTherListOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   useEffect(() => {
-    const fetchTherapistDetails = async () => {
+    const fetchTherapistRelationship = async () => {
       try {
         if (user) {
-          const response = await axios.get(`/students/${user.id}/listTherapists/`);
-          setTherapist(response.data.therapist); // Adjust based on API response structure
+          // Fetch relationship details
+          const response = await axios.get(`/api/relationships/${user.id}`);
+          const relationship = response.data.relationship;
+  
+          if (relationship && relationship.current_therapist_id) {
+            setTherapistName(
+              `${relationship.current_therapist_first_name} ${relationship.current_therapist_last_name}`
+            );
+            fetchTherapistDetails(relationship.current_therapist_id); // Fetch therapist details
+          } else {
+            // No therapist assigned
+            setTherapistName(null);
+            setTherapistDetails(null);
+          }
         } else {
           throw new Error("User not authenticated");
         }
       } catch (err: any) {
-        setError(err.response?.data?.message || "Failed to load therapist details");
+        console.error("Failed to load therapist relationship:", err);
+        // Assume no therapist if error occurs
+        setTherapistName(null);
+        setTherapistDetails(null);
       } finally {
         setLoading(false);
       }
     };
-
-    fetchTherapistDetails();
+  
+    const fetchTherapistDetails = async (therapistId: number) => {
+      try {
+        const response = await axios.get(`/api/therapists/${therapistId}`);
+        setTherapistDetails(response.data.therapist);
+      } catch (err: any) {
+        console.error("Error fetching therapist details:", err);
+        setTherapistDetails(null);
+      }
+    };
+  
+    fetchTherapistRelationship();
   }, [user]);
+
 
   if (loading) return <div>Loading therapist details...</div>;
   if (error) return <div className="text-red-500">Error: {error}</div>;
 
   return (
     <div>
-      {/* Lottie Animation */}
-      <div className="flex justify-center bg-blue-100 rounded-lg border border-[#5E9ED9] shadow-lg mb-12">
-        <Lottie
-          animationData={StudentDashboardAnimation}
-          loop={true}
-          style={{ width: "45%", height: "45%" }}
-        />
-      </div>
-
-      {/* Therapist Details */}
       <div className="bg-blue-100 rounded-lg shadow-lg p-6 border border-[#5E9ED9]">
-        <h2 className="text-2xl text-center font-bold text-[#5E9ED9] mb-10">
-          Your Therapist
+        <h2 className="text-4xl text-center font-bold text-[#5E9ED9] mb-1">
+          My Therapist
         </h2>
-        <p className="text-xl text-center font-medium text-gray-800 mb-10">
-          {therapist?.name || "No therapist assigned"}
-        </p>
-        <div className="mb-14">
-          <button
-            className="w-full bg-[#5E9ED9] text-white px-4 py-2 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center"
-            onClick={() => setIsExpanded(!isExpanded)}
-          >
-            View Details
-            <FaChevronDown
-              className={`ml-2 transition-transform ${isExpanded ? "rotate-180" : ""}`}
-            />
-          </button>
-          {isExpanded && therapist && (
-            <div className="mt-4 flex space-x-5 justify-center text-gray-700">
-              <p>
-                <FaUser className="inline mr-2 text-[#5E9ED9]" />
-                <span className="font-medium">Years of Experience:</span>{" "}
-                {therapist.experience_years || "N/A"}
-              </p>
-              <p>
-                <FaBriefcase className="inline mr-2 text-[#5E9ED9]" />
-                <span className="font-medium">Specialty:</span>{" "}
-                {therapist.specialization || "N/A"}
-              </p>
-              <p>
-                <FaMapMarkerAlt className="inline mr-2 text-[#5E9ED9]" />
-                <span className="font-medium">Location:</span>{" "}
-                {therapist.location || "N/A"}
+        {therapistName ? (
+          <>
+            <div className=" justify-center flex mb-2">
+              <p className="text-2xl text-center shadow-lg rounded-md p-2 font-medium bg-white border-2 border-[#5E9ED9] text-[#5E9ED9]">
+                Dr. {therapistName}
               </p>
             </div>
-          )}
-        </div>
-        <div className="mt-6 flex justify-center space-x-4 mb-5">
-          <button className="bg-[#5E9ED9] text-white px-4 py-2 rounded hover:bg-[#4a8ac9] transition">
-            <FaCalendar className="inline mr-2" /> Schedule Appointment
+            {therapistDetails && (
+              <div>
+                <div className="flex flex-col items-center justify-center ">
+                  <div className="bg-white w-full p-4 mb-6 shadow-lg rounded-md border-2 border-[#5E9ED9]">
+                    <p className="text-xl font-bold text-[#5E9ED9]">Details</p>
+
+                    <div className="flex">
+                      <p className="w-1/2"><strong><CiStar className="inline mb-1"/> Specialization:</strong> {therapistDetails.specialization}</p>
+                      <p className="w-1/2"><strong><MdOutlineWorkHistory className="inline mb-1"/> Experience:</strong> {therapistDetails.experience_years} years</p>
+                    </div>
+                    
+                    <div className="flex ">
+                      <p className="w-1/2"><strong><CiBadgeDollar className="inline mb-1"/> Monthly Rate:</strong> <span className="text-green-600">${therapistDetails.monthly_rate}</span></p>
+                      <p className="w-1/2"><strong><MdOutlineMail className="inline mb-1"/> Email:</strong> {therapistDetails.email}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <p className="text-xl text-center bg-[#5E9ED9] rounded-xl p-2 font-medium text-white mt-5 mb-5">
+            No therapist assigned, please click find a therapist and request one.
+          </p>
+        )}
+        <div className="flex justify-center space-x-4 mb-2">
+          <button
+            className="bg-[#5E9ED9] text-white px-4 py-2 rounded shadow-lg hover:bg-[#4a8ac9] transition"
+            onClick={() => setIsTherListOpen(true)}
+          >
+            <FaClipboardList className="inline mr-2 mb-1" />
+            {therapistName ? "Switch Therapist" : "Request a Therapist"}
+          </button>
+          <button className="bg-[#5E9ED9] text-white px-4 py-2 rounded shadow-lg  hover:bg-[#4a8ac9] transition">
+            <FaCalendar className="inline mr-2 mb-1" /> Schedule Appointment
           </button>
           <button
+
             className="bg-[#5E9ED9] text-white px-4 py-2 rounded hover:bg-[#4a8ac9] transition"
             onClick={() => setIsChatOpen(true)} // Open chat modal
+
           >
-            <FaComments className="inline mr-2" /> Chat
+            <FaComments className="inline mr-2 mb-1" /> Chat
           </button>
         </div>
+        <TherapistModal isOpen={isTherListOpen} onClose={() => setIsTherListOpen(false)} />
       </div>
 
-      {/* Chat Interface */}
       {isChatOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="relative bg-white rounded-lg p-6 w-full max-w-3xl shadow-lg">
-            
+
             <MessagingInterface
               userId={user.id}
               userRole={user.role}
               onClose={() => setIsChatOpen(false)}
             />
+
           </div>
         </div>
       )}
     </div>
   );
 };
+
 
 export default TherapistSection;
