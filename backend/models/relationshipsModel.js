@@ -110,18 +110,23 @@ const getRelationshipsByTherapistId = async (therapistId) => {
 
 // End relationship (remove current therapist)
 const endRelationship = async (studentId) => {
-  const result = await pool.query(
-    `UPDATE student_therapist_relationships 
-    SET current_therapist_id = NULL, 
-        requested_therapist_id = NULL, 
-        status = 'active', 
-        updated_at = CURRENT_TIMESTAMP
-    WHERE student_id = $1
-    RETURNING *`,
-    [studentId]
-  );
-  return result.rows[0];
+  try {
+    const result = await pool.query(
+      `DELETE FROM student_therapist_relationships 
+       WHERE student_id = $1 
+       RETURNING *`,
+      [studentId]
+    );
+
+    return result.rows[0]; // Returns the deleted row for confirmation
+  } catch (error) {
+    console.error("Error deleting relationship:", error);
+    throw error; // Propagate the error for handling upstream
+  }
 };
+
+module.exports = { endRelationship };
+
 
 module.exports = {
   createRelationship,
