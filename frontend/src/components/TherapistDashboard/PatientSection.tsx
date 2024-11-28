@@ -1,21 +1,52 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { User, ClipboardList, MessageCircle, FileText, X } from "lucide-react";
 
-const PatientSection: React.FC = () => {
+interface PatientListComponentProps {
+  therapistId: number;
+  refresh: boolean;
+}
+
+const PatientSection: React.FC<PatientListComponentProps> = ({
+  therapistId,
+  refresh,
+}) => {
+  const [currPatients, setCurrPatients] = useState([]);
   const [selectedPatient, setSelectedPatient] = useState<any | null>(null);
 
-  const patients = Array.from({ length: 5 }, (_, i) => ({
+  useEffect(() => {
+    const fetchRequests = async () => {
+      if (!therapistId) return;
+      try {
+        const response = await axios.get(
+          `/api/relationships/therapist/${therapistId}`
+        );
+        console.log("Relationships Response:", response.data); // Debugging
+        setCurrPatients(response.data.relationships || []);
+      } catch (error) {
+        console.error("Error retrieving relationships", error);
+      }
+    };
+
+    fetchRequests();
+  }, [therapistId, refresh]);
+
+  const activeRelations = currPatients.filter(
+    (relation) => relation.status !== "pending"
+  );
+
+  /*const patients = Array.from({ length: 5 }, (_, i) => ({
     id: i + 1,
     name: `FirstName LastName ${i + 1}`,
     email: `patient${i + 1}@example.com`,
     condition: "Condition Details",
     notes: "Notes about the patient...",
-  }));
+  }));*/
 
   return (
     <div className="flex flex-row w-full h-full p-6 space-x-4">
       <div className="flex-grow bg-blue-100 border-2 border-[#5E9ED9] rounded-lg p-6">
+        <h1>Therapist ID: {therapistId}</h1>
         <h2 className="text-3xl font-semibold text-center text-[#5E9ED9] mb-6">
           My Patients
         </h2>
@@ -36,16 +67,16 @@ const PatientSection: React.FC = () => {
         </div>
 
         <div className="space-y-4 mb-5">
-          {patients.map((patient) => (
+          {activeRelations.map((patient) => (
             <div
               key={patient.id}
               className="flex items-center justify-between p-4 rounded-lg shadow-md bg-blue-50 hover:bg-blue-100 transition"
             >
               <div>
                 <h3 className="text-lg font-semibold text-gray-800">
-                  {patient.name}
+                  {patient.student_first_name} {patient.student_last_name}
                 </h3>
-                <p className="text-sm text-gray-600">{patient.email}</p>
+                <p className="text-sm text-gray-600">Email goes here</p>
               </div>
               <button
                 className="flex items-center space-x-2 bg-[#5E9ED9] text-white px-4 py-2 rounded-lg hover:bg-[#4b8bc4] transition"
@@ -70,17 +101,21 @@ const PatientSection: React.FC = () => {
               <X className="w-6 h-6" />
             </button>
             <h3 className="text-2xl font-semibold text-center text-[#5E9ED9] mb-4">
-              {selectedPatient.name}
+              Details for {selectedPatient.student_first_name}{" "}
+              {selectedPatient.student_last_name}
             </h3>
             <div className="space-y-2">
               <p className="text-gray-700">
-                <strong>Email:</strong> {selectedPatient.email}
+                <strong>I will get this info by next PR</strong>
               </p>
               <p className="text-gray-700">
-                <strong>Condition:</strong> {selectedPatient.condition}
+                <strong>Email:</strong> Email goes here
               </p>
               <p className="text-gray-700">
-                <strong>Notes:</strong> {selectedPatient.notes}
+                <strong>Condition:</strong> Condition goes here
+              </p>
+              <p className="text-gray-700">
+                <strong>Notes:</strong> Notes go here
               </p>
             </div>
             <div className="flex justify-around mt-6">
@@ -105,5 +140,3 @@ const PatientSection: React.FC = () => {
 };
 
 export default PatientSection;
-
-
