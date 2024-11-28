@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import HeaderTherapistDashboard from "../components/TherapistDashboard/HeaderTherapistDashboard";
 import Footer from "../components/Footer";
 import PatientSection from "../components/TherapistDashboard/PatientSection";
@@ -9,17 +10,37 @@ import TherapistHelpModal from "../components/TherapistDashboard/TherapistHelpMo
 import RequestList from "../components/TherapistDashboard/RequestList";
 import { FaUserPlus, FaTasks, FaFileInvoice } from "react-icons/fa";
 
-
-
 const TherapistDashboard: React.FC = () => {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isRequestOpen, setIsRequestOpen] = useState(false);
   const [isAvailable, setIsAvailable] = useState(true);
+  const [therapistId, setTherapistId] = useState(null);
+  const [refresh, setRefresh] = useState(false);
   const { user } = useAuth();
 
   const toggleAvailability = () => {
     setIsAvailable(!isAvailable);
   };
+
+  const handleRefresh = () => {
+    setRefresh((prev) => !prev);
+  };
+
+  // Fetch therapist ID when modal opens
+  useEffect(() => {
+    const fetchTherapistId = async () => {
+      if (!user) return;
+      try {
+        const response = await axios.get(`/api/therapists/find/${user.id}`);
+        console.log("Therapist ID Response:", response.data); // Debugging
+        setTherapistId(response.data.therapist);
+      } catch (error) {
+        console.error("Error making GET request:", error);
+      }
+    };
+
+    fetchTherapistId();
+  }, [user]);
 
   return (
     <div className="therapist-dashboard flex flex-col min-h-screen">
@@ -28,11 +49,22 @@ const TherapistDashboard: React.FC = () => {
         <h1 className="text-4xl font-bold text-center text-[#5E9ED9]">
           Welcome, {user?.first_name} {user?.last_name}!
         </h1>
+        <h2>
+          Therapist ID:{" "}
+          {therapistId != null ? (
+            <h2>{therapistId.id}</h2>
+          ) : (
+            <h2>Getting Id...</h2>
+          )}
+        </h2>
       </header>
       <div className="flex-grow grid grid-cols-1 md:grid-cols-3 px-6 py-10">
         {/* Patients Section */}
         <div className="col-span-2">
-          <PatientSection />
+          <PatientSection
+            therapistId={therapistId ? therapistId.id : null}
+            refresh={refresh}
+          />
         </div>
         <div className="col-span-1 bg-blue-100 rounded-lg shadow-lg p-6 border border-[#5E9ED9]">
           <h2 className="text-4xl text-center font-bold text-[#5E9ED9]">
@@ -73,8 +105,14 @@ const TherapistDashboard: React.FC = () => {
         onClose={() => setIsHelpOpen(false)}
       />
       <RequestList
+        therapistId={therapistId ? therapistId.id : null}
         isOpen={isRequestOpen}
-        onClose={() => setIsRequestOpen(false)}
+        refresh={refresh}
+        onClose={() => {
+          setIsRequestOpen(false);
+          handleRefresh();
+          //window.location.reload(); Refreshes page
+        }}
       />
     </div>
   );
