@@ -1,4 +1,4 @@
-const pool = require('../config/db');
+const pool = require("../config/db");
 
 // Retrieve all users
 const getAllUsers = async () => {
@@ -21,8 +21,16 @@ const getUserAuditHistory = async (userId) => {
   return result.rows;
 };
 
+const getEmailById = async (userId) => {
+  const result = await pool.query(`SELECT auth.email FROM auth WHERE id = $1`, [
+    userId,
+  ]);
+  return result.rows[0];
+};
+
 module.exports = {
   getAllUsers,
-  getUserById, 
-  getUserAuditHistory
+  getUserById,
+  getUserAuditHistory,
+  getEmailById,
 };
