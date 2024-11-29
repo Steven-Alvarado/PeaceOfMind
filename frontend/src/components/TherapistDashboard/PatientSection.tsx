@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { User, ClipboardList, MessageCircle, FileText, X } from "lucide-react";
+import { User, MessageCircle, FileText, X } from "lucide-react";
 
 interface PatientListComponentProps {
   therapistId: number;
@@ -13,6 +13,8 @@ const PatientSection: React.FC<PatientListComponentProps> = ({
 }) => {
   const [currPatients, setCurrPatients] = useState([]);
   const [selectedPatient, setSelectedPatient] = useState<any | null>(null);
+  const [patEmail, setPatEmail] = useState(null);
+  const [patientFilter, setPatientFilter] = useState<string>("");
 
   useEffect(() => {
     const fetchRequests = async () => {
@@ -35,13 +37,23 @@ const PatientSection: React.FC<PatientListComponentProps> = ({
     (relation) => relation.status !== "pending"
   );
 
-  /*const patients = Array.from({ length: 5 }, (_, i) => ({
-    id: i + 1,
-    name: `FirstName LastName ${i + 1}`,
-    email: `patient${i + 1}@example.com`,
-    condition: "Condition Details",
-    notes: "Notes about the patient...",
-  }));*/
+  const filteredPatients = activeRelations.filter((patient) => {
+    const fullName =
+      (patient.student_first_name || "").toLowerCase() +
+      " " +
+      (patient.student_last_name || "").toLowerCase();
+    return fullName.includes(patientFilter.toLowerCase());
+  });
+
+  const getEmail = async (studentId: number) => {
+    try {
+      const response = await axios.get(`/api/users/email/${studentId}`);
+      console.log("Email GET successful:", response.data);
+      setPatEmail(response.data);
+    } catch (error) {
+      console.error("Error retrieving email:", error);
+    }
+  };
 
   return (
     <div className="flex flex-row w-full h-full p-6 space-x-4">
@@ -51,23 +63,17 @@ const PatientSection: React.FC<PatientListComponentProps> = ({
           My Patients
         </h2>
         <div className="flex items-center justify-center space-x-4 mb-6">
-          <select
-            className="border border-[#5E9ED9] rounded-md p-2.5 text-black focus:outline-none focus:ring-2 focus:ring-[#5E9ED9]"
-            defaultValue="firstName"
-          >
-            <option value="null">Select</option>
-            <option value="firstName">First Name</option>
-            <option value="lastName">Last Name</option>
-          </select>
           <input
             type="text"
-            placeholder="Search..."
+            placeholder="Type part of name..."
+            value={patientFilter}
+            onChange={(e) => setPatientFilter(e.target.value)}
             className="w-2/3 border border-[#5E9ED9] rounded-md p-2.5 text-black focus:outline-none focus:ring-2 focus:ring-[#5E9ED9]"
           />
         </div>
 
         <div className="space-y-4 mb-5">
-          {activeRelations.map((patient) => (
+          {filteredPatients.map((patient) => (
             <div
               key={patient.id}
               className="flex items-center justify-between p-4 rounded-lg shadow-md bg-blue-50 hover:bg-blue-100 transition"
@@ -76,11 +82,21 @@ const PatientSection: React.FC<PatientListComponentProps> = ({
                 <h3 className="text-lg font-semibold text-gray-800">
                   {patient.student_first_name} {patient.student_last_name}
                 </h3>
-                <p className="text-sm text-gray-600">Email goes here</p>
+                <p className="text-sm text-gray-600">
+                  Assigned patient since{" "}
+                  {new Date(patient.updated_at).toLocaleDateString("en-US", {
+                    month: "long",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </p>
               </div>
               <button
                 className="flex items-center space-x-2 bg-[#5E9ED9] text-white px-4 py-2 rounded-lg hover:bg-[#4b8bc4] transition"
-                onClick={() => setSelectedPatient(patient)}
+                onClick={() => {
+                  setSelectedPatient(patient);
+                  getEmail(patient.student_id);
+                }}
               >
                 <User className="w-5 h-5" />
                 <span>View Details</span>
@@ -94,7 +110,10 @@ const PatientSection: React.FC<PatientListComponentProps> = ({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="relative bg-white rounded-lg p-8 max-w-xl w-full shadow-lg">
             <button
-              onClick={() => setSelectedPatient(null)}
+              onClick={() => {
+                setSelectedPatient(null);
+                setPatEmail(null);
+              }}
               className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 focus:outline-none"
               aria-label="Close"
             >
@@ -106,23 +125,14 @@ const PatientSection: React.FC<PatientListComponentProps> = ({
             </h3>
             <div className="space-y-2">
               <p className="text-gray-700">
-                <strong>I will get this info by next PR</strong>
-              </p>
-              <p className="text-gray-700">
-                <strong>Email:</strong> Email goes here
-              </p>
-              <p className="text-gray-700">
-                <strong>Condition:</strong> Condition goes here
+                <strong>Email: </strong>{" "}
+                {patEmail ? patEmail.email : <span>Loading Email...</span>}
               </p>
               <p className="text-gray-700">
                 <strong>Notes:</strong> Notes go here
               </p>
             </div>
             <div className="flex justify-around mt-6">
-              <button className="flex items-center space-x-2 bg-[#5E9ED9] text-white px-4 py-2 rounded-full hover:bg-[#4b8bc4] transition">
-                <ClipboardList className="w-5 h-5" />
-                <span>Records</span>
-              </button>
               <button className="flex items-center space-x-2 bg-[#5E9ED9] text-white px-4 py-2 rounded-full hover:bg-[#4b8bc4] transition">
                 <MessageCircle className="w-5 h-5" />
                 <span>Chat</span>

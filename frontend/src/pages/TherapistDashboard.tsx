@@ -52,9 +52,9 @@ const TherapistDashboard: React.FC = () => {
         <h2>
           Therapist ID:{" "}
           {therapistId != null ? (
-            <h2>{therapistId.id}</h2>
+            <span>{therapistId.id}</span>
           ) : (
-            <h2>Getting Id...</h2>
+            <span>Getting Id...</span>
           )}
         </h2>
       </header>
