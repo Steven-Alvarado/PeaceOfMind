@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { User, MessageCircle, FileText, X } from "lucide-react";
+import MessagingInterface from "../Messaging/MessagingInterface";
 
 interface PatientListComponentProps {
   therapistId: number;
@@ -13,8 +14,10 @@ const PatientSection: React.FC<PatientListComponentProps> = ({
 }) => {
   const [currPatients, setCurrPatients] = useState([]);
   const [selectedPatient, setSelectedPatient] = useState<any | null>(null);
-  const [patEmail, setPatEmail] = useState(null);
+  const [patEmail, setPatEmail] = useState<string | null>(null);
   const [patientFilter, setPatientFilter] = useState<string>("");
+  const [isChatOpen, setIsChatOpen] = useState(false); // State to toggle chat modal
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false); // State to toggle details modal
 
   useEffect(() => {
     const fetchRequests = async () => {
@@ -23,7 +26,7 @@ const PatientSection: React.FC<PatientListComponentProps> = ({
         const response = await axios.get(
           `/api/relationships/therapist/${therapistId}`
         );
-        console.log("Relationships Response:", response.data); // Debugging
+        console.log("Relationships Response:", response.data);
         setCurrPatients(response.data.relationships || []);
       } catch (error) {
         console.error("Error retrieving relationships", error);
@@ -49,10 +52,21 @@ const PatientSection: React.FC<PatientListComponentProps> = ({
     try {
       const response = await axios.get(`/api/users/email/${studentId}`);
       console.log("Email GET successful:", response.data);
-      setPatEmail(response.data);
+      setPatEmail(response.data.email || null);
     } catch (error) {
       console.error("Error retrieving email:", error);
     }
+  };
+
+  const handleViewDetails = (patient: any) => {
+    setSelectedPatient(patient);
+    getEmail(patient.student_id);
+    setIsDetailsOpen(true); // Open the details modal
+  };
+
+  const handleChat = (patient: any) => {
+    setSelectedPatient(patient);
+    setIsChatOpen(true); // Open the chat modal
   };
 
   return (
@@ -91,26 +105,34 @@ const PatientSection: React.FC<PatientListComponentProps> = ({
                   })}
                 </p>
               </div>
-              <button
-                className="flex items-center space-x-2 bg-[#5E9ED9] text-white px-4 py-2 rounded-lg hover:bg-[#4b8bc4] transition"
-                onClick={() => {
-                  setSelectedPatient(patient);
-                  getEmail(patient.student_id);
-                }}
-              >
-                <User className="w-5 h-5" />
-                <span>View Details</span>
-              </button>
+              <div className="flex space-x-2">
+                <button
+                  className="flex items-center space-x-2 bg-[#5E9ED9] text-white px-4 py-2 rounded-lg hover:bg-[#4b8bc4] transition"
+                  onClick={() => handleViewDetails(patient)}
+                >
+                  <User className="w-5 h-5" />
+                  <span>View Details</span>
+                </button>
+                <button
+                  className="flex items-center space-x-2 bg-[#5E9ED9] text-white px-4 py-2 rounded-lg hover:bg-[#4b8bc4] transition"
+                  onClick={() => handleChat(patient)}
+                >
+                  <MessageCircle className="w-5 h-5" />
+                  <span>Chat</span>
+                </button>
+              </div>
             </div>
           ))}
         </div>
       </div>
 
-      {selectedPatient && (
+      {/* Details Modal */}
+      {selectedPatient && isDetailsOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="relative bg-white rounded-lg p-8 max-w-xl w-full shadow-lg">
             <button
               onClick={() => {
+                setIsDetailsOpen(false); // Close details modal
                 setSelectedPatient(null);
                 setPatEmail(null);
               }}
@@ -125,15 +147,17 @@ const PatientSection: React.FC<PatientListComponentProps> = ({
             </h3>
             <div className="space-y-2">
               <p className="text-gray-700">
-                <strong>Email: </strong>{" "}
-                {patEmail ? patEmail.email : <span>Loading Email...</span>}
+                <strong>Email: </strong> {patEmail || <span>Loading...</span>}
               </p>
               <p className="text-gray-700">
                 <strong>Notes:</strong> Notes go here
               </p>
             </div>
             <div className="flex justify-around mt-6">
-              <button className="flex items-center space-x-2 bg-[#5E9ED9] text-white px-4 py-2 rounded-full hover:bg-[#4b8bc4] transition">
+              <button
+                className="flex items-center space-x-2 bg-[#5E9ED9] text-white px-4 py-2 rounded-full hover:bg-[#4b8bc4] transition"
+                onClick={() => handleChat(selectedPatient)} // Open chat modal from details
+              >
                 <MessageCircle className="w-5 h-5" />
                 <span>Chat</span>
               </button>
@@ -142,6 +166,30 @@ const PatientSection: React.FC<PatientListComponentProps> = ({
                 <span>Notes</span>
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Chat Modal */}
+      {selectedPatient && isChatOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="relative bg-white rounded-lg p-8 max-w-3xl w-full shadow-lg">
+            <button
+              onClick={() => setIsChatOpen(false)} // Close chat modal
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 focus:outline-none"
+              aria-label="Close"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            <h3 className="text-2xl font-semibold text-center text-[#5E9ED9] mb-4">
+              Chat with {selectedPatient.student_first_name}{" "}
+              {selectedPatient.student_last_name}
+            </h3>
+            <MessagingInterface
+              userId={therapistId}
+              userRole="therapist"
+              onClose={() => setIsChatOpen(false)}
+            />
           </div>
         </div>
       )}
