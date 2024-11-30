@@ -3,8 +3,17 @@ import { FaArrowRightArrowLeft, FaArrowRightToBracket } from "react-icons/fa6";
 import { useAuth } from "../../hooks/useAuth";
 import axios from "axios";
 
-const TherapistModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
+interface TherapistModalProps {
+  isOpen: boolean;
+  refresh: boolean;
+  sentAlert: () => void;
+  onClose: () => void;
+}
+
+const TherapistModal: React.FC<TherapistModalProps> = ({
   isOpen,
+  refresh,
+  sentAlert,
   onClose,
 }) => {
   const { user, fetchUser } = useAuth();
@@ -29,7 +38,7 @@ const TherapistModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
 
   useEffect(() => {
     if (isOpen && user) fetchTherapists();
-  }, [isOpen, user]);
+  }, [isOpen, user, refresh]);
 
   const fetchTherapists = async () => {
     try {
@@ -39,6 +48,7 @@ const TherapistModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
       setTherapists(data1.therapists || []);
 
       const response2 = await fetch(`api/relationships/${user.id}`);
+      if (!response2.ok) setRelations([]);
       if (!response2.ok) throw new Error("Failed to Fetch relationships");
       const data2 = await response2.json();
       setRelations(data2.relationship || []);
@@ -66,7 +76,7 @@ const TherapistModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
 
   const requestTherapist = async (studentId: number, therapistId: number) => {
     try {
-      const response = await axios.post("/api/relationships", {
+      const response = await axios.post("/api/relationships/request", {
         studentId: studentId,
         therapistId: therapistId,
       });
@@ -96,6 +106,10 @@ const TherapistModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
     } else {
       return false;
     }
+  };
+
+  const sentConfirm = () => {
+    sentAlert();
   };
 
   return (
@@ -129,6 +143,7 @@ const TherapistModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                         disabled={checkPending()}
                         onClick={() => {
                           switchTherapist(user.id, therapist.id);
+                          sentConfirm();
                           onClose();
                         }}
                         className="mt-4 w-40 bg-blue-600 text-white py-2 rounded hover:bg-blue-500"
@@ -145,6 +160,7 @@ const TherapistModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                       <button
                         onClick={() => {
                           requestTherapist(user.id, therapist.id);
+                          sentConfirm();
                           onClose();
                         }}
                         className="mt-4 w-60 bg-blue-600 text-white py-2 rounded hover:bg-blue-500"
