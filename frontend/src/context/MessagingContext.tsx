@@ -58,6 +58,7 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [messages, setMessages] = useState<Message[]>([]);
 
   useEffect(() => {
+    // Handle receiving messages in real-time
     const handleReceiveMessage = (message: Message) => {
       if (message.conversation_id === currentConversation?.id) {
         setMessages((prev) => [...prev, message]);
@@ -99,6 +100,7 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     try {
       const { conversationId, senderId, receiverId, messageContent } = payload;
 
+      // Optimistically add the message to the chat
       const optimisticMessage: Message = {
         id: Date.now(),
         conversation_id: conversationId,
@@ -107,9 +109,9 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         message_content: messageContent,
         sent_at: new Date().toISOString(),
       };
-
       setMessages((prev) => [...prev, optimisticMessage]);
 
+      // Emit the message via the backend
       await axios.post("http://localhost:5000/api/messages/send", {
         conversation_id: conversationId,
         sender_id: senderId,
@@ -127,7 +129,15 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (currentConversation?.id) {
       fetchMessages(currentConversation.id);
       socket.emit("joinConversation", currentConversation.id);
+
+      // Optionally listen for "userTyping" events here if needed
     }
+
+    return () => {
+      if (currentConversation?.id) {
+        socket.emit("leaveConversation", currentConversation.id);
+      }
+    };
   }, [currentConversation]);
 
   return (
