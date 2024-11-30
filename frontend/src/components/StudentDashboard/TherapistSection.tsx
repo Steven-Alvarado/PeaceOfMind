@@ -85,6 +85,7 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
   if (loading) return <div>Loading therapist details...</div>;
   if (error) return <div className="text-red-500">Error: {error}</div>;
 
+
   return (
     <div className="p-6 mt-4">
       <div className="bg-white border-2 border-[#5E9ED9] rounded-lg shadow-lg p-12">
