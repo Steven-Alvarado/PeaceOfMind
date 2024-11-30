@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useMessaging } from "../../context/MessagingContext";
 import VideoCall from "./VideoCall";
 import { Video, Send, ChevronLeft, X } from "lucide-react";
@@ -18,14 +18,52 @@ const MessagingInterface: React.FC<MessagingInterfaceProps> = ({ userId, userRol
     fetchConversations,
     setCurrentConversation,
     sendMessage,
+    fetchMessages,
   } = useMessaging();
 
   const [newMessage, setNewMessage] = useState("");
   const [isVideoCallActive, setIsVideoCallActive] = useState(false);
+  const chatEndRef = useRef<HTMLDivElement | null>(null);
 
+  // Scroll to the bottom of the chat container
+  const scrollToBottom = () => {
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  // Fetch conversations on component mount
   useEffect(() => {
     fetchConversations(userId, userRole);
   }, [userId, userRole]);
+
+  // Manage real-time message updates and scroll behavior
+  useEffect(() => {
+    if (currentConversation?.id) {
+      fetchMessages(currentConversation.id);
+      scrollToBottom();
+
+      socket.emit("joinConversation", currentConversation.id);
+
+      const handleReceiveMessage = (message: any) => {
+        if (message.conversation_id === currentConversation.id) {
+          fetchMessages(currentConversation.id); // Ensure consistent state update
+        }
+      };
+
+      socket.on("receiveMessage", handleReceiveMessage);
+
+      return () => {
+        socket.emit("leaveConversation", currentConversation.id);
+        socket.off("receiveMessage", handleReceiveMessage);
+      };
+    }
+  }, [currentConversation]);
+
+  // Scroll to bottom whenever messages are updated
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const handleSendMessage = () => {
     if (newMessage.trim() && currentConversation) {
@@ -40,7 +78,8 @@ const MessagingInterface: React.FC<MessagingInterfaceProps> = ({ userId, userRol
         receiverId,
         messageContent: newMessage,
       });
-      setNewMessage("");
+
+      setNewMessage(""); // Clear the input box
     }
   };
 
@@ -159,6 +198,7 @@ const MessagingInterface: React.FC<MessagingInterfaceProps> = ({ userId, userRol
                       </div>
                     </div>
                   ))}
+                  <div ref={chatEndRef} />
                 </div>
 
                 <div className="flex items-center gap-2">
