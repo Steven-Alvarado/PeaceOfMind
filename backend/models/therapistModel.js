@@ -38,6 +38,24 @@ const findTherapistById = async (therapistId) => {
   }
 };
 
+// Find a therapist by user id in the therapist table
+const findTherapistIdById = async (userId) => {
+  try {
+    const query = `
+            SELECT t.*, a.email
+            FROM therapists t
+            INNER JOIN users u ON t.user_id = u.id
+            INNER JOIN auth a ON u.id = a.user_id
+            WHERE t.user_id = $1;
+        `;
+    const result = await pool.query(query, [userId]);
+    return result.rows[0];
+  } catch (error) {
+    console.error("Error finding therapist by ID:", error);
+    throw new Error("Could not find therapist");
+  }
+};
+
 // Get the available therapists using availability in the therapist table
 const getAvailableTherapists = async () => {
   try {
@@ -70,6 +88,7 @@ const isLicenseVerified = async (licenseNumber) => {
   }
 };
 
+
 // Retrieve a therapist's details by user ID
 const getTherapistByUserId = async (userId) => {
     try {
@@ -96,9 +115,8 @@ const getTherapistByUserId = async (userId) => {
 
 module.exports = {
     createTherapist,
-    findTherapistById,
     getAvailableTherapists,
     isLicenseVerified,
-    getTherapistByUserId
-
+    getTherapistByUserId,
+    findTherapistIdById
 };

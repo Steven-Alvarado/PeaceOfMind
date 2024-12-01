@@ -1,60 +1,86 @@
 import React, { useState } from "react";
+import { User, ClipboardList, MessageCircle, FileText, X } from "lucide-react";
 
 const PatientSection: React.FC = () => {
   const [selectedPatient, setSelectedPatient] = useState<any | null>(null);
 
+  // Sample patients list
   const patients = Array.from({ length: 5 }, (_, i) => ({
-    id: i,
+    id: i + 1,
     name: `FirstName LastName ${i + 1}`,
+    email: `patient${i + 1}@example.com`,
+    condition: "Condition Details",
+    notes: "Notes about the patient...",
   }));
 
   return (
-    <div className="bg-blue-100 rounded-lg shadow-lg p-6 border border-[#5E9ED9]">
-      <h2 className="text-2xl text-center font-bold text-[#5E9ED9] mb-4">
-        Patients
-      </h2>
-      <div>
-        {patients.map((patient) => (
-          <div
-            key={patient.id}
-            className="flex justify-between items-center p-2 border-b border-gray-300"
-          >
-            <span>Patient: {patient.name}</span>
-            <button
-              className="bg-[#5E9ED9] text-white px-4 py-1 rounded hover:bg-[#4a8ac9]"
-              onClick={() => setSelectedPatient(patient)}
+    <div className="max-w-4xl mx-auto p-6">
+      <div className="bg-white rounded-lg shadow-lg p-6">
+        <h2 className="text-3xl font-semibold text-center text-[#5E9ED9] mb-6">
+          My Patients
+        </h2>
+        <div className="space-y-4">
+          {patients.map((patient) => (
+            <div
+              key={patient.id}
+              className="flex items-center justify-between p-4 rounded-lg shadow-md bg-blue-50 hover:bg-blue-100 transition"
             >
-              View Details
-            </button>
-          </div>
-        ))}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800">
+                  {patient.name}
+                </h3>
+                <p className="text-sm text-gray-600">
+                  {patient.email}
+                </p>
+              </div>
+              <button
+                className="flex items-center space-x-2 bg-[#5E9ED9] text-white px-4 py-2 rounded-lg hover:bg-[#4b8bc4] transition"
+                onClick={() => setSelectedPatient(patient)}
+              >
+                <User className="w-5 h-5" />
+                <span>View Details</span>
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
+
       {selectedPatient && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="relative bg-white rounded-lg p-10 w-full max-w-xl outline outline-white outline-2 outline-offset-2">
+          <div className="relative bg-white rounded-lg p-8 max-w-xl w-full shadow-lg">
             <button
               onClick={() => setSelectedPatient(null)}
-              className="absolute top-0 right-0 text-black text-lg p-2 m-2"
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 focus:outline-none"
+              aria-label="Close"
             >
-              &#x2715;
+              <X className="w-6 h-6" />
             </button>
-            <h2 className="text-3xl font-bold text-center text-[#5E9ED9]">
+            <h3 className="text-2xl font-semibold text-center text-[#5E9ED9] mb-4">
               {selectedPatient.name}
-            </h2>
-            <p className="text-gray-700 mt-4">
-              Patient details: Lorem ipsum dolor sit amet, consectetur adipiscing
-              elit. Praesent mattis ex ac laoreet tempus. Vestibulum sapien ligula,
-              venenatis et orci in, auctor feugiat massa.
-            </p>
-            <div className="flex justify-around mt-4">
-              <button className="bg-[#5E9ED9] text-white px-4 py-2 rounded-full hover:bg-[#4a8ac9]">
-                Records
+            </h3>
+            <div className="space-y-2">
+              <p className="text-gray-700">
+                <strong>Email:</strong> {selectedPatient.email}
+              </p>
+              <p className="text-gray-700">
+                <strong>Condition:</strong> {selectedPatient.condition}
+              </p>
+              <p className="text-gray-700">
+                <strong>Notes:</strong> {selectedPatient.notes}
+              </p>
+            </div>
+            <div className="flex justify-around mt-6">
+              <button className="flex items-center space-x-2 bg-[#5E9ED9] text-white px-4 py-2 rounded-full hover:bg-[#4b8bc4] transition">
+                <ClipboardList className="w-5 h-5" />
+                <span>Records</span>
               </button>
-              <button className="bg-[#5E9ED9] text-white px-4 py-2 rounded-full hover:bg-[#4a8ac9]">
-                Chat
+              <button className="flex items-center space-x-2 bg-[#5E9ED9] text-white px-4 py-2 rounded-full hover:bg-[#4b8bc4] transition">
+                <MessageCircle className="w-5 h-5" />
+                <span>Chat</span>
               </button>
-              <button className="bg-[#5E9ED9] text-white px-4 py-2 rounded-full hover:bg-[#4a8ac9]">
-                Notes
+              <button className="flex items-center space-x-2 bg-[#5E9ED9] text-white px-4 py-2 rounded-full hover:bg-[#4b8bc4] transition">
+                <FileText className="w-5 h-5" />
+                <span>Notes</span>
               </button>
             </div>
           </div>
@@ -65,3 +91,4 @@ const PatientSection: React.FC = () => {
 };
 
 export default PatientSection;
+
