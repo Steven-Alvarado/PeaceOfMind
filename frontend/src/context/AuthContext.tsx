@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import {sendPasswordResetEmail as apiSendPasswordResetEmail} from "../api/authApi";
 
 // Define User interface
 export interface User {
@@ -39,6 +40,9 @@ interface AuthContextProps {
   logout: () => void;
   isAuthenticated: boolean;
   fetchUser: () => Promise<void>;
+  sendPasswordResetEmail: (
+    email: string
+  ) => Promise<void>;
 }
 
 // Create AuthContext
@@ -210,7 +214,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       logout();
     }
   };
-  
+
+  const sendPasswordResetEmail = async (email: string): Promise<void> => {
+    try {
+      await apiSendPasswordResetEmail(email);
+    } catch (error: any) {
+      throw new Error(error.response?.data?.error || "Failed to send password reset email");
+    }
+  };
 
   return (
     <AuthContext.Provider value={{  
@@ -221,6 +232,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       logout, 
       isAuthenticated: !!user, 
       fetchUser,
+      sendPasswordResetEmail,
       }}
       >
       {children}
