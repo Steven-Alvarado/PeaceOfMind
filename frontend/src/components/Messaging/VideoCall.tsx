@@ -46,6 +46,7 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, userId, onEndCall }) => {
   useEffect(() => {
     const initCall = async () => {
       try {
+        // Get local media stream
         const localStream = await navigator.mediaDevices.getUserMedia({
           video: true,
           audio: true,
@@ -56,6 +57,7 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, userId, onEndCall }) => {
           localVideoRef.current.srcObject = localStream;
         }
 
+        // Create peer connection
         const peerConnection = new RTCPeerConnection({
           iceServers: [
             { urls: "stun:stun.l.google.com:19302" }, // Public STUN server
@@ -80,6 +82,7 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, userId, onEndCall }) => {
         // Handle ICE candidates
         peerConnection.onicecandidate = (event) => {
           if (event.candidate) {
+            console.log("Sending ICE candidate:", event.candidate);
             socket.emit("sendIceCandidate", {
               roomId,
               candidate: event.candidate,
@@ -88,19 +91,24 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, userId, onEndCall }) => {
         };
 
         // Join video room
-        socket.emit("joinVideoRoom", { roomId, userId }, (response: { success: boolean; error?: string }) => {
-          if (response.success) {
-            console.log("Successfully joined room:", roomId);
-          } else {
-            console.error("Failed to join room:", response.error);
-            setError("Failed to join video room.");
+        socket.emit(
+          "joinVideoRoom",
+          { roomId, userId },
+          (response: { success: boolean; error?: string }) => {
+            if (response.success) {
+              console.log("Successfully joined room:", roomId);
+            } else {
+              console.error("Failed to join room:", response.error);
+              setError("Failed to join video room.");
+            }
           }
-        });
+        );
 
         // Handle signaling
         socket.on("receiveSignal", async ({ type, data }: { type: string; data: any }) => {
           try {
             if (type === "offer") {
+              console.log("Received offer, setting remote description...");
               await peerConnection.setRemoteDescription(
                 new RTCSessionDescription(data)
               );
@@ -108,10 +116,12 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, userId, onEndCall }) => {
               await peerConnection.setLocalDescription(answer);
               socket.emit("sendSignal", { roomId, type: "answer", data: answer });
             } else if (type === "answer") {
+              console.log("Received answer, setting remote description...");
               await peerConnection.setRemoteDescription(
                 new RTCSessionDescription(data)
               );
             } else if (type === "candidate") {
+              console.log("Adding ICE candidate:", data);
               await peerConnection.addIceCandidate(new RTCIceCandidate(data));
             }
           } catch (error) {
@@ -122,6 +132,7 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, userId, onEndCall }) => {
         // Handle ICE candidates from remote peer
         socket.on("receiveIceCandidate", async (candidate) => {
           try {
+            console.log("Adding received ICE candidate:", candidate);
             await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
           } catch (error) {
             console.error("Failed to add ICE candidate:", error);
