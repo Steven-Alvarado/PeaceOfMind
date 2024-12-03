@@ -42,7 +42,6 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, userId, onEndCall }) => {
   }, [isConnected]);
 
   useEffect(() => {
-    // Initialize the call when the component mounts
     const initCall = async () => {
       try {
         // Get local media stream
@@ -106,11 +105,9 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, userId, onEndCall }) => {
         });
 
         // Create and send offer if initiating the call
-        if (roomId) {
-          const offer = await peerConnection.createOffer();
-          await peerConnection.setLocalDescription(offer);
-          socket.emit("sendSignal", { roomId, type: "offer", data: offer });
-        }
+        const offer = await peerConnection.createOffer();
+        await peerConnection.setLocalDescription(offer);
+        socket.emit("sendSignal", { roomId, type: "offer", data: offer });
 
         setIsConnected(true);
       } catch (error) {
