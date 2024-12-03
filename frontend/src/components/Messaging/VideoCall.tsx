@@ -130,7 +130,7 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, userId, onEndCall }) => {
         });
 
         // Handle ICE candidates from remote peer
-        socket.on("receiveIceCandidate", async (candidate) => {
+        socket.on("receiveIceCandidate", async (candidate: RTCIceCandidateInit) => {
           try {
             console.log("Adding received ICE candidate:", candidate);
             await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
