@@ -83,22 +83,22 @@ io.on("connection", (socket) => {
   // Video call signaling (offer/answer exchange)
   socket.on("videoCallSignal", ({ conversationId, signal }) => {
     if (!signal || !conversationId) {
-      console.error("Invalid video call signal data.");
+      console.error("Invalid signal data.");
       return;
     }
     const room = `conversation_${conversationId}`;
-    console.log(`Broadcasting signal for room ${room}:`, signal);
-    socket.to(room).emit("receiveVideoCallSignal", { signal, senderId: socket.id });
+    console.log(`Broadcasting video call signal for room ${room}:`, signal);
+    socket.to(room).emit("receiveSignal", signal);
   });
-
-  // Handle ICE candidate exchange
+  
   socket.on("sendIceCandidate", ({ conversationId, candidate }) => {
+    const room = `conversation_${conversationId}`;
     if (!candidate || !conversationId) {
       console.error("Invalid ICE candidate data.");
       return;
     }
-    console.log(`Broadcasting ICE candidate for room: conversation_${conversationId}`);
-    socket.to(`conversation_${conversationId}`).emit("receiveIceCandidate", candidate);
+    console.log(`Broadcasting ICE candidate for room ${room}:`, candidate);
+    socket.to(room).emit("receiveIceCandidate", candidate);
   });
   
   // Start video call (notify other users in the room)

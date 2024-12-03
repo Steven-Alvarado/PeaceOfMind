@@ -45,10 +45,9 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, userId, onEndCall }) => {
     const initCall = async () => {
       try {
         // Get local media stream
-        const localStream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: true,
-        });
+        const localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+localStream.getTracks().forEach((track) => peerConnection.addTrack(track, localStream));
+
 
         localStreamRef.current = localStream;
         if (localVideoRef.current) {
@@ -71,6 +70,7 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, userId, onEndCall }) => {
 
         // Handle remote stream
         peerConnection.ontrack = (event) => {
+          console.log("Remote stream received:", event.streams[0]);
           const [remoteStream] = event.streams;
           if (remoteVideoRef.current) {
             remoteVideoRef.current.srcObject = remoteStream;
@@ -98,9 +98,8 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, userId, onEndCall }) => {
           }
         });
 
-        // Handle signaling data
         socket.on("receiveSignal", async ({ type, data }) => {
-          console.log(`Received signal of type ${type}:`, data);
+          console.log(`Received signal of type ${type}`, data);
           try {
             if (type === "offer") {
               await peerConnection.setRemoteDescription(new RTCSessionDescription(data));
@@ -110,20 +109,21 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, userId, onEndCall }) => {
             } else if (type === "answer") {
               await peerConnection.setRemoteDescription(new RTCSessionDescription(data));
             } else if (type === "candidate") {
+              console.log("Adding ICE candidate:", data);
               await peerConnection.addIceCandidate(new RTCIceCandidate(data));
             }
-          } catch (err) {
-            console.error("Error handling received signal:", err.message);
+          } catch (error) {
+            console.error("Error handling signaling data:", error.message);
           }
         });
         
+
         socket.on("receiveIceCandidate", async (candidate) => {
+          console.log("Adding ICE candidate:", candidate);
           try {
-            console.log("Adding ICE candidate:", candidate);
             await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
-          } catch (err) {
-            console.error("Failed to add ICE candidate:", err.message);
-            setError("Error adding ICE candidate.");
+          } catch (error) {
+            console.error("Failed to add ICE candidate:", error.message);
           }
         });
          
