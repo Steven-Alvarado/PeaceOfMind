@@ -90,7 +90,8 @@ io.on("connection", (socket) => {
     console.log(`Broadcasting video call signal for room ${room}:`, signal);
     socket.to(room).emit("receiveSignal", signal);
   });
-  
+
+  // Handle ICE candidate exchange
   socket.on("sendIceCandidate", ({ conversationId, candidate }) => {
     const room = `conversation_${conversationId}`;
     if (!candidate || !conversationId) {
@@ -100,18 +101,18 @@ io.on("connection", (socket) => {
     console.log(`Broadcasting ICE candidate for room ${room}:`, candidate);
     socket.to(room).emit("receiveIceCandidate", candidate);
   });
-  
-  // Start video call (notify other users in the room)
-  socket.on("startVideoCall", (conversationId) => {
-    if (!conversationId) {
-      console.error("Invalid conversationId for video call.");
+
+  // Handle SDP signaling for offer/answer
+  socket.on("sendSignal", ({ roomId, type, data }) => {
+    if (!roomId || !type || !data) {
+      console.error("Invalid signaling data.");
       return;
     }
-    const room = `conversation_${conversationId}`;
-    console.log(`Starting video call in room: ${room}.`);
-    socket.to(room).emit("startVideoCall");
+    console.log(`Broadcasting ${type} for room ${roomId}:`, data);
+    socket.to(roomId).emit("receiveSignal", { type, data });
   });
 
+  // Join video room
   socket.on("joinVideoRoom", ({ roomId, userId }, callback) => {
     if (!roomId || !userId) {
       console.error("Invalid room or user data.");
@@ -122,12 +123,24 @@ io.on("connection", (socket) => {
     socket.join(roomId);
     callback({ success: true });
   });
-  
+
+  // Notify other users in the room to start video call
+  socket.on("startVideoCall", (conversationId) => {
+    if (!conversationId) {
+      console.error("Invalid conversationId for video call.");
+      return;
+    }
+    const room = `conversation_${conversationId}`;
+    console.log(`Starting video call in room: ${room}.`);
+    socket.to(room).emit("startVideoCall");
+  });
+
   // Handle user disconnection
   socket.on("disconnect", () => {
     console.log(`User disconnected: ${socket.id}`);
   });
 });
+
 
 // Start the server
 httpServer.listen(PORT, () => {
