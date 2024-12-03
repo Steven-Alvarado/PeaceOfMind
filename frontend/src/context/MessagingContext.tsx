@@ -36,10 +36,12 @@ interface MessagingContextType {
   conversations: Conversation[];
   currentConversation: Conversation | null;
   messages: Message[];
+  setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
   fetchConversations: (userId: number, role: "student" | "therapist") => void;
   fetchMessages: (conversationId: number) => void;
   setCurrentConversation: (conversation: Conversation) => void;
   sendMessage: (payload: MessagePayload) => void;
+  createConversation: (studentId: number, therapistId: number) => Promise<Conversation>; 
 }
 
 const MessagingContext = createContext<MessagingContextType | undefined>(undefined);
@@ -58,20 +60,40 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [messages, setMessages] = useState<Message[]>([]);
 
   useEffect(() => {
-    // Handle receiving messages in real-time
-    const handleReceiveMessage = (message: Message) => {
-      if (message.conversation_id === currentConversation?.id) {
-        setMessages((prev) => [...prev, message]);
-      }
-    };
-
-    socket.on("receiveMessage", handleReceiveMessage);
-
-    return () => {
-      socket.off("receiveMessage", handleReceiveMessage);
-    };
+    if (currentConversation?.id) {
+      console.log("Joining conversation:", currentConversation.id);
+  
+      fetchMessages(currentConversation.id); 
+  
+      socket.emit("joinConversation", currentConversation.id);
+  
+      const handleReceiveMessage = (message: any) => {
+        console.log("Message received via socket:", message);
+      
+        const normalizedMessage = {
+          ...message,
+          sent_at: message.sent_at ? new Date(message.sent_at).toISOString() : null, // Safeguard for invalid dates
+        };
+      
+        if (message.conversationId === currentConversation?.id) {
+          setMessages((prevMessages) => [...prevMessages, normalizedMessage]);
+          
+        } else {
+          console.warn("Message received for a different conversation:", message.conversationId);
+        }
+      };
+      
+  
+      socket.on("receiveMessage", handleReceiveMessage);
+  
+      return () => {
+        console.log("Leaving conversation:", currentConversation.id);
+        socket.emit("leaveConversation", currentConversation.id);
+        socket.off("receiveMessage", handleReceiveMessage);
+      };
+    }
   }, [currentConversation]);
-
+  
   const fetchConversations = async (userId: number, role: "student" | "therapist") => {
     try {
       const { data } = await axios.get(
@@ -86,59 +108,44 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const fetchMessages = async (conversationId: number) => {
     try {
-      const { data } = await axios.get<Message[]>(
-        `http://localhost:5000/api/messages/${conversationId}`
-      );
-      setMessages(data);
+      if (!conversationId) {
+        throw new Error("Invalid conversation ID");
+      }
+      const { data } = await axios.get<Message[]>(`http://localhost:5000/api/messages/${conversationId}`);
+      setMessages(data); // Use `sent_at` as provided by the API
     } catch (error) {
       console.error("Failed to fetch messages:", error);
       setMessages([]);
     }
   };
+  
+  
+
+  const createConversation = async (studentId: number, therapistId: number) => {
+    try {
+      const { data } = await axios.post("http://localhost:5000/api/conversations/create", {
+        student_id: studentId,
+        therapist_id: therapistId,
+      });
+      return data; // The created conversation
+    } catch (error) {
+      console.error("Failed to create conversation:", error);
+      throw new Error("Could not create conversation.");
+    }
+  };
 
   const sendMessage = async (payload: MessagePayload) => {
     try {
-      const { conversationId, senderId, receiverId, messageContent } = payload;
-
-      // Optimistically add the message to the chat
-      const optimisticMessage: Message = {
-        id: Date.now(),
-        conversation_id: conversationId,
-        sender_id: senderId,
-        receiver_id: receiverId,
-        message_content: messageContent,
-        sent_at: new Date().toISOString(),
-      };
-      setMessages((prev) => [...prev, optimisticMessage]);
-
-      // Emit the message via the backend
-      await axios.post("http://localhost:5000/api/messages/send", {
-        conversation_id: conversationId,
-        sender_id: senderId,
-        receiver_id: receiverId,
-        message_content: messageContent,
-      });
-
+      // Emit the message to the backend via Socket.IO
       socket.emit("sendMessage", payload);
     } catch (error) {
       console.error("Failed to send message:", error);
     }
   };
+  
+  
 
-  useEffect(() => {
-    if (currentConversation?.id) {
-      fetchMessages(currentConversation.id);
-      socket.emit("joinConversation", currentConversation.id);
 
-      // Optionally listen for "userTyping" events here if needed
-    }
-
-    return () => {
-      if (currentConversation?.id) {
-        socket.emit("leaveConversation", currentConversation.id);
-      }
-    };
-  }, [currentConversation]);
 
   return (
     <MessagingContext.Provider
@@ -150,6 +157,8 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         fetchMessages,
         setCurrentConversation,
         sendMessage,
+        createConversation,
+        setMessages,
       }}
     >
       {children}
