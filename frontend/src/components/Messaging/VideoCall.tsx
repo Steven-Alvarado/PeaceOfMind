@@ -89,7 +89,7 @@ localStream.getTracks().forEach((track) => peerConnection.addTrack(track, localS
           }
         };
         // Join room
-        socket.emit("joinVideoRoom", { roomId, userId }, (response) => {
+        socket.emit("joinVideoRoom", { roomId, userId }, (response: { success: boolean; error?: string }) => {
           if (response.success) {
             console.log("Successfully joined room:", roomId);
           } else {
@@ -98,7 +98,7 @@ localStream.getTracks().forEach((track) => peerConnection.addTrack(track, localS
           }
         });
 
-        socket.on("receiveSignal", async ({ type, data }) => {
+        socket.on("receiveSignal", async ({ type, data }: { type: string; data: any }) => {
           console.log(`Received signal of type ${type}`, data);
           try {
             if (type === "offer") {
@@ -112,18 +112,26 @@ localStream.getTracks().forEach((track) => peerConnection.addTrack(track, localS
               console.log("Adding ICE candidate:", data);
               await peerConnection.addIceCandidate(new RTCIceCandidate(data));
             }
-          } catch (error) {
-            console.error("Error handling signaling data:", error.message);
+          } catch (error: unknown) {
+            if (error instanceof Error) {
+              console.error("Error handling signaling data:", error.message);
+            } else {
+              console.error("Error handling signaling data:", String(error));
+            }
           }
         });
         
 
-        socket.on("receiveIceCandidate", async (candidate) => {
+        socket.on("receiveIceCandidate", async (candidate: RTCIceCandidateInit) => {
           console.log("Adding ICE candidate:", candidate);
           try {
             await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
-          } catch (error) {
-            console.error("Failed to add ICE candidate:", error.message);
+          } catch (error: unknown) {
+            if (error instanceof Error) {
+              console.error("Failed to add ICE candidate:", error.message);
+            } else {
+              console.error("Failed to add ICE candidate:", String(error));
+            }
           }
         });
          
