@@ -60,8 +60,8 @@ function IntroSection() {
             className="w-full h-full object-contain hover:scale-175 scale-150 rounded-full"
           />
         </div>
-
-        <h2 className="text-3xl text-[#5E9ED9] p-2 font-semibold">
+        
+       <h2 className="text-3xl text-[#5E9ED9] p-2 font-semibold">
           <Typewriter
             words={[
               "A Place to Find Your Calm",
@@ -75,8 +75,10 @@ function IntroSection() {
             deleteSpeed={50}
             delaySpeed={2000}
           />
-        </h2>
-      </div>
+        </h2> 
+
+        </div>
+        
     </section>
   );
 }

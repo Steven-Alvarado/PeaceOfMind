@@ -99,6 +99,9 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
             Your therapist has been dropped.
           </Alert>
         )}
+        <div className="flex items-center justify-center mb-6">
+          <h2 className="text-2xl font-bold text-[#5E9ED9]">Therapist Details</h2>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Therapist Image Section */}
           <div className="flex flex-col items-center justify-center">
