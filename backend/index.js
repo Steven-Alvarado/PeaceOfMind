@@ -83,11 +83,11 @@ io.on("connection", (socket) => {
   // Video call signaling (offer/answer exchange)
   socket.on("videoCallSignal", ({ conversationId, signal }) => {
     if (!signal || !conversationId) {
-      console.error("Invalid signal data.");
+      console.error("Invalid video call signal data.");
       return;
     }
     const room = `conversation_${conversationId}`;
-    console.log(`Video call signal received for room ${room}.`);
+    console.log(`Broadcasting signal for room ${room}:`, signal);
     socket.to(room).emit("receiveVideoCallSignal", { signal, senderId: socket.id });
   });
 
@@ -97,11 +97,10 @@ io.on("connection", (socket) => {
       console.error("Invalid ICE candidate data.");
       return;
     }
-    const room = `conversation_${conversationId}`;
-    console.log(`ICE candidate received for room ${room}.`);
-    socket.to(room).emit("receiveIceCandidate", candidate);
+    console.log(`Broadcasting ICE candidate for room: conversation_${conversationId}`);
+    socket.to(`conversation_${conversationId}`).emit("receiveIceCandidate", candidate);
   });
-
+  
   // Start video call (notify other users in the room)
   socket.on("startVideoCall", (conversationId) => {
     if (!conversationId) {
@@ -113,6 +112,17 @@ io.on("connection", (socket) => {
     socket.to(room).emit("startVideoCall");
   });
 
+  socket.on("joinVideoRoom", ({ roomId, userId }, callback) => {
+    if (!roomId || !userId) {
+      console.error("Invalid room or user data.");
+      callback({ success: false, error: "Invalid room or user data." });
+      return;
+    }
+    console.log(`User ${userId} joined video room: ${roomId}`);
+    socket.join(roomId);
+    callback({ success: true });
+  });
+  
   // Handle user disconnection
   socket.on("disconnect", () => {
     console.log(`User disconnected: ${socket.id}`);
