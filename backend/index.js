@@ -1,4 +1,5 @@
 const express = require("express");
+const path = require("path");
 const cors = require("cors");
 require("dotenv").config();
 const swaggerUi = require("swagger-ui-express");
@@ -19,6 +20,10 @@ const io = new Server(httpServer, {
     methods: ["GET", "POST"],
   },
 });
+
+// Serve static profile pic files from uploads folder
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
 
 // Middleware
 app.use(cors({ origin: "http://localhost:3000" }));
