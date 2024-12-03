@@ -3,10 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth.ts"; // Custom hook for accessing AuthContext
 import HeaderSignUpLoginPage from "../components/HeaderSignUpLoginPage.tsx";
 import FooterLandingPage from "../components/Footer";
+import Lottie from "lottie-react";
+import LoginPageAnimation from "../assets/lotties/LogInPageAnimation.json"
 
 const Login: React.FC = () => {
   return (
-    <div>
+    <div style={{ position: "relative", minHeight: "100vh" }}>
       <HeaderSignUpLoginPage />
       <LoginSection />
       <div className="absolute bottom-0 w-full">
@@ -44,15 +46,25 @@ const LoginSection: React.FC = () => {
   };
 
   return (
-    <section className="flex flex-row justify-center py-10 px-6 mt-48 bg-white h-full">
+    <section className="flex flex-col md:flex-row justify-center items-center py-10 px-6 bg-white h-full min-h-[80vh]">
+        <div className="md:w-1/2 flex flex-col items-center text-center md:pr-8 mb-6 md:mb-0">
+          <h1 className="text-4xl font-bold text-[#5E9ED9] mb-4">Welcome Back!</h1>
+          <p className="text-gray-700 font-semibold mb-6">
+            Log in to access your personalized dashboard and stay on track with your goals.
+          </p>
+          <Lottie
+            animationData={LoginPageAnimation}
+            loop={true}
+            style={{ width: "400px", height: "400px" }}
+          />
+        </div>
       <div className="bg-blue-100 rounded-lg shadow-md p-6 w-full border border-[#5E9ED9] max-w-lg text-center">
         <h2 className="text-3xl font-extrabold text-[#5E9ED9] mb-4">Log in</h2>
-        {error && <p className="text-red-500 mb-4">{error}</p>}
         <form className="flex flex-col items-center" onSubmit={handleSubmit}>
           <input
             type="email"
             placeholder="Email"
-            className="w-full p-3 mb-4 border border-[#5E9ED9] rounded-md"
+            className="w-full p-3 mb-2 border border-[#5E9ED9] rounded-md"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -60,7 +72,7 @@ const LoginSection: React.FC = () => {
           <input
             type="password"
             placeholder="Password"
-            className="w-full p-3 mb-6 border border-[#5E9ED9] rounded-md"
+            className="w-full p-3 mb-4 border border-[#5E9ED9] rounded-md"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -75,6 +87,12 @@ const LoginSection: React.FC = () => {
             {loading ? "Logging in..." : "Log in"}
           </button>
         </form>
+        <div className="mt-6 text-sm text-gray-600">
+          <a href="/forgot-password" className="hover:underline">
+            Forgot Password?
+          </a>
+        </div>
+        {error && <p className="mt-4 text-red-500 font-medium">{error}</p>}
       </div>
     </section>
   );
