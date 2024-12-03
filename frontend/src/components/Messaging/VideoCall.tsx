@@ -81,7 +81,7 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, userId, onEndCall }) => {
         peerConnection.onicecandidate = (event) => {
           if (event.candidate) {
             socket.emit("sendIceCandidate", {
-              conversationId: roomId,
+              roomId,
               candidate: event.candidate,
             });
           }
@@ -202,11 +202,7 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, userId, onEndCall }) => {
 
         {/* Status */}
         <div className="absolute top-4 left-4 flex items-center space-x-2 bg-white/80 px-3 py-1 rounded-full">
-          <div
-            className={`w-2 h-2 rounded-full ${
-              isConnected ? "bg-green-500" : "bg-red-500"
-            } animate-pulse`}
-          />
+          <div className={`w-2 h-2 rounded-full ${isConnected ? "bg-green-500" : "bg-red-500"} animate-pulse`} />
           <span className="text-sm font-medium text-gray-700">
             {isConnected ? "Connected" : "Disconnected"}
           </span>
@@ -215,9 +211,7 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, userId, onEndCall }) => {
         {/* Call Timer */}
         {isConnected && (
           <div className="absolute top-4 right-4 bg-white/80 px-3 py-1 rounded-full">
-            <span className="text-sm font-medium text-gray-700">
-              {formatTime(callDuration)}
-            </span>
+            <span className="text-sm font-medium text-gray-700">{formatTime(callDuration)}</span>
           </div>
         )}
 
@@ -233,21 +227,13 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, userId, onEndCall }) => {
       {/* Controls */}
       <div className="mt-4 flex space-x-4">
         <button onClick={toggleMute} className="p-2 bg-gray-200 rounded-full">
-          {isMuted ? (
-            <MicOff className="w-6 h-6 text-gray-800" />
-          ) : (
-            <Mic className="w-6 h-6 text-gray-800" />
-          )}
+          {isMuted ? <MicOff className="w-6 h-6 text-gray-800" /> : <Mic className="w-6 h-6 text-gray-800" />}
         </button>
         <button onClick={onEndCall} className="p-2 bg-red-500 rounded-full">
           <PhoneOff className="w-6 h-6 text-white" />
         </button>
         <button onClick={toggleVideo} className="p-2 bg-gray-200 rounded-full">
-          {isVideoEnabled ? (
-            <VideoOff className="w-6 h-6 text-gray-800" />
-          ) : (
-            <Video className="w-6 h-6 text-gray-800" />
-          )}
+          {isVideoEnabled ? <VideoOff className="w-6 h-6 text-gray-800" /> : <Video className="w-6 h-6 text-gray-800" />}
         </button>
       </div>
     </div>
