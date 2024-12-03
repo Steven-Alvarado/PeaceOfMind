@@ -6,7 +6,7 @@ const swaggerUi = require("swagger-ui-express");
 const YAML = require("yamljs");
 const { createServer } = require("http");
 const { Server } = require("socket.io");
-
+const db = require("./config/db")
 const apiRoutes = require("./routes/api");
 
 const app = express();
@@ -54,38 +54,63 @@ io.on("connection", (socket) => {
     }
   });
 
-  // Event: Send message
-  socket.on("sendMessage", (message) => {
+  socket.on("sendMessage", async (message) => {
     try {
-      const { conversationId } = message;
-      if (!conversationId || !message) {
-        console.error(`Invalid message or conversationId: ${JSON.stringify(message)}`);
+      // Normalize and validate fields
+      const {
+        conversationId = message.conversation_id,
+        senderId = message.sender_id,
+        receiverId = message.receiver_id,
+        messageContent = message.message_content,
+      } = message;
+  
+      if (!conversationId || !messageContent) {
+        console.error(`Invalid message data: ${JSON.stringify(message)}`);
         return;
       }
-      console.log(`Message sent in conversation_${conversationId}:`, message);
-
-      // Emit the message to all clients in the conversation room
-      io.to(`conversation_${conversationId}`).emit("receiveMessage", message);
-    } catch (error) {
-      console.error(`Error sending message: ${error.message}`);
-    }
-  });
-
-  // Event: Video call signaling
-  socket.on("videoCallSignal", ({ room, signal }) => {
-    try {
-      if (!room || !signal) {
-        console.error(`Invalid video call signal data: room=${room}, signal=${signal}`);
+  
+      // Insert the message into the database
+      const insertedMessage = await db.query(
+        `INSERT INTO messages (conversation_id, sender_id, receiver_id, message_content) 
+         VALUES ($1, $2, $3, $4) RETURNING *`,
+        [conversationId, senderId, receiverId, messageContent]
+      );
+  
+      const dbMessage = insertedMessage.rows[0];
+  
+      if (!dbMessage) {
+        console.error("Failed to insert message into database");
         return;
       }
-      console.log(`Video call signal received for room ${room}:`, signal);
-
-      // Forward the signal to the other users in the room
-      socket.to(room).emit("videoCallSignal", signal);
+  
+      console.log(`Message sent in conversation_${conversationId}:`, dbMessage);
+  
+      // Emit the message with `sent_at` to all clients in the room
+      io.to(`conversation_${conversationId}`).emit("receiveMessage", dbMessage);
     } catch (error) {
-      console.error(`Error handling video call signal: ${error.message}`);
+      console.error(`Error processing message: ${error.message}`);
     }
   });
+  
+  
+  socket.on("videoCallSignal", ({ conversationId, signal }) => {
+    const room = `conversation_${conversationId}`;
+    if (!room || !signal) {
+      socket.emit("error", "Invalid video call signal data");
+      return;
+    }
+    socket.to(room).emit("videoCallSignal", signal);
+  });
+  
+  socket.on("sendIceCandidate", ({ conversationId, candidate }) => {
+    const room = `conversation_${conversationId}`;
+    if (!candidate) {
+      console.error(`Invalid ICE candidate data: ${candidate}`);
+      return;
+    }
+    socket.to(room).emit("receiveIceCandidate", candidate);
+  });
+  
 
   // Event: Start video call
   socket.on("startVideoCall", (room) => {
