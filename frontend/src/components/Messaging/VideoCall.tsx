@@ -27,6 +27,7 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, userId, onEndCall }) => {
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
 
+  // Timer for call duration
   useEffect(() => {
     let callTimer: NodeJS.Timeout | null = null;
 
@@ -41,20 +42,20 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, userId, onEndCall }) => {
     };
   }, [isConnected]);
 
+  // Initialize the WebRTC call
   useEffect(() => {
     const initCall = async () => {
       try {
-        // Get local media stream
-        const localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-localStream.getTracks().forEach((track) => peerConnection.addTrack(track, localStream));
-
+        const localStream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: true,
+        });
 
         localStreamRef.current = localStream;
         if (localVideoRef.current) {
           localVideoRef.current.srcObject = localStream;
         }
 
-        // Create peer connection
         const peerConnection = new RTCPeerConnection({
           iceServers: [
             { urls: "stun:stun.l.google.com:19302" }, // Public STUN server
@@ -63,32 +64,30 @@ localStream.getTracks().forEach((track) => peerConnection.addTrack(track, localS
 
         peerConnectionRef.current = peerConnection;
 
-        // Add local tracks to peer connection
+        // Add local tracks to the peer connection
         localStream.getTracks().forEach((track) =>
           peerConnection.addTrack(track, localStream)
         );
 
         // Handle remote stream
         peerConnection.ontrack = (event) => {
-          console.log("Remote stream received:", event.streams[0]);
           const [remoteStream] = event.streams;
           if (remoteVideoRef.current) {
             remoteVideoRef.current.srcObject = remoteStream;
           }
         };
 
+        // Handle ICE candidates
         peerConnection.onicecandidate = (event) => {
           if (event.candidate) {
-            console.log("Sending ICE candidate:", event.candidate);
             socket.emit("sendIceCandidate", {
               conversationId: roomId,
               candidate: event.candidate,
             });
-          } else {
-            console.log("All ICE candidates sent.");
           }
         };
-        // Join room
+
+        // Join video room
         socket.emit("joinVideoRoom", { roomId, userId }, (response: { success: boolean; error?: string }) => {
           if (response.success) {
             console.log("Successfully joined room:", roomId);
@@ -98,43 +97,36 @@ localStream.getTracks().forEach((track) => peerConnection.addTrack(track, localS
           }
         });
 
+        // Handle signaling
         socket.on("receiveSignal", async ({ type, data }: { type: string; data: any }) => {
-          console.log(`Received signal of type ${type}`, data);
           try {
             if (type === "offer") {
-              await peerConnection.setRemoteDescription(new RTCSessionDescription(data));
+              await peerConnection.setRemoteDescription(
+                new RTCSessionDescription(data)
+              );
               const answer = await peerConnection.createAnswer();
               await peerConnection.setLocalDescription(answer);
               socket.emit("sendSignal", { roomId, type: "answer", data: answer });
             } else if (type === "answer") {
-              await peerConnection.setRemoteDescription(new RTCSessionDescription(data));
+              await peerConnection.setRemoteDescription(
+                new RTCSessionDescription(data)
+              );
             } else if (type === "candidate") {
-              console.log("Adding ICE candidate:", data);
               await peerConnection.addIceCandidate(new RTCIceCandidate(data));
             }
-          } catch (error: unknown) {
-            if (error instanceof Error) {
-              console.error("Error handling signaling data:", error.message);
-            } else {
-              console.error("Error handling signaling data:", String(error));
-            }
+          } catch (error) {
+            console.error("Error handling signaling data:", error);
           }
         });
-        
 
-        socket.on("receiveIceCandidate", async (candidate: RTCIceCandidateInit) => {
-          console.log("Adding ICE candidate:", candidate);
+        // Handle ICE candidates from remote peer
+        socket.on("receiveIceCandidate", async (candidate) => {
           try {
             await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
-          } catch (error: unknown) {
-            if (error instanceof Error) {
-              console.error("Failed to add ICE candidate:", error.message);
-            } else {
-              console.error("Failed to add ICE candidate:", String(error));
-            }
+          } catch (error) {
+            console.error("Failed to add ICE candidate:", error);
           }
         });
-         
 
         // Create and send offer if initiating the call
         const offer = await peerConnection.createOffer();
@@ -143,27 +135,29 @@ localStream.getTracks().forEach((track) => peerConnection.addTrack(track, localS
 
         setIsConnected(true);
       } catch (error) {
+        console.error("Failed to initialize call:", error);
         setError("Failed to initialize call.");
-        console.error(error);
       }
     };
 
     initCall();
 
     return () => {
-      // Clean up on unmount
+      // Cleanup on unmount
       peerConnectionRef.current?.close();
       localStreamRef.current?.getTracks().forEach((track) => track.stop());
       socket.emit("leaveVideoRoom", roomId);
     };
   }, [roomId, userId]);
 
+  // Format call duration
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
+  // Toggle mute
   const toggleMute = () => {
     if (localStreamRef.current) {
       localStreamRef.current.getAudioTracks().forEach((track) => {
@@ -173,6 +167,7 @@ localStream.getTracks().forEach((track) => peerConnection.addTrack(track, localS
     }
   };
 
+  // Toggle video
   const toggleVideo = () => {
     if (localStreamRef.current) {
       localStreamRef.current.getVideoTracks().forEach((track) => {
@@ -207,7 +202,11 @@ localStream.getTracks().forEach((track) => peerConnection.addTrack(track, localS
 
         {/* Status */}
         <div className="absolute top-4 left-4 flex items-center space-x-2 bg-white/80 px-3 py-1 rounded-full">
-          <div className={`w-2 h-2 rounded-full ${isConnected ? "bg-green-500" : "bg-red-500"} animate-pulse`} />
+          <div
+            className={`w-2 h-2 rounded-full ${
+              isConnected ? "bg-green-500" : "bg-red-500"
+            } animate-pulse`}
+          />
           <span className="text-sm font-medium text-gray-700">
             {isConnected ? "Connected" : "Disconnected"}
           </span>
@@ -216,7 +215,9 @@ localStream.getTracks().forEach((track) => peerConnection.addTrack(track, localS
         {/* Call Timer */}
         {isConnected && (
           <div className="absolute top-4 right-4 bg-white/80 px-3 py-1 rounded-full">
-            <span className="text-sm font-medium text-gray-700">{formatTime(callDuration)}</span>
+            <span className="text-sm font-medium text-gray-700">
+              {formatTime(callDuration)}
+            </span>
           </div>
         )}
 
@@ -232,13 +233,21 @@ localStream.getTracks().forEach((track) => peerConnection.addTrack(track, localS
       {/* Controls */}
       <div className="mt-4 flex space-x-4">
         <button onClick={toggleMute} className="p-2 bg-gray-200 rounded-full">
-          {isMuted ? <MicOff className="w-6 h-6 text-gray-800" /> : <Mic className="w-6 h-6 text-gray-800" />}
+          {isMuted ? (
+            <MicOff className="w-6 h-6 text-gray-800" />
+          ) : (
+            <Mic className="w-6 h-6 text-gray-800" />
+          )}
         </button>
         <button onClick={onEndCall} className="p-2 bg-red-500 rounded-full">
           <PhoneOff className="w-6 h-6 text-white" />
         </button>
         <button onClick={toggleVideo} className="p-2 bg-gray-200 rounded-full">
-          {isVideoEnabled ? <VideoOff className="w-6 h-6 text-gray-800" /> : <Video className="w-6 h-6 text-gray-800" />}
+          {isVideoEnabled ? (
+            <VideoOff className="w-6 h-6 text-gray-800" />
+          ) : (
+            <Video className="w-6 h-6 text-gray-800" />
+          )}
         </button>
       </div>
     </div>
