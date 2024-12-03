@@ -77,32 +77,56 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, userId, onEndCall }) => {
           }
         };
 
-        // Handle ICE candidates
         peerConnection.onicecandidate = (event) => {
           if (event.candidate) {
+            console.log("Sending ICE candidate:", event.candidate);
             socket.emit("sendIceCandidate", {
-              roomId,
+              conversationId: roomId,
               candidate: event.candidate,
             });
+          } else {
+            console.log("All ICE candidates sent.");
           }
         };
-
         // Join room
-        socket.emit("joinVideoRoom", { roomId, userId });
+        socket.emit("joinVideoRoom", { roomId, userId }, (response) => {
+          if (response.success) {
+            console.log("Successfully joined room:", roomId);
+          } else {
+            console.error("Failed to join room:", response.error);
+            setError("Failed to join video room.");
+          }
+        });
 
         // Handle signaling data
         socket.on("receiveSignal", async ({ type, data }) => {
-          if (type === "offer") {
-            await peerConnection.setRemoteDescription(new RTCSessionDescription(data));
-            const answer = await peerConnection.createAnswer();
-            await peerConnection.setLocalDescription(answer);
-            socket.emit("sendSignal", { roomId, type: "answer", data: answer });
-          } else if (type === "answer") {
-            await peerConnection.setRemoteDescription(new RTCSessionDescription(data));
-          } else if (type === "candidate") {
-            await peerConnection.addIceCandidate(new RTCIceCandidate(data));
+          console.log(`Received signal of type ${type}:`, data);
+          try {
+            if (type === "offer") {
+              await peerConnection.setRemoteDescription(new RTCSessionDescription(data));
+              const answer = await peerConnection.createAnswer();
+              await peerConnection.setLocalDescription(answer);
+              socket.emit("sendSignal", { roomId, type: "answer", data: answer });
+            } else if (type === "answer") {
+              await peerConnection.setRemoteDescription(new RTCSessionDescription(data));
+            } else if (type === "candidate") {
+              await peerConnection.addIceCandidate(new RTCIceCandidate(data));
+            }
+          } catch (err) {
+            console.error("Error handling received signal:", err.message);
           }
         });
+        
+        socket.on("receiveIceCandidate", async (candidate) => {
+          try {
+            console.log("Adding ICE candidate:", candidate);
+            await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+          } catch (err) {
+            console.error("Failed to add ICE candidate:", err.message);
+            setError("Error adding ICE candidate.");
+          }
+        });
+         
 
         // Create and send offer if initiating the call
         const offer = await peerConnection.createOffer();
