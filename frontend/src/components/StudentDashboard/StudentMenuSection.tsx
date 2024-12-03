@@ -15,7 +15,8 @@ const StudentMenuSection: React.FC<StudentMenuSectionProps> = ({ user, onSurveyC
     const [isJournalOpen, setIsJournalOpen] = useState(false);
 
     return (
-        <div className="bg-blue-100 border border-[#5E9ED9] flex-grow rounded-lg p-6 shadow-lg">
+        <div className="p-6 mt-4">
+        <div className="bg-blue-100 border-2 border-[#5E9ED9] rounded-lg shadow-lg p-1">
             <div className="items-center justify-between mb-6">
                 <h2 className="text-2xl text-center font-bold text-[#5E9ED9] mt-2">Menu</h2>
                 <div className="flex justify-center md:mt-5 md:mb-5">
@@ -64,6 +65,7 @@ const StudentMenuSection: React.FC<StudentMenuSectionProps> = ({ user, onSurveyC
             </div>
             <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
             <JournalingModal isOpen={isJournalOpen} onClose={() => setIsJournalOpen(false)} />
+        </div>
         </div>
     );
 };

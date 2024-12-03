@@ -1,13 +1,35 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
-import socket, { Message, MessagePayload } from "../socket";
+import socket from "../socket";
 
 interface Conversation {
   id: number;
   student_id: number;
   therapist_id: number;
+  therapist_first_name?: string;
+  therapist_last_name?: string;
+  specialization?: string;
   created_at: string;
   updated_at: string;
+  student_first_name?: string;
+  student_last_name?: string;
+  profile_picture?: string;
+}
+
+interface Message {
+  id: number;
+  conversation_id: number;
+  sender_id: number;
+  receiver_id: number;
+  message_content: string;
+  sent_at: string;
+}
+
+interface MessagePayload {
+  conversationId: number;
+  senderId: number;
+  receiverId: number;
+  messageContent: string;
 }
 
 interface MessagingContextType {
@@ -15,10 +37,9 @@ interface MessagingContextType {
   currentConversation: Conversation | null;
   messages: Message[];
   fetchConversations: (userId: number, role: "student" | "therapist") => void;
-  fetchMessages: (conversationId: number) => void; // Added fetchMessages here
+  fetchMessages: (conversationId: number) => void;
   setCurrentConversation: (conversation: Conversation) => void;
   sendMessage: (payload: MessagePayload) => void;
-  createConversation: (student_id: number, therapist_id: number) => Promise<void>;
 }
 
 const MessagingContext = createContext<MessagingContextType | undefined>(undefined);
@@ -37,48 +58,70 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [messages, setMessages] = useState<Message[]>([]);
 
   useEffect(() => {
-    // Listen for new messages
-    socket.on("receiveMessage", (message) => {
+    // Handle receiving messages in real-time
+    const handleReceiveMessage = (message: Message) => {
       if (message.conversation_id === currentConversation?.id) {
         setMessages((prev) => [...prev, message]);
       }
-    });
-  
-    // Clean up when the component is unmounted
+    };
+
+    socket.on("receiveMessage", handleReceiveMessage);
+
     return () => {
-      socket.off("receiveMessage");
+      socket.off("receiveMessage", handleReceiveMessage);
     };
   }, [currentConversation]);
-  /**
-   * Fetch all conversations for a user based on their role.
-   * @param userId The user ID.
-   * @param role The role of the user ("student" or "therapist").
-   */
+
   const fetchConversations = async (userId: number, role: "student" | "therapist") => {
     try {
-      const response = await axios.get(
+      const { data } = await axios.get(
         `http://localhost:5000/api/conversations/${userId}?role=${role}`
       );
-      console.log("Fetched conversations from API:", response.data);
-      setConversations(response.data); // Use the direct array from backend
+      setConversations(data);
     } catch (error) {
       console.error("Failed to fetch conversations:", error);
-      setConversations([]); // Reset conversations on failure
+      setConversations([]);
     }
   };
 
-  /**
-   * Fetch all messages for a specific conversation.
-   * @param conversationId The conversation ID.
-   */
   const fetchMessages = async (conversationId: number) => {
     try {
-      const { data } = await axios.get<Message[]>(`http://localhost:5000/api/messages/${conversationId}`);
-      console.log("Fetched messages:", data); // Debugging log
-      setMessages(data); // Update the messages state
+      const { data } = await axios.get<Message[]>(
+        `http://localhost:5000/api/messages/${conversationId}`
+      );
+      setMessages(data);
     } catch (error) {
       console.error("Failed to fetch messages:", error);
-      setMessages([]); // Prevent undefined issues by setting an empty array
+      setMessages([]);
+    }
+  };
+
+  const sendMessage = async (payload: MessagePayload) => {
+    try {
+      const { conversationId, senderId, receiverId, messageContent } = payload;
+
+      // Optimistically add the message to the chat
+      const optimisticMessage: Message = {
+        id: Date.now(),
+        conversation_id: conversationId,
+        sender_id: senderId,
+        receiver_id: receiverId,
+        message_content: messageContent,
+        sent_at: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, optimisticMessage]);
+
+      // Emit the message via the backend
+      await axios.post("http://localhost:5000/api/messages/send", {
+        conversation_id: conversationId,
+        sender_id: senderId,
+        receiver_id: receiverId,
+        message_content: messageContent,
+      });
+
+      socket.emit("sendMessage", payload);
+    } catch (error) {
+      console.error("Failed to send message:", error);
     }
   };
 
@@ -86,81 +129,14 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (currentConversation?.id) {
       fetchMessages(currentConversation.id);
       socket.emit("joinConversation", currentConversation.id);
-    }
-  }, [currentConversation]);
 
-  /**
-   * Send a new message using the WebSocket connection.
-   * @param payload The message payload.
-   */
-  const sendMessage = async (payload: MessagePayload) => {
-    try {
-      const { conversationId, senderId, receiverId, messageContent } = payload;
-  
-      // Ensure all required fields are present
-      if (!conversationId || !senderId || !receiverId || !messageContent) {
-        console.error("Missing required fields in payload:", payload);
-        return;
-      }
-  
-      // Optimistic update
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now(), // Temporary ID for optimistic rendering
-          conversation_id: conversationId,
-          sender_id: senderId,
-          receiver_id: receiverId,
-          message_content: messageContent,
-          sent_at: new Date().toISOString(), // Timestamp
-          is_read: false, // Default read status
-        },
-      ]);
-  
-      // API request to send the message
-      await axios.post("http://localhost:5000/api/messages/send", {
-        conversation_id: conversationId,
-        sender_id: senderId,
-        receiver_id: receiverId,
-        message_content: messageContent,
-      });
-  
-      // Emit the WebSocket event for real-time updates
-      socket.emit("sendMessage", payload);
-    } catch (error) {
-      console.error("Failed to send message:", error);
+      // Optionally listen for "userTyping" events here if needed
     }
-  };
-  
-  
-  
-
-  /**
-   * Create a new conversation between a student and a therapist.
-   * @param student_id The student ID.
-   * @param therapist_id The therapist ID.
-   */
-  const createConversation = async (student_id: number, therapist_id: number) => {
-    try {
-      const { data } = await axios.post<Conversation>(
-        `http://localhost:5000/api/conversations/create`,
-        { student_id, therapist_id }
-      );
-      setConversations((prev) => [...prev, data]);
-    } catch (error) {
-      console.error("Failed to create conversation:", error);
-    }
-  };
-
-  useEffect(() => {
-    socket.on("receiveMessage", (message) => {
-      if (message.conversation_id === currentConversation?.id) {
-        setMessages((prev) => [...prev, message]);
-      }
-    });
 
     return () => {
-      socket.off("receiveMessage");
+      if (currentConversation?.id) {
+        socket.emit("leaveConversation", currentConversation.id);
+      }
     };
   }, [currentConversation]);
 
@@ -171,10 +147,9 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         currentConversation,
         messages,
         fetchConversations,
-        fetchMessages, 
+        fetchMessages,
         setCurrentConversation,
         sendMessage,
-        createConversation,
       }}
     >
       {children}
