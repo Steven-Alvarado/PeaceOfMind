@@ -25,17 +25,21 @@ const fetchUserById = async (req, res) => {
   }
 
   try {
-    const user = await getUserById(userId);
+    const user = await getUserById(userId); // Assume this queries the database and retrieves the user.
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
+
+    // Ensure the `profile_picture_url` is set to the default if not already present.
+    user.profile_picture_url =
+      user.profile_picture_url || "/uploads/default-profile.png";
+
     res.status(200).json(user);
   } catch (error) {
     console.error("Error retrieving user:", error);
     res.status(500).json({ error: "Database query failed" });
   }
 };
-
 // Retrieve audit history for a specific user
 const fetchUserAudit = async (req, res) => {
   const userId = parseInt(req.params.id, 10);

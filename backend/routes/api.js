@@ -16,6 +16,7 @@ const journalRoutes = require("./journal");
 const documentRoutes = require("./documents");
 const relationshipRoutes = require("./relationships");
 const invoiceRoutes = require("./invoices");
+const profilePictureRoutes = require("./profilePicture"); 
 
 // Mount routes on `/api`
 router.use("/users", userRoutes);
@@ -30,5 +31,6 @@ router.use("/journals", journalRoutes);
 router.use("/documents", documentRoutes);
 router.use("/relationships", relationshipRoutes);
 router.use("/invoices", invoiceRoutes);
+router.use("/profilePicture", profilePictureRoutes);
 
 module.exports = router;
