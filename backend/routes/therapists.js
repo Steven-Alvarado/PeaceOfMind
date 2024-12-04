@@ -7,7 +7,6 @@ const {
   toggleAvailability
   updateAvailability,
   toggleAvailability
-  updateAvailability,
 } = require("../controllers/therapistController");
 const router = express.Router();
 

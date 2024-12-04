@@ -18,7 +18,7 @@ const TherapistDashboard: React.FC = () => {
   const [isRequestOpen, setIsRequestOpen] = useState(false);
   const [isInvoicingOpen, setIsInvoicingOpen] = useState(false);
 
-  const [isAvailable, setIsAvailable] = useState(true);
+  const [isAvailable, setIsAvailable] = useState<boolean | undefined>(undefined);
   const [therapistId, setTherapistId] = useState(null);
   const [refresh, setRefresh] = useState(false);
   const { user } = useAuth();
@@ -91,10 +91,13 @@ const TherapistDashboard: React.FC = () => {
                 Help
               </button>
             </div>
-            <div className="flex items-center justify-center space-x-2">
-              <span>Not Available</span>
-              <Switch checked={isAvailable} onChange={toggleAvailability} />
-              <span>Available</span>
+            <div className="flex justify-center">              
+              <div className="text-center p-2 text-[#5E9ED9] rounded-2xl w-2/3"> Set your availability for Patient Requests.</div>
+            </div>
+            <div className="flex items-center justify-center space-x-2 border-[#5E9ED9] border-2 rounded-2xl">
+              <span className=" p-2 rounded-3xl text-[#5E9ED9] font-bold">Not Available</span>
+              <Switch className="" checked={isAvailable} onChange={toggleAvailability} />
+              <span className=" p-2 rounded-3xl text-[#5E9ED9] font-bold">Available</span>
             </div>
             <button
               className="w-full bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center"

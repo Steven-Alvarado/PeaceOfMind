@@ -119,8 +119,6 @@ module.exports = {
   findTherapistIdById,
   getAvailableTherapists,
   isLicenseVerified,
-  toggleTherapistAvailability
-  updateTherapistAvailability,
-  toggleTherapistAvailability
+  toggleTherapistAvailability,
   updateTherapistAvailability,
 };
