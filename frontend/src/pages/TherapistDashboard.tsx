@@ -6,21 +6,33 @@ import PatientSection from "../components/TherapistDashboard/PatientSection";
 //import Lottie from "lottie-react";
 import Switch from "@mui/material/Switch";
 import { useAuth } from "../hooks/useAuth";
+
 import TherapistHelpModal from "../components/TherapistDashboard/TherapistHelpModal"; // Import your existing TherapistHelpModal component
 import RequestList from "../components/TherapistDashboard/RequestList";
+import InvoicingModal from "../components/TherapistDashboard/InvoicingModal";
+
 import { FaUserPlus, FaTasks, FaFileInvoice } from "react-icons/fa";
 
 const TherapistDashboard: React.FC = () => {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isRequestOpen, setIsRequestOpen] = useState(false);
+  const [isInvoicingOpen, setIsInvoicingOpen] = useState(false);
+
   const [isAvailable, setIsAvailable] = useState(true);
   const [therapistId, setTherapistId] = useState(null);
   const [refresh, setRefresh] = useState(false);
   const { user } = useAuth();
 
-  const toggleAvailability = () => {
-    setIsAvailable(!isAvailable);
-  };
+  const toggleAvailability = async () => {
+    try {
+        const response = await axios.put(`/api/therapists/${therapistId.id}/availability`, {
+            availability: !isAvailable,
+        });
+        setIsAvailable(response.data.availability);
+    } catch (error) {
+        console.error("Failed to toggle availability:", error);
+    }
+};
 
   const handleRefresh = () => {
     setRefresh((prev) => !prev);
@@ -66,16 +78,11 @@ const TherapistDashboard: React.FC = () => {
             refresh={refresh}
           />
         </div>
-        <div className="col-span-1 bg-blue-100 rounded-lg shadow-lg p-6 border border-[#5E9ED9]">
+        <div className="col-span-1 bg-blue-100 rounded-lg shadow-lg p-6 border-2 border-[#5E9ED9]">
           <h2 className="text-4xl text-center font-bold text-[#5E9ED9]">
             Menu
           </h2>
           <div className="space-y-4 mt-4">
-            <div className="flex items-center justify-center space-x-2">
-              <span>Not Available</span>
-              <Switch checked={isAvailable} onChange={toggleAvailability} />
-              <span>Available</span>
-            </div>
             <div className="flex justify-center md:mt-7 md:mb-20">
               <button
                 className="bg-[#5E9ED9] text-white px-4 py-1 rounded-2xl hover:bg-[#4a8ac9] text-sm"
@@ -83,6 +90,11 @@ const TherapistDashboard: React.FC = () => {
               >
                 Help
               </button>
+            </div>
+            <div className="flex items-center justify-center space-x-2">
+              <span>Not Available</span>
+              <Switch checked={isAvailable} onChange={toggleAvailability} />
+              <span>Available</span>
             </div>
             <button
               className="w-full bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center"
@@ -93,7 +105,10 @@ const TherapistDashboard: React.FC = () => {
             <button className="w-full bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center">
               <FaTasks className="mr-3" /> Manage Scheduling
             </button>
-            <button className="w-full bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center">
+            <button 
+              className="w-full bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center"
+              onClick={() => setIsInvoicingOpen(true)}
+            >
               <FaFileInvoice className="mr-3" /> Invoices
             </button>
           </div>
@@ -114,6 +129,12 @@ const TherapistDashboard: React.FC = () => {
           //window.location.reload(); Refreshes page
         }}
       />
+      <InvoicingModal 
+        isOpen={isInvoicingOpen}
+        onClose={() => setIsInvoicingOpen(false)} 
+        therapistId={therapistId ? therapistId.id : null}
+      />
+
     </div>
   );
 };
