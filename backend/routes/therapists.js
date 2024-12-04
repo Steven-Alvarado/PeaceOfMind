@@ -6,6 +6,7 @@ const {
   getTherapistId,
   toggleAvailability
   updateAvailability,
+  toggleAvailability
 } = require("../controllers/therapistController");
 const router = express.Router();
 
@@ -14,5 +15,5 @@ router.get("/available", listAvailableTherapists); // Get available therapists
 router.get("/:id", getTherapistDetails); // Get therapist by id
 router.get("/find/:id", getTherapistId); // Get therapist_id from user_id
 router.put("/toggleAvailability/:id", toggleAvailability); // Toggle availability by therapist idrouter.put('/:id/availability', updateAvailability); // Update therapist availability
-
+router.put("/toggleAvailability/:id", toggleAvailability); // Toggle availability by therapist id
 module.exports = router;
