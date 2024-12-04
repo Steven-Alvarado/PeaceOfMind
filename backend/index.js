@@ -6,7 +6,7 @@ const swaggerUi = require("swagger-ui-express");
 const YAML = require("yamljs");
 const { createServer } = require("http");
 const { Server } = require("socket.io");
-
+const db = require("./config/db");
 const apiRoutes = require("./routes/api");
 
 const app = express();
@@ -24,7 +24,6 @@ const io = new Server(httpServer, {
 // Serve static profile pic files from uploads folder
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-
 // Middleware
 app.use(cors({ origin: "http://localhost:3000" }));
 app.use(express.json());
@@ -40,72 +39,104 @@ app.use("/api", apiRoutes);
 io.on("connection", (socket) => {
   console.log(`A user connected: ${socket.id}`);
 
-  // Event: User joins a conversation room
+  // User joins a conversation room
   socket.on("joinConversation", (conversationId) => {
-    try {
-      if (!conversationId) {
-        console.error(`Invalid conversationId received: ${conversationId}`);
-        return;
-      }
-      console.log(`User joined conversation room: conversation_${conversationId}`);
-      socket.join(`conversation_${conversationId}`);
-    } catch (error) {
-      console.error(`Error joining conversation room: ${error.message}`);
+    if (!conversationId) {
+      console.error("Invalid conversationId received.");
+      return;
     }
+    console.log(`User joined conversation room: conversation_${conversationId}`);
+    socket.join(`conversation_${conversationId}`);
   });
 
-  // Event: Send message
-  socket.on("sendMessage", (message) => {
+  // Handle sending messages
+  socket.on("sendMessage", async (message) => {
+    const { conversationId, senderId, receiverId, messageContent } = message;
+  
+    if (!conversationId || !messageContent) {
+      console.error("Invalid message data.");
+      return;
+    }
+  
     try {
-      const { conversationId } = message;
-      if (!conversationId || !message) {
-        console.error(`Invalid message or conversationId: ${JSON.stringify(message)}`);
-        return;
+      // Save the message in the database
+      const insertedMessage = await db.query(
+        `INSERT INTO messages (conversation_id, sender_id, receiver_id, message_content) 
+         VALUES ($1, $2, $3, $4) RETURNING *`,
+        [conversationId, senderId, receiverId, messageContent]
+      );
+  
+      const dbMessage = insertedMessage.rows[0];
+      if (dbMessage) {
+        console.log(`Message sent in conversation_${conversationId}:`, dbMessage);
+  
+        // Emit message only to the relevant room
+        io.to(`conversation_${conversationId}`).emit("receiveMessage", dbMessage);
       }
-      console.log(`Message sent in conversation_${conversationId}:`, message);
-
-      // Emit the message to all clients in the conversation room
-      io.to(`conversation_${conversationId}`).emit("receiveMessage", message);
     } catch (error) {
-      console.error(`Error sending message: ${error.message}`);
+      console.error("Error processing message:", error.message);
     }
   });
+  
 
-  // Event: Video call signaling
-  socket.on("videoCallSignal", ({ room, signal }) => {
-    try {
-      if (!room || !signal) {
-        console.error(`Invalid video call signal data: room=${room}, signal=${signal}`);
-        return;
-      }
-      console.log(`Video call signal received for room ${room}:`, signal);
-
-      // Forward the signal to the other users in the room
-      socket.to(room).emit("videoCallSignal", signal);
-    } catch (error) {
-      console.error(`Error handling video call signal: ${error.message}`);
+  // Video call signaling (offer/answer exchange)
+  socket.on("videoCallSignal", ({ conversationId, signal }) => {
+    if (!signal || !conversationId) {
+      console.error("Invalid signal data.");
+      return;
     }
+    const room = `conversation_${conversationId}`;
+    console.log(`Broadcasting video call signal for room ${room}:`, signal);
+    socket.to(room).emit("receiveSignal", signal);
   });
 
-  // Event: Start video call
-  socket.on("startVideoCall", (room) => {
-    try {
-      if (!room) {
-        console.error(`Invalid room for starting video call: ${room}`);
-        return;
-      }
-      console.log(`Starting video call in room: ${room}`);
-
-      // Notify other users in the room to start the video call
-      socket.to(room).emit("startVideoCall");
-    } catch (error) {
-      console.error(`Error starting video call: ${error.message}`);
+  // Handle ICE candidate exchange
+  socket.on("sendIceCandidate", ({ conversationId, candidate }) => {
+    const room = `conversation_${conversationId}`;
+    if (!candidate || !conversationId) {
+      console.error("Invalid ICE candidate data.");
+      return;
     }
+    console.log(`Broadcasting ICE candidate for room ${room}:`, candidate);
+    socket.to(room).emit("receiveIceCandidate", candidate);
   });
 
-  // Event: Disconnect
+  // Handle SDP signaling for offer/answer
+  socket.on("sendSignal", ({ roomId, type, data }) => {
+    if (!roomId || !type || !data) {
+      console.error("Invalid signaling data.");
+      return;
+    }
+    console.log(`Broadcasting ${type} for room ${roomId}:`, data);
+    socket.to(roomId).emit("receiveSignal", { type, data });
+  });
+
+  // Join video room
+  socket.on("joinVideoRoom", ({ roomId, userId }, callback) => {
+    if (!roomId || !userId) {
+      console.error("Invalid room or user data.");
+      callback({ success: false, error: "Invalid room or user data." });
+      return;
+    }
+    console.log(`User ${userId} joined video room: ${roomId}`);
+    socket.join(roomId);
+    callback({ success: true });
+  });
+
+  // Notify other users in the room to start video call
+  socket.on("startVideoCall", (conversationId) => {
+    if (!conversationId) {
+      console.error("Invalid conversationId for video call.");
+      return;
+    }
+    const room = `conversation_${conversationId}`;
+    console.log(`Starting video call in room: ${room}.`);
+    socket.to(room).emit("startVideoCall");
+  });
+
+  // Handle user disconnection
   socket.on("disconnect", () => {
-    console.log(`A user disconnected: ${socket.id}`);
+    console.log(`User disconnected: ${socket.id}`);
   });
 });
 
