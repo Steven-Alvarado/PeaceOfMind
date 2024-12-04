@@ -215,5 +215,4 @@ module.exports = {
   getTherapistId,
   toggleAvailability,
   updateAvailability,
-  updateAvailability,
 };

@@ -17,7 +17,6 @@ const TherapistDashboard: React.FC = () => {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isRequestOpen, setIsRequestOpen] = useState(false);
   const [isInvoicingOpen, setIsInvoicingOpen] = useState(false);
-
   const [isAvailable, setIsAvailable] = useState<boolean | undefined>(undefined);
   const [therapistId, setTherapistId] = useState(null);
   const [refresh, setRefresh] = useState(false);
