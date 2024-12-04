@@ -268,7 +268,9 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
 
   return (
     isOpen && (
-      <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+      style={{ marginTop:"80px"}}
+      >
         <div className="bg-white rounded-lg shadow-lg w-4/5 h-4/5 max-w-6xl max-h-[90vh]">
           <div className="flex h-full">
             <div className="w-1/4 bg-blue-100 p-4 rounded-l-lg flex flex-col">
