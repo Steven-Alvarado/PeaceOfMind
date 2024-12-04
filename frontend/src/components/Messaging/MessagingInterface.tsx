@@ -3,7 +3,7 @@ import { useMessaging } from "../../context/MessagingContext";
 import VideoCall from "./VideoCall";
 import { Video, Send, X } from "lucide-react";
 import socket from "../../socket";
-
+import ProfilePicture from "../ProfilePicture";
 interface MessagingInterfaceProps {
   userId: number;
   userRole: "student" | "therapist";
@@ -240,19 +240,11 @@ const MessagingInterface: React.FC<MessagingInterfaceProps> = ({
                     currentConversation?.id === conversation.id ? "bg-blue-300" : ""
                   }`}
                 >
-                  <img
-                    src={
-                      userRole === "student"
-                        ? `http://localhost:5000/api/profilePicture/therapist/${conversation.therapist_id}`
-                        : `http://localhost:5000/api/profilePicture/${conversation.student_id}`
-                    }
-                    alt="Conversation"
-                    onError={(e) => {
-                      const imgElement = e.target as HTMLImageElement;
-                      imgElement.onerror = null;
-                      imgElement.src = "http://localhost:5000/uploads/default-profile.png";
-                    }}
-                    className="w-10 h-10 rounded-full object-cover"
+                  {/* Updated ProfilePicture Usage */}
+                  <ProfilePicture
+                    userId={userRole === "student" ? undefined : conversation.student_id}
+                    therapistId={userRole === "student" ? conversation.therapist_id : undefined}
+                    userRole={userRole === "student" ? "therapist" : "student"}
                   />
                   <div>
                     <h3 className="font-semibold text-gray-900">
@@ -289,15 +281,11 @@ const MessagingInterface: React.FC<MessagingInterfaceProps> = ({
                         setShowPotentialPartners(false);
                       }}
                     >
-                      <img
-                        src={`http://localhost:5000/api/profilePicture/${userRole === "student" ? "therapist" : ""}/${partner.id}`}
-                        alt="Profile"
-                        className="w-10 h-10 rounded-full mr-4"
-                        onError={(e) => {
-                          const imgElement = e.target as HTMLImageElement;
-                          imgElement.onerror = null;
-                          imgElement.src = "http://localhost:5000/uploads/default-profile.png";
-                        }}
+                      {/* Updated ProfilePicture Usage */}
+                      <ProfilePicture
+                        userId={userRole === "student" ? undefined : partner.id}
+                        therapistId={userRole === "student" ? partner.id : undefined}
+                        userRole={userRole === "student" ? "therapist" : "student"}
                       />
                       <div>
                         <h3 className="font-semibold">
@@ -319,24 +307,16 @@ const MessagingInterface: React.FC<MessagingInterfaceProps> = ({
                 {/* Chat interface */}
                 <header className="mb-4 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <img
-                      src={
-                        userRole === "student"
-                          ? `http://localhost:5000/api/profilePicture/therapist/${currentConversation?.therapist_id}`
-                          : `http://localhost:5000/api/profilePicture/${currentConversation?.student_id}`
-                      }
-                      alt="Profile"
-                      onError={(e) => {
-                        const imgElement = e.target as HTMLImageElement;
-                        imgElement.onerror = null;
-                        imgElement.src = "http://localhost:5000/uploads/default-profile.png";
-                      }}
-                      className="w-10 h-10 rounded-full"
+                    {/* Updated ProfilePicture Usage */}
+                    <ProfilePicture
+                      userId={userRole === "student" ? undefined : currentConversation.student_id}
+                      therapistId={userRole === "student" ? currentConversation.therapist_id : undefined}
+                      userRole={userRole === "student" ? "therapist" : "student"}
                     />
                     <h2 className="font-semibold text-gray-900">
                       {userRole === "student"
-                        ? `${currentConversation?.therapist_first_name} ${currentConversation?.therapist_last_name}`
-                        : `${currentConversation?.student_first_name} ${currentConversation?.student_last_name}`}
+                        ? `${currentConversation.therapist_first_name} ${currentConversation.therapist_last_name}`
+                        : `${currentConversation.student_first_name} ${currentConversation.student_last_name}`}
                     </h2>
                   </div>
                   <button

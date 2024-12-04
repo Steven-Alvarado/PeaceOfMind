@@ -1,20 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { FaCalendar, FaComments } from "react-icons/fa";
-import {
-  FaClipboardList,
-  FaPerson,
-  FaPersonWalkingArrowRight,
-} from "react-icons/fa6";
-import Alert from "@mui/material/Alert";
+import { FaPersonWalkingArrowRight } from "react-icons/fa6";
 import { CiStar, CiBadgeDollar } from "react-icons/ci";
 import { MdOutlineWorkHistory, MdOutlineMail } from "react-icons/md";
 import { MessageCircle, Search, Star, Calendar } from "lucide-react";
 
+import Alert from "@mui/material/Alert";
 import TherapistModal from "./TherapistModal";
 import DropModal from "./DropTherapist";
 import axios from "axios";
 import { User } from "../../context/AuthContext";
 import MessagingInterface from "../Messaging/MessagingInterface";
+import ProfilePicture from "../ProfilePicture";
 
 interface TherapistSectionProps {
   user: User;
@@ -24,7 +20,7 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
   const [therapistName, setTherapistName] = useState<string | null>(null);
   const [therapistDetails, setTherapistDetails] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [error] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [refresh, setRefresh] = useState(false);
   const [sentAlert, setSentAlert] = useState(false);
   const [sentDrop, setSentDrop] = useState(false);
@@ -33,17 +29,9 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
   const [isDropOpen, setIsDropOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
 
-  const handleRefresh = () => {
-    setRefresh((prev) => !prev);
-  };
-
-  const handleAlert = () => {
-    setSentAlert((prev) => !prev);
-  };
-
-  const handleDrop = () => {
-    setSentDrop((prev) => !prev);
-  };
+  const handleRefresh = () => setRefresh((prev) => !prev);
+  const handleAlert = () => setSentAlert((prev) => !prev);
+  const handleDrop = () => setSentDrop((prev) => !prev);
 
   useEffect(() => {
     const fetchTherapistRelationship = async () => {
@@ -62,8 +50,7 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
         }
       } catch (err) {
         console.error("Failed to load therapist relationship:", err);
-        setTherapistName(null);
-        setTherapistDetails(null);
+        setError("Unable to load therapist relationship.");
       } finally {
         setLoading(false);
       }
@@ -75,7 +62,6 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
         setTherapistDetails(response.data.therapist);
       } catch (err) {
         console.error("Error fetching therapist details:", err);
-        setTherapistDetails(null);
       }
     };
 
@@ -85,16 +71,12 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
   if (loading) return <div>Loading therapist details...</div>;
   if (error) return <div className="text-red-500">Error: {error}</div>;
 
-
   return (
     <div className="p-6 mt-4">
-
-
-
       <div className="bg-blue-100 border-2 border-[#5E9ED9] rounded-lg shadow-lg p-12">
         {sentAlert && (
           <Alert severity="info" onClose={handleAlert}>
-            Your request has been sent
+            Your request has been sent.
           </Alert>
         )}
         {sentDrop && (
@@ -107,27 +89,23 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Therapist Image Section */}
-          <div className="flex flex-col items-center justify-center">
-            <div className="relative w-48 h-48 md:w-64 md:h-64">
-              <img
-                src={
-                  therapistDetails
-                    ? `http://localhost:5000/api/profilePicture/therapist/${therapistDetails.id}`
-                    : "http://localhost:5000/uploads/default-profile.png"
-                }
-                alt={therapistName || "Therapist"}
-                onError={(e) => {
-                  const imgElement = e.target as HTMLImageElement;
-                  imgElement.onerror = null;
-                  imgElement.src = "http://localhost:5000/uploads/default-profile.png";
-                }}
-                className="rounded-full object-cover w-full h-full shadow-md transition duration-300 hover:shadow-lg"
+          <div className="relative mx-auto">
+            {/* Pass therapistId if userRole is "therapist", otherwise userId */}
+            {therapistDetails?.id && (
+              <ProfilePicture
+                userRole={user.role === "therapist" ? "therapist" : "student"}
+                userId={user.role === "student" ? user.id : undefined}
+                therapistId={user.role === "therapist" ? therapistDetails.id : undefined}
+                className="w-full h-full rounded-full object-cover" 
+                style={{ width: "200px", height: "200px" }} // Explicitly set dimensions
               />
-              <div className="absolute bottom-2 right-2 bg-white rounded-full p-1 shadow-md">
-                <Star className="w-6 h-6 text-yellow-400" />
-              </div>
+            )}
+            <div className="absolute right-2 bg-white rounded-full p-1 shadow-md">
+              <Star className="w-6 h-6 text-yellow-400" />
             </div>
           </div>
+
+
           {/* Therapist Info Section */}
           <div className="flex flex-col justify-center space-y-6">
             <div>
@@ -157,13 +135,7 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
             </div>
             <div className="grid grid-cols-1 gap-4">
               <button
-                onClick={() => {
-                  setIsTherListOpen(true);
-                  {
-                    if (sentAlert) handleAlert();
-                    if (sentDrop) handleDrop();
-                  }
-                }}
+                onClick={() => setIsTherListOpen(true)}
                 className="flex items-center justify-center space-x-2 bg-[#5E9ED9] text-white py-3 px-6 rounded-lg hover:bg-[#4b8bc4] transition duration-300 shadow-md hover:shadow-lg"
               >
                 <Search className="w-5 h-5" />
@@ -173,21 +145,13 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
               </button>
 
               {therapistDetails && (
-                <>
-                  <button
-                    onClick={() => {
-                      setIsDropOpen(true);
-                      {
-                        if (sentAlert) handleAlert();
-                        if (sentDrop) handleDrop();
-                      }
-                    }}
-                    className="flex items-center justify-center space-x-2 bg-[#5E9ED9] text-white py-3 px-6 rounded-lg hover:bg-[#4b8bc4] transition duration-300 shadow-md hover:shadow-lg"
-                  >
-                    <FaPersonWalkingArrowRight className="w-5 h-5" />
-                    <span>Drop Therapist</span>
-                  </button>
-                </>
+                <button
+                  onClick={() => setIsDropOpen(true)}
+                  className="flex items-center justify-center space-x-2 bg-[#5E9ED9] text-white py-3 px-6 rounded-lg hover:bg-[#4b8bc4] transition duration-300 shadow-md hover:shadow-lg"
+                >
+                  <FaPersonWalkingArrowRight className="w-5 h-5" />
+                  <span>Drop Therapist</span>
+                </button>
               )}
 
               <button
@@ -209,22 +173,11 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
 
       {/* Chat Modal */}
       {isChatOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="relative bg-white rounded-lg p-6 max-w-md w-full">
-            <button
-              onClick={() => setIsChatOpen(false)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 focus:outline-none"
-              aria-label="Close"
-            >
-              ✕
-            </button>
-            <MessagingInterface
-              userId={user.id}
-              userRole={user.role}
-              onClose={() => setIsChatOpen(false)}
-            />
-          </div>
-        </div>
+        <MessagingInterface
+          userId={user.id}
+          userRole={user.role}
+          onClose={() => setIsChatOpen(false)}
+        />
       )}
 
       <DropModal
@@ -236,7 +189,6 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
         }}
       />
 
-      {/* Therapist Modal */}
       <TherapistModal
         isOpen={isTherListOpen}
         refresh={refresh}
