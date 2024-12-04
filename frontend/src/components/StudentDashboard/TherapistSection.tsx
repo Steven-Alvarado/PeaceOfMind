@@ -38,7 +38,7 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
       try {
         const response = await axios.get(`/api/relationships/${user.id}`);
         const relationship = response.data.relationship;
-
+  
         if (relationship?.current_therapist_id) {
           setTherapistName(
             `${relationship.current_therapist_first_name} ${relationship.current_therapist_last_name}`
@@ -48,14 +48,19 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
           setTherapistName(null);
           setTherapistDetails(null);
         }
-      } catch (err) {
-        console.error("Failed to load therapist relationship:", err);
-        setError("Unable to load therapist relationship.");
+      } catch (err: any) {
+        if (err.response?.status === 404) {
+          // Explicitly handle 404 (No therapist relationship)
+          setTherapistName(null);
+          setTherapistDetails(null);
+        } else {
+          console.error("Failed to load therapist relationship:", err);
+          setError("Unable to load therapist relationship.");
+        }
       } finally {
         setLoading(false);
       }
     };
-
     const fetchTherapistDetails = async (therapistId: number) => {
       try {
         const response = await axios.get(`/api/therapists/${therapistId}`);
