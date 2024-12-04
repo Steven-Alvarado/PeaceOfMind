@@ -320,9 +320,6 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
                             <p>
                               <strong>{entry.mood}</strong>
                             </p>
-                            {/* <p>
-                              {new Date(entry.date).toLocaleTimeString("en-US", { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone })}
-                            </p>*/}
                           </div>
                         </div>
                       </li>
@@ -364,7 +361,7 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
                     : "No Journal Entries Available."}
                 </h2>
                 <button
-                  className="bg-red-500 text-white px-2 rounded hover:bg-red-600"
+                  className="text-black px-2 rounded hover:text-gray-900"
                   onClick={onClose}
                 >
                   X

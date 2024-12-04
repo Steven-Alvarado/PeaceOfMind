@@ -5,6 +5,7 @@ import HelpModal from "./StudentHelpModal";
 import JournalingModal from "./JournalingModal";
 import JournalAnalyticsModal from "./JournalAnalyticsModal";
 import WeeklySurvey from "./WeeklySurvey";
+import InvoicingModal from "./InvoicingModal";
 import {User} from "../../context/AuthContext";
 
 interface StudentMenuSectionProps {
@@ -17,6 +18,8 @@ const StudentMenuSection: React.FC<StudentMenuSectionProps> = ({ user, onSurveyC
     const [isJournalOpen, setIsJournalOpen] = useState(false);
     const [isSurveyOpen, setIsSurveyOpen] = useState(false);
     const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
+    const [isInvoicingOpen, setIsInvoicingOpen] = useState(false);
+
 
     return (
         <div className="p-6 mt-4">
@@ -63,6 +66,7 @@ const StudentMenuSection: React.FC<StudentMenuSectionProps> = ({ user, onSurveyC
                 <div className="justify-center flex">
                     <button
                         className=" w-full bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center"
+                        onClick={() => setIsInvoicingOpen(true)}
                     >
                         <FaFileInvoiceDollar className="mr-3" /> Invoices
                     </button>
@@ -72,8 +76,9 @@ const StudentMenuSection: React.FC<StudentMenuSectionProps> = ({ user, onSurveyC
             <JournalingModal isOpen={isJournalOpen} onClose={() => setIsJournalOpen(false)} />
             <JournalAnalyticsModal isOpen={isAnalyticsOpen} onClose={() =>setIsAnalyticsOpen(false)} />
             <WeeklySurvey isOpen={isSurveyOpen} onClose={() => setIsSurveyOpen(false)} user={user} />
+            <InvoicingModal isOpen={isInvoicingOpen} onClose={() => setIsInvoicingOpen(false)} />
         </div>
-        </div>
+      </div>
     );
 };
 
