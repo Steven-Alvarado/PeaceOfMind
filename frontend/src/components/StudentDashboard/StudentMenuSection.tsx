@@ -20,6 +20,7 @@ const StudentMenuSection: React.FC<StudentMenuSectionProps> = ({ user, onSurveyC
     const [isInvoicingOpen, setIsInvoicingOpen] = useState(false);
     const [isSurveyOpen, setIsSurveyOpen] = useState(false);
     const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
+    const [isInvoicingOpen, setIsInvoicingOpen] = useState(false);
 
     return (
         <div className="p-6 mt-4">
@@ -77,6 +78,7 @@ const StudentMenuSection: React.FC<StudentMenuSectionProps> = ({ user, onSurveyC
             <InvoicingModal isOpen={isInvoicingOpen} onClose={() => setIsInvoicingOpen(false)} />
             <JournalAnalyticsModal isOpen={isAnalyticsOpen} onClose={() =>setIsAnalyticsOpen(false)} />
             <WeeklySurvey isOpen={isSurveyOpen} onClose={() => setIsSurveyOpen(false)} user={user} />
+            <InvoicingModal isOpen={isInvoicingOpen} onClose={() => setIsInvoicingOpen(false)} />
         </div>
         </div>
     );

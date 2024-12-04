@@ -6,7 +6,6 @@ const {
   getAvailableTherapists,
   isLicenseVerified,
   toggleTherapistAvailability,
-  toggleTherapistAvailability,
   updateTherapistAvailability,
 } = require("../models/therapistModel");
 const { createUser, findUserByEmail } = require("../models/authModel");
@@ -215,5 +214,6 @@ module.exports = {
   listAvailableTherapists,
   getTherapistId,
   toggleAvailability,
+  updateAvailability,
   updateAvailability,
 };
