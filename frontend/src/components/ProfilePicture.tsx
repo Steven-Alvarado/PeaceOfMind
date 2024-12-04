@@ -64,7 +64,7 @@ const ProfilePicture: React.FC<ProfilePictureProps> = ({
       src={profilePictureUrl || "http://localhost:5000/uploads/default-profile.png"}
       alt="Profile"
       className={`rounded-full object-cover ${className || ""}`} // Apply custom class names
-      style={style} // Apply custom inline styles
+      style={style || {}} // Apply custom inline styles
       onError={(e) => {
         const imgElement = e.target as HTMLImageElement;
         imgElement.onerror = null;

@@ -245,6 +245,8 @@ const MessagingInterface: React.FC<MessagingInterfaceProps> = ({
                     userId={userRole === "student" ? undefined : conversation.student_id}
                     therapistId={userRole === "student" ? conversation.therapist_id : undefined}
                     userRole={userRole === "student" ? "therapist" : "student"}
+                    className="w-10 h-10 rounded-full object-cover" // Use Tailwind classes for width and height
+                    style={{ width: "40px", height: "40px" }}
                   />
                   <div>
                     <h3 className="font-semibold text-gray-900">
@@ -286,10 +288,12 @@ const MessagingInterface: React.FC<MessagingInterfaceProps> = ({
                         userId={userRole === "student" ? undefined : partner.id}
                         therapistId={userRole === "student" ? partner.id : undefined}
                         userRole={userRole === "student" ? "therapist" : "student"}
-                      />
-                      <div>
+                        className="w-5 h-5 rounded-full object-cover"
+                        style={{ width: "40px", height: "40px" }}
+                      /> 
+                      <div className="ml-4">
                         <h3 className="font-semibold">
-                          {partner.first_name} {partner.last_name}
+                            {partner.first_name} {partner.last_name}
                         </h3>
                       </div>
                     </div>
@@ -312,6 +316,8 @@ const MessagingInterface: React.FC<MessagingInterfaceProps> = ({
                       userId={userRole === "student" ? undefined : currentConversation.student_id}
                       therapistId={userRole === "student" ? currentConversation.therapist_id : undefined}
                       userRole={userRole === "student" ? "therapist" : "student"}
+                      className="w-10 h-10 rounded-full object-cover"
+                      style={{ width: "40px", height: "40px" }}
                     />
                     <h2 className="font-semibold text-gray-900">
                       {userRole === "student"
