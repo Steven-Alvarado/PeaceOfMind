@@ -107,8 +107,17 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
           <div className="flex flex-col items-center justify-center">
             <div className="relative w-48 h-48 md:w-64 md:h-64">
               <img
-                src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-4.0.3"
+                src={
+                  therapistDetails
+                    ? `http://localhost:5000/api/profilePicture/therapist/${therapistDetails.id}`
+                    : "http://localhost:5000/uploads/default-profile.png"
+                }
                 alt={therapistName || "Therapist"}
+                onError={(e) => {
+                  const imgElement = e.target as HTMLImageElement;
+                  imgElement.onerror = null;
+                  imgElement.src = "http://localhost:5000/uploads/default-profile.png";
+                }}
                 className="rounded-full object-cover w-full h-full shadow-md transition duration-300 hover:shadow-lg"
               />
               <div className="absolute bottom-2 right-2 bg-white rounded-full p-1 shadow-md">
@@ -116,7 +125,6 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
               </div>
             </div>
           </div>
-
           {/* Therapist Info Section */}
           <div className="flex flex-col justify-center space-y-6">
             <div>

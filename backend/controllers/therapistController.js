@@ -6,6 +6,7 @@ const {
   getAvailableTherapists,
   isLicenseVerified,
   updateTherapistAvailability,
+  toggleTherapistAvailability,
 } = require("../models/therapistModel");
 const { createUser, findUserByEmail } = require("../models/authModel");
 
@@ -183,10 +184,35 @@ const updateAvailability = async (req, res) => {
   }
 };
 
+const toggleAvailability = async (req, res) => {
+  const therapistId = parseInt(req.params.id, 10);
+
+  if (isNaN(therapistId)) {
+    return res.status(400).json({ error: "Invalid therapist ID" });
+  }
+
+  try {
+    const updatedTherapist = await toggleTherapistAvailability(therapistId);
+
+    if (!updatedTherapist) {
+      return res.status(404).json({ error: "Therapist not found" });
+    }
+
+    res.status(200).json({
+      message: "Therapist availability toggled successfully",
+      therapist: updatedTherapist,
+    });
+  } catch (error) {
+    console.error("Error toggling therapist availability:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 module.exports = {
   registerTherapist,
   getTherapistDetails,
   listAvailableTherapists,
   getTherapistId,
   updateAvailability,
+  toggleAvailability,
 };
