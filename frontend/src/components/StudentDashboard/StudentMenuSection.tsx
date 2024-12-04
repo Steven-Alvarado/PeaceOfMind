@@ -6,7 +6,6 @@ import JournalingModal from "./JournalingModal";
 import JournalAnalyticsModal from "./JournalAnalyticsModal";
 import WeeklySurvey from "./WeeklySurvey";
 import InvoicingModal from "./InvoicingModal";
-
 import {User} from "../../context/AuthContext";
 
 interface StudentMenuSectionProps {
@@ -20,6 +19,7 @@ const StudentMenuSection: React.FC<StudentMenuSectionProps> = ({ user, onSurveyC
     const [isSurveyOpen, setIsSurveyOpen] = useState(false);
     const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
     const [isInvoicingOpen, setIsInvoicingOpen] = useState(false);
+
 
     return (
         <div className="p-6 mt-4">
