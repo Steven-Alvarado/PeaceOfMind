@@ -38,7 +38,7 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
       try {
         const response = await axios.get(`/api/relationships/${user.id}`);
         const relationship = response.data.relationship;
-  
+        
         if (relationship?.current_therapist_id) {
           setTherapistName(
             `${relationship.current_therapist_first_name} ${relationship.current_therapist_last_name}`
@@ -60,6 +60,7 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
       } finally {
         setLoading(false);
       }
+      console.log(therapistDetails.id);
     };
     const fetchTherapistDetails = async (therapistId: number) => {
       try {
