@@ -51,34 +51,33 @@ io.on("connection", (socket) => {
 
   // Handle sending messages
   socket.on("sendMessage", async (message) => {
-    const {
-      conversationId = message.conversation_id,
-      senderId = message.sender_id,
-      receiverId = message.receiver_id,
-      messageContent = message.message_content,
-    } = message;
-
+    const { conversationId, senderId, receiverId, messageContent } = message;
+  
     if (!conversationId || !messageContent) {
       console.error("Invalid message data.");
       return;
     }
-
+  
     try {
+      // Save the message in the database
       const insertedMessage = await db.query(
         `INSERT INTO messages (conversation_id, sender_id, receiver_id, message_content) 
          VALUES ($1, $2, $3, $4) RETURNING *`,
         [conversationId, senderId, receiverId, messageContent]
       );
-
+  
       const dbMessage = insertedMessage.rows[0];
       if (dbMessage) {
         console.log(`Message sent in conversation_${conversationId}:`, dbMessage);
+  
+        // Emit message only to the relevant room
         io.to(`conversation_${conversationId}`).emit("receiveMessage", dbMessage);
       }
     } catch (error) {
       console.error("Error processing message:", error.message);
     }
   });
+  
 
   // Video call signaling (offer/answer exchange)
   socket.on("videoCallSignal", ({ conversationId, signal }) => {
