@@ -1,8 +1,11 @@
 import React, { useState } from "react";
 import {  FaBook, FaClipboardQuestion } from "react-icons/fa6";
 import { FaQuestionCircle } from "react-icons/fa";
+
 import HelpModal from "./StudentHelpModal";
 import JournalingModal from "./JournalingModal";
+import InvoicingModal from "./InvoicingModal";
+
 import {User} from "../../context/AuthContext";
 
 interface StudentMenuSectionProps {
@@ -13,6 +16,7 @@ interface StudentMenuSectionProps {
 const StudentMenuSection: React.FC<StudentMenuSectionProps> = ({ user, onSurveyClick }) => {
     const [isHelpOpen, setIsHelpOpen] = useState(false);
     const [isJournalOpen, setIsJournalOpen] = useState(false);
+    const [isInvoicingOpen, setIsInvoicingOpen] = useState(false);
 
     return (
         <div className="p-6 mt-4">
@@ -58,6 +62,7 @@ const StudentMenuSection: React.FC<StudentMenuSectionProps> = ({ user, onSurveyC
                 <div className="justify-center flex">
                     <button
                         className=" w-full bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center"
+                        onClick={() => setIsInvoicingOpen(true)}
                     >
                         <FaBook className="mr-3" /> Invoices
                     </button>
@@ -65,6 +70,7 @@ const StudentMenuSection: React.FC<StudentMenuSectionProps> = ({ user, onSurveyC
             </div>
             <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
             <JournalingModal isOpen={isJournalOpen} onClose={() => setIsJournalOpen(false)} />
+            <InvoicingModal isOpen={isInvoicingOpen} onClose={() => setIsInvoicingOpen(false)} />
         </div>
         </div>
     );
