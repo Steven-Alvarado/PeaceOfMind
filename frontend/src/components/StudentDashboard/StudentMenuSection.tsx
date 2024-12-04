@@ -1,8 +1,10 @@
 import React, { useState } from "react";
-import {  FaBook, FaClipboardQuestion } from "react-icons/fa6";
-import { FaQuestionCircle } from "react-icons/fa";
+import { FaBook, FaChartPie, FaFileInvoiceDollar, FaQuestionCircle} from "react-icons/fa";
+import { FaClipboardQuestion } from "react-icons/fa6"
 import HelpModal from "./StudentHelpModal";
 import JournalingModal from "./JournalingModal";
+import JournalAnalyticsModal from "./JournalAnalyticsModal";
+import WeeklySurvey from "./WeeklySurvey";
 import {User} from "../../context/AuthContext";
 
 interface StudentMenuSectionProps {
@@ -13,6 +15,8 @@ interface StudentMenuSectionProps {
 const StudentMenuSection: React.FC<StudentMenuSectionProps> = ({ user, onSurveyClick }) => {
     const [isHelpOpen, setIsHelpOpen] = useState(false);
     const [isJournalOpen, setIsJournalOpen] = useState(false);
+    const [isSurveyOpen, setIsSurveyOpen] = useState(false);
+    const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
 
     return (
         <div className="p-6 mt-4">
@@ -43,14 +47,15 @@ const StudentMenuSection: React.FC<StudentMenuSectionProps> = ({ user, onSurveyC
                 <div className="justify-center flex">
                     <button
                         className=" w-full bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center"
+                        onClick={() => setIsAnalyticsOpen(true)}
                     >
-                        <FaBook className="mr-3" /> Analytics
+                        <FaChartPie className="mr-3" /> Analytics
                     </button>
                 </div>
                 <div className="justify-center flex">
                     <button
                         className="w-full bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center"
-                        onClick={onSurveyClick}
+                        onClick={()=> setIsSurveyOpen(true)}
                     >
                         <FaClipboardQuestion className="mr-3" /> Surveys
                     </button>
@@ -59,12 +64,14 @@ const StudentMenuSection: React.FC<StudentMenuSectionProps> = ({ user, onSurveyC
                     <button
                         className=" w-full bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center"
                     >
-                        <FaBook className="mr-3" /> Invoices
+                        <FaFileInvoiceDollar className="mr-3" /> Invoices
                     </button>
                 </div>
             </div>
             <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
             <JournalingModal isOpen={isJournalOpen} onClose={() => setIsJournalOpen(false)} />
+            <JournalAnalyticsModal isOpen={isAnalyticsOpen} onClose={() =>setIsAnalyticsOpen(false)} />
+            <WeeklySurvey isOpen={isSurveyOpen} onClose={() => setIsSurveyOpen(false)} user={user} />
         </div>
         </div>
     );
