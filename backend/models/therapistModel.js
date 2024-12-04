@@ -121,4 +121,5 @@ module.exports = {
   isLicenseVerified,
   updateTherapistAvailability,
   toggleTherapistAvailability
+  updateTherapistAvailability,
 };
