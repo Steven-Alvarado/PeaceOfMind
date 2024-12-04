@@ -17,7 +17,6 @@ interface StudentMenuSectionProps {
 const StudentMenuSection: React.FC<StudentMenuSectionProps> = ({ user, onSurveyClick }) => {
     const [isHelpOpen, setIsHelpOpen] = useState(false);
     const [isJournalOpen, setIsJournalOpen] = useState(false);
-    const [isInvoicingOpen, setIsInvoicingOpen] = useState(false);
     const [isSurveyOpen, setIsSurveyOpen] = useState(false);
     const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
     const [isInvoicingOpen, setIsInvoicingOpen] = useState(false);
@@ -75,7 +74,6 @@ const StudentMenuSection: React.FC<StudentMenuSectionProps> = ({ user, onSurveyC
             </div>
             <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
             <JournalingModal isOpen={isJournalOpen} onClose={() => setIsJournalOpen(false)} />
-            <InvoicingModal isOpen={isInvoicingOpen} onClose={() => setIsInvoicingOpen(false)} />
             <JournalAnalyticsModal isOpen={isAnalyticsOpen} onClose={() =>setIsAnalyticsOpen(false)} />
             <WeeklySurvey isOpen={isSurveyOpen} onClose={() => setIsSurveyOpen(false)} user={user} />
             <InvoicingModal isOpen={isInvoicingOpen} onClose={() => setIsInvoicingOpen(false)} />
