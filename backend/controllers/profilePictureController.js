@@ -55,30 +55,31 @@ exports.uploadProfilePicture = async (req, res) => {
   /**
  * Get therapist profile picture
  */
-exports.getTherapistProfilePicture = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const query = `
-      SELECT u.profile_picture_url
-      FROM therapists t
-      INNER JOIN users u ON t.user_id = u.id
-      WHERE t.user_id = $1;
-    `;
-
-    const values = [id];
-    const result = await db.query(query, values);
-
-    if (result.rowCount === 0) {
-      return res.status(404).json({ error: "Therapist not found." });
+  exports.getTherapistProfilePicture = async (req, res) => {
+    try {
+      const { id } = req.params; // Therapist ID
+  
+      const query = `
+        SELECT u.profile_picture_url
+        FROM therapists t
+        INNER JOIN users u ON t.user_id = u.id
+        WHERE t.id = $1; -- Query by therapist ID
+      `;
+  
+      const values = [id];
+      const result = await db.query(query, values);
+  
+      if (result.rowCount === 0) {
+        return res.status(404).json({ error: "Therapist not found." });
+      }
+  
+      res.status(200).json({ profile_picture_url: result.rows[0].profile_picture_url });
+    } catch (error) {
+      console.error("Error fetching therapist profile picture:", error);
+      res.status(500).json({ error: "Internal server error." });
     }
-
-    res.status(200).json({ profile_picture_url: result.rows[0].profile_picture_url });
-  } catch (error) {
-    console.error("Error fetching therapist profile picture:", error);
-    res.status(500).json({ error: "Internal server error." });
-  }
-};
+  };
+  
 
 /**
  * Get student profile picture
