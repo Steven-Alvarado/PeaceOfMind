@@ -8,6 +8,7 @@ const {
   toggleTherapistAvailability,
   updateTherapistAvailability,
   toggleTherapistAvailability,
+  updateTherapistAvailability,
 } = require("../models/therapistModel");
 const { createUser, findUserByEmail } = require("../models/authModel");
 
@@ -233,6 +234,27 @@ const toggleAvailability = async (req, res) => {
   }
 };
 
+const updateAvailability = async (req, res) => {
+  try {
+    const therapistId = req.params.id;
+    const { availability } = req.body;
+
+    if (typeof availability !== "boolean") {
+      return res.status(400).json({ error: "Invalid availability value" });
+    }
+
+    const result = await updateTherapistAvailability(therapistId, availability);
+    if (result) {
+      res.status(200).json({ message: "Availability updated successfully", availability });
+    } else {
+      res.status(404).json({ error: "Therapist not found" });
+    }
+  } catch (error) {
+    console.error("Error updating availability:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
 module.exports = {
   registerTherapist,
   getTherapistDetails,
@@ -241,4 +263,5 @@ module.exports = {
   toggleAvailability,
   updateAvailability,
   toggleAvailability,
+  updateAvailability,
 };

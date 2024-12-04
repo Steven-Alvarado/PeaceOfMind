@@ -122,4 +122,5 @@ module.exports = {
   toggleTherapistAvailability
   updateTherapistAvailability,
   toggleTherapistAvailability
+  updateTherapistAvailability,
 };
