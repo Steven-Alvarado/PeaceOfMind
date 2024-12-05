@@ -36,6 +36,8 @@ router.use("/journals", journalRoutes);
 router.use("/documents", documentRoutes);
 router.use("/relationships", relationshipRoutes);
 router.use("/invoices", invoiceRoutes);
+router.use("/accountSettings", accountSettingsRoutes );
+
 
  
 
