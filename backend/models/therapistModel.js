@@ -90,19 +90,6 @@ const getAvailableTherapists = async () => {
   }
 };
 
-
-const updateTherapistAvailability = async (therapistId, availability) => {
-  const query = `
-    UPDATE therapists
-    SET availability = $1, updated_at = CURRENT_TIMESTAMP
-    WHERE id = $2
-    RETURNING availability;
-  `;
-  const values = [availability, therapistId];
-  const result = await pool.query(query, values);
-  return result.rows[0];
-};
-
 // Check if the therapist's license is valid in the verified_licenses table
 const isLicenseVerified = async (licenseNumber) => {
   try {
@@ -160,6 +147,17 @@ const findTherapistByUserId = async (userId) => {
   }
 };
 
+const toggleTherapistAvailability = async (therapistId) => {
+  const query = 
+    `UPDATE therapists
+    SET availability = NOT availability, updated_at = NOW()
+    WHERE id = $1
+    RETURNING *;`
+  ;
+
+  const result = await pool.query(query, [therapistId]);
+  return result.rows[0]; // Return the updated row
+};
 
 
 module.exports = {
@@ -168,7 +166,7 @@ module.exports = {
     isLicenseVerified,
     licenseExists,
     findTherapistByUserId,
-    findTherapistIdById,
-    updateTherapistAvailability,
-    findTherapistById
+    findTherapistIdById, 
+    findTherapistById,
+    toggleTherapistAvailability
 };
