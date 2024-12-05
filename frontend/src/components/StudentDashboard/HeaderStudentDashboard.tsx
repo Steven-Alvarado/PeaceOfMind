@@ -8,7 +8,6 @@ import { MdOutlineLogout } from "react-icons/md";
 
 import Logo from "../../assets/images/logobetter.png";
 
-import { useAuth } from "../../hooks/useAuth";
 interface UserSettings {
   fname: string;
   last_name: string;
@@ -21,14 +20,13 @@ interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
-
 const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const { user } = useAuth();
   const [userSettings, setUserSettings] = useState<UserSettings | null>(null);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [deleteErrorMessage, setDeleteErrorMessage] = useState("");
+  const [saveErrorMessage, setSaveErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  // Fetch settings when the modal is opened and the user ID is available
   useEffect(() => {
     if (isOpen && user?.id) {
       fetchSettings();
@@ -37,7 +35,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
 
   const fetchSettings = async () => {
     if (!user?.id) {
-      setErrorMessage("User ID is not available.");
+      setDeleteErrorMessage("User ID is not available.");
       return;
     }
 
@@ -51,11 +49,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
       });
 
       const data = await response.json();
-
-      // Log the response data for debugging
       console.log("Response Data:", data);
 
-      // Ensure the response contains the necessary fields
       if (data && data.first_name && data.last_name && data.email) {
         setUserSettings({
           fname: data.first_name || "",
@@ -65,25 +60,25 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
           confirmPassword: "",
         });
       } else {
-        setErrorMessage("Failed to fetch user settings.");
+        setDeleteErrorMessage("Failed to fetch user settings.");
       }
     } catch (error) {
       console.error("Error fetching user settings:", error);
-      setErrorMessage(error.message || "Failed to fetch user settings.");
+      setDeleteErrorMessage(error.message || "Failed to fetch user settings.");
     }
   };
 
   const handleSave = async () => {
     if (!userSettings) {
-      setErrorMessage("User settings are not loaded.");
+      setSaveErrorMessage("User settings are not loaded.");
       return;
     }
-  
+
     if (userSettings.newPassword !== userSettings.confirmPassword) {
-      setErrorMessage("Passwords do not match.");
+      setSaveErrorMessage("Passwords do not match.");
       return;
     }
-  
+
     try {
       const response = await fetch(`/api/accountSettings/student/${user.id}`, {
         method: "PATCH",
@@ -98,41 +93,77 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
           ...(userSettings.newPassword && { newPassword: userSettings.newPassword }), // Include new password if provided
         }),
       });
-  
-      // Log the response data for debugging
+
       const data = await response.json();
       console.log("Response Data:", data);
-  
+
       if (response.ok) {
         setSuccessMessage("Settings saved successfully.");
-        setErrorMessage("");
+        setSaveErrorMessage(""); // Clear the save error message if successful
       } else {
-        setErrorMessage(data.error || "Failed to save settings.");
+        setSaveErrorMessage(data.error || "Failed to save settings.");
       }
     } catch (error) {
       console.error("Error saving user settings:", error);
-      setErrorMessage(error.message || "Failed to save settings.");
+      setSaveErrorMessage(error.message || "Failed to save settings.");
     }
   };
-  
+
+  // Handle student deletion
+  const handleDelete = async () => {
+    if (!user?.id) {
+      setDeleteErrorMessage("User ID is not available.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/accountSettings/students/${user.id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        setSuccessMessage("Your account has been deleted successfully.");
+        setDeleteErrorMessage(""); // Clear the delete error message if successful
+        onClose(); // Close the modal after deletion
+      } else {
+        const data = await response.json();
+        setDeleteErrorMessage(data.error || "Failed to delete account.");
+      }
+    } catch (error) {
+      console.error("Error deleting user account:", error);
+      setDeleteErrorMessage(error.message || "Failed to delete account.");
+    }
+  };
+
+  const handleClose = () => {
+    onClose(); // Close the modal
+    // Reset error messages and success state when modal is closed
+    setDeleteErrorMessage("");
+    setSaveErrorMessage("");
+    setSuccessMessage("");
+    setUserSettings(null); // Optional: Reset settings when modal is closed
+  };
+
   return (
     isOpen && (
       <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
         <div className="bg-white rounded-lg shadow-lg w-3/4 max-w-4xl">
           <div className="flex">
-            {/* Left Panel: User Info Form */}
             <div className="w-full p-8">
               <div className="flex justify-between mb-4">
                 <h2 className="text-2xl font-bold text-blue-600">User Settings</h2>
                 <button
                   className="bg-red-400 text-white px-4 py-2 rounded-full hover:bg-red-500"
-                  onClick={onClose}
+                  onClick={handleClose} // Close the modal and reset
                 >
                   <FaTimes size={20} />
                 </button>
               </div>
 
-              {/* Form to display and edit user settings */}
               {userSettings ? (
                 <div>
                   <div className="mb-6">
@@ -180,7 +211,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                     />
                   </div>
 
-                  {/* New Password */}
                   <div className="mb-6">
                     <label className="block text-sm font-bold text-gray-700">New Password</label>
                     <input
@@ -196,7 +226,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                     />
                   </div>
 
-                  {/* Confirm Password */}
                   <div className="mb-6">
                     <label className="block text-sm font-bold text-gray-700">Confirm Password</label>
                     <input
@@ -212,15 +241,32 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                     />
                   </div>
 
-                  <div className="flex justify-between">
+                  {/* Save Button and Error Message */}
+                  <div className="flex justify-center gap-4 mt-4">
                     <button
                       className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-500"
                       onClick={handleSave}
                     >
                       Save
                     </button>
-                    {errorMessage && (
-                      <p className="text-red-500 mt-2 text-sm">{errorMessage}</p>
+                    {saveErrorMessage && (
+                      <p className="text-red-500 mt-2 text-sm">{saveErrorMessage}</p>
+                    )}
+                    {successMessage && (
+                      <p className="text-green-500 mt-2 text-sm">{successMessage}</p>
+                    )}
+                  </div>
+
+                  {/* Delete Button and Error Message */}
+                  <div className="flex justify-center gap-4 mt-4">
+                    <button
+                      className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-500"
+                      onClick={handleDelete}
+                    >
+                      Delete Account
+                    </button>
+                    {deleteErrorMessage && (
+                      <p className="text-red-500 mt-2 text-sm">{deleteErrorMessage}</p>
                     )}
                     {successMessage && (
                       <p className="text-green-500 mt-2 text-sm">{successMessage}</p>
@@ -228,7 +274,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                   </div>
                 </div>
               ) : (
-                <p className="text-center text-gray-500">Loading user settings...</p>
+                <p className="text-gray-500">Loading settings...</p>
               )}
             </div>
           </div>
@@ -237,6 +283,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     )
   );
 };
+
 const HeaderStudentDashboard = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);

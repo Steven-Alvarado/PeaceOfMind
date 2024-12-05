@@ -20,24 +20,6 @@ const createTherapist = async (
   }
 };
 
-// Find a therapist by id in the therapist table
-const findTherapistById = async (therapistId) => {
-  try {
-    const query = `
-            SELECT t.*, a.email
-            FROM therapists t
-            INNER JOIN users u ON t.user_id = u.id
-            INNER JOIN auth a ON u.id = a.user_id
-            WHERE t.id = $1;
-        `;
-    const result = await pool.query(query, [therapistId]);
-    return result.rows[0];
-  } catch (error) {
-    console.error("Error finding therapist by ID:", error);
-    throw new Error("Could not find therapist");
-  }
-};
-
 // Find a therapist by user id in the therapist table
 const findTherapistIdById = async (userId) => {
   try {
@@ -90,33 +72,40 @@ const isLicenseVerified = async (licenseNumber) => {
 
 
 // Retrieve a therapist's details by user ID
-const getTherapistByUserId = async (userId) => {
-    try {
-        const query = `
-            SELECT u.first_name, u.last_name, a.email, t.experience_years, t.monthly_rate
-            FROM therapists t
-            INNER JOIN users u ON t.user_id = u.id
-            INNER JOIN auth a ON u.id = a.user_id
-            WHERE t.user_id = $1;
-        `;
-        const result = await pool.query(query, [userId]);
+const findTherapistByUserId = async (userId) => {
+  try {
+      const query = `
+          SELECT 
+              t.user_id,               
+              u.first_name, 
+              u.last_name, 
+              a.email, 
+              t.experience_years, 
+              t.monthly_rate
+          FROM therapists t
+          INNER JOIN users u ON t.user_id = u.id
+          INNER JOIN auth a ON u.id = a.user_id
+          WHERE t.user_id = $1;
+      `;
+      const result = await pool.query(query, [userId]);
 
-        if (result.rows.length === 0) {
-            throw new Error("Therapist not found for this user ID");
-        }
+      if (result.rows.length === 0) {
+          throw new Error("Therapist not found for this user ID");
+      }
 
-        return result.rows[0]; // Return the therapist's details
-    } catch (error) {
-        console.error("Error retrieving therapist details:", error);
-        throw error; // Rethrow error to be handled in the controller
-    }
+      return result.rows[0]; // Return the therapist's details
+  } catch (error) {
+      console.error("Error retrieving therapist details:", error);
+      throw error; // Rethrow error to be handled in the controller
+  }
 };
+
 
 
 module.exports = {
     createTherapist,
     getAvailableTherapists,
     isLicenseVerified,
-    getTherapistByUserId,
+    findTherapistByUserId,
     findTherapistIdById
 };

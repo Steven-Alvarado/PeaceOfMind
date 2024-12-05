@@ -187,4 +187,26 @@ const updateTherapistAccountSettings = async (id, first_name, last_name, email, 
 
 
 
-module.exports = { updateUserAccountSettings, updateTherapistAccountSettings};
+const deleteTherapist = async (therapistId) => {
+  try {
+    const query = `DELETE FROM therapists WHERE id = $1 RETURNING *`; // Update column name as per schema
+    const result = await pool.query(query, [therapistId]);
+    return result.rows[0];
+  } catch (error) {
+    console.error("Error deleting therapist:", error);
+    throw new Error("Error deleting therapist.");
+  }
+};
+
+const deleteUser = async (studentId) => {
+  const query = `
+    DELETE FROM users
+    WHERE id = $1
+    RETURNING *;
+  `;
+  const result = await pool.query(query, [studentId]);
+  return result.rows[0];
+};
+
+
+ module.exports = { updateUserAccountSettings, updateTherapistAccountSettings,deleteTherapist, deleteUser};

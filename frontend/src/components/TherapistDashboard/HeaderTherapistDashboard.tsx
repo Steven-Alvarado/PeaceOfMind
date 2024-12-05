@@ -15,7 +15,7 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
   const [confirmPassword, setConfirmPassword] = useState('');
   const [monthlyRate, setMonthlyRate] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
-  
+  const [therapistId, setTherapistId] = useState(null);
   const { user } = useAuth();  // Get user data from useAuth hook
 
   useEffect(() => {
@@ -91,32 +91,87 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
       setErrorMessage(error.message || "Error updating therapist details.");
     }
   };
-
   const handleDeleteAccount = async () => {
+    if (!user?.id) {
+      setErrorMessage("User ID is not available.");
+      return;
+    }
+  
+    const fetchTherapistId = async () => {
+      if (!user?.id) {
+        setErrorMessage("User ID is not available.");
+        return null; // Return null if there's no user ID
+      }
+  
+      try {
+        const response = await fetch(`/api/therapists/find/${user.id}`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+            "Content-Type": "application/json",
+          },
+        });
+  
+        if (!response.ok) {
+          const errorText = await response.text(); // Read as text to understand error response
+          setErrorMessage(errorText || "Failed to fetch therapist ID.");
+          return null;
+        }
+  
+        const data = await response.json();
+        console.log("Therapist ID Response:", data);
+  
+        if (data.therapist?.id) {
+          return data.therapist.id; // Return the therapist ID
+        } else {
+          setErrorMessage("Therapist ID is not available in the response.");
+          return null;
+        }
+      } catch (error) {
+        console.error("Error fetching therapist ID:", error);
+        setErrorMessage(error.message || "Error fetching therapist ID.");
+        return null;
+      }
+    };
+  
+    // Proceed with deleting the therapist
+    const therapistId = await fetchTherapistId();
+  
+    if (!therapistId) {
+      return; // If no therapist ID is found, exit the function
+    }
+  
     if (window.confirm("Are you sure you want to delete your account?")) {
       try {
-        const response = await fetch(`/api/therapists/user/${user.id}`, {
+        const response = await fetch(`/api/accountSettings/therapist/delete/${therapistId}`, {
           method: "DELETE", // Use DELETE for account deletion
           headers: {
             Authorization: `Bearer ${localStorage.getItem("jwt")}`,
             "Content-Type": "application/json",
           },
         });
-
-        const data = await response.json();
-        if (response.ok) {
-          alert("Account deleted successfully.");
-          onClose(); // Close the modal after successful deletion
-        } else {
-          setErrorMessage(data.message || "Failed to delete account.");
+  
+        const data = await response.json(); // Parse the response JSON
+  
+        if (!response.ok) {
+          // Handle error: check for error messages like unpaid invoices or active relationships
+          console.error("Error response:", data); // Log error response for debugging
+          setErrorMessage(data.error || "Failed to delete account.");
+          return;
         }
+  
+        // If the deletion was successful
+        alert("Account deleted successfully.");
+        onClose(); // Close the modal after successful deletion
       } catch (error) {
         console.error("Error deleting account:", error);
         setErrorMessage(error.message || "Error deleting account.");
       }
     }
   };
-
+  
+  
+  
   if (!isOpen) return null;
 
   return (

@@ -1,7 +1,7 @@
 const bcrypt = require("bcryptjs");
 const {
   createTherapist,
-  findTherapistById,
+  findTherapistByUserId,
   findTherapistIdById,
   getAvailableTherapists,
   isLicenseVerified,
@@ -169,7 +169,7 @@ const getTherapistDetailsByUserId = async (req, res) => {
   }
 
   try {
-      const therapist = await getTherapistByUserId(userId);
+      const therapist = await findTherapistByUserId(userId);
       if (!therapist) {
           return res.status(404).json({ error: "Therapist not found" });
       }
