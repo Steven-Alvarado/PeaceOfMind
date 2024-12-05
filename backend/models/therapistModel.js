@@ -1,5 +1,39 @@
 const pool = require("../config/db");
 
+
+const findTherapistById = async (therapistId) => {
+  try {
+    const query = `
+      SELECT 
+        t.id AS therapist_id, 
+        t.user_id,
+        t.license_number,
+        t.specialization,
+        t.experience_years,
+        t.monthly_rate,
+        t.availability,
+        u.first_name,
+        u.last_name,
+        u.gender,
+        a.email
+      FROM therapists t
+      INNER JOIN users u ON t.user_id = u.id
+      INNER JOIN auth a ON u.id = a.user_id
+      WHERE t.id = $1;
+    `;
+    const result = await pool.query(query, [therapistId]);
+
+    if (result.rows.length === 0) {
+      return null; // No therapist found
+    }
+
+    return result.rows[0]; // Return therapist details
+  } catch (error) {
+    console.error("Error fetching therapist details by ID:", error);
+    throw new Error("Could not fetch therapist details");
+  }
+};
+
 const createTherapist = async (
   userId,
   licenseNumber,
@@ -56,7 +90,7 @@ const getAvailableTherapists = async () => {
   }
 };
 
-// Update therapist availability
+
 const updateTherapistAvailability = async (therapistId, availability) => {
   const query = `
     UPDATE therapists
@@ -134,5 +168,7 @@ module.exports = {
     isLicenseVerified,
     licenseExists,
     findTherapistByUserId,
-    findTherapistIdById
+    findTherapistIdById,
+    updateTherapistAvailability,
+    findTherapistById
 };

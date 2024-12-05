@@ -34,16 +34,27 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
   const handleDrop = () => setSentDrop((prev) => !prev);
 
   useEffect(() => {
+    const fetchTherapistDetails = async (therapistId: number) => {
+      try {
+        const response = await axios.get(`http://localhost:5000/api/therapists/${therapistId}`);
+        setTherapistDetails(response.data.therapist);
+       console.log(response.data.therapist) ;
+      } catch (err) {
+        console.error("Error fetching therapist details:", err);
+      }
+    };
+  
     const fetchTherapistRelationship = async () => {
       try {
-        const response = await axios.get(`/api/relationships/${user.id}`);
+        const response = await axios.get(`http://localhost:5000/api/relationships/${user.id}`);
+        console.log("User ID:", user.id);
         const relationship = response.data.relationship;
-        
+  
         if (relationship?.current_therapist_id) {
           setTherapistName(
             `${relationship.current_therapist_first_name} ${relationship.current_therapist_last_name}`
           );
-          fetchTherapistDetails(relationship.current_therapist_id);
+          await fetchTherapistDetails(relationship.current_therapist_id);
         } else {
           setTherapistName(null);
           setTherapistDetails(null);
@@ -58,21 +69,21 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
           setError("Unable to load therapist relationship.");
         }
       } finally {
-        setLoading(false);
-      }
-      console.log(therapistDetails.id);
-    };
-    const fetchTherapistDetails = async (therapistId: number) => {
-      try {
-        const response = await axios.get(`/api/therapists/${therapistId}`);
-        setTherapistDetails(response.data.therapist);
-      } catch (err) {
-        console.error("Error fetching therapist details:", err);
+        setLoading(false); // Set loading to false after everything completes
       }
     };
-
+  
     fetchTherapistRelationship();
   }, [user, refresh]);
+
+  // DEBUGGING
+ /* useEffect(() => {
+    if (therapistDetails) {
+      console.log("Therapist details are now available:", therapistDetails);
+    } else {
+      //console.log("Therapist details are not available.");
+    }
+  }, [therapistDetails]); */
 
   if (loading) return <div>Loading therapist details...</div>;
   if (error) return <div className="text-red-500">Error: {error}</div>;
@@ -96,16 +107,12 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Therapist Image Section */}
           <div className="relative mx-auto">
-            {/* Pass therapistId if userRole is "therapist", otherwise userId */}
-            {therapistDetails?.id && (
-              <ProfilePicture
-                userRole={user.role === "therapist" ? "therapist" : "student"}
-                userId={user.role === "student" ? user.id : undefined}
-                therapistId={user.role === "therapist" ? therapistDetails.id : undefined}
-                className="w-full h-full rounded-full object-cover" 
-                style={{ width: "200px", height: "200px" }} // Explicitly set dimensions
-              />
-            )}
+            <ProfilePicture
+              userRole="therapist"  // Specify the role as therapist
+              therapistId={therapistDetails?.therapist_id} // Pass therapistId from therapistDetails
+              className="w-full h-full rounded-full object-cover"
+              style={{ width: "200px", height: "200px" }}
+            />
             <div className="absolute right-2 bg-white rounded-full p-1 shadow-md">
               <Star className="w-6 h-6 text-yellow-400" />
             </div>

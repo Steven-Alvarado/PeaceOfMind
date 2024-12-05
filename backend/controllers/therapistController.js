@@ -8,6 +8,7 @@ const {
   licenseExists,
   toggleTherapistAvailability,
   updateTherapistAvailability,
+  findTherapistById
 } = require("../models/therapistModel");
 const { createUser, findUserByEmail } = require("../models/authModel");
 
@@ -136,7 +137,7 @@ const getTherapistDetails = async (req, res) => {
   }
 };
 
-const getTherapistId = async (req, res) => {
+const getTherapistIdByUserId = async (req, res) => {
   const userId = req.params.id;
   try {
     const therapist = await findTherapistIdById(userId);
@@ -235,4 +236,4 @@ const getTherapistDetailsByUserId = async (req, res) => {
   }
 };
 
-module.exports = { registerTherapist, getTherapistDetails, listAvailableTherapists, updateAvailability, toggleAvailability, getTherapistId, getTherapistDetailsByUserId};
+module.exports = { getTherapistIdByUserId, registerTherapist, getTherapistDetails, listAvailableTherapists, updateAvailability, toggleAvailability, getTherapistDetailsByUserId};
