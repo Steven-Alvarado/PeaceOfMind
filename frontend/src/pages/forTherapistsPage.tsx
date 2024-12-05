@@ -34,22 +34,22 @@ const TherapistSignUp = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.firstName || !form.lastName || !form.email || !form.password || !form.confirmPassword || !form.licenseNumber || !form.gender) {
+    if (!form.firstName || !form.lastName || !form.email || !form.password || !form.confirmPassword || !form.licenseNumber || !form.gender || form.experienceYears === '' || form.monthlyRate === '') {
       setError('Please fill in all fields');
       return;
     }
-    {/*Not sure if needed*/}
-    if (!/\S+@\S+\.\S+/.test(form.email)) {
-      return 'Please enter a valid email';
-    }
+    // Check if passwords match
     if (form.password !== form.confirmPassword) {
-      setError('Passwords do not match');
+      setError('Passwords do not match.');
       return;
     }
+
+    // Check password length
     if (form.password.length < 8) {
-      setError('Password must be at least 8 characters');
+      setError('Password must be at least 8 characters.');
       return;
     }
+
     setError('');
 
     try{
@@ -66,7 +66,7 @@ const TherapistSignUp = () => {
       );
       // Delay navigation by 3 seconds
       setTimeout(() => 3000);
-      navigate('/therapist-dashboard')
+      navigate('/therapist-dashboard');
     }
     //Errors to check if everything goes smoothly
     catch (error) {
@@ -218,7 +218,14 @@ function TherapistSignUpSection({ form, handleChange, handleGenderSelect, handle
             placeholder="Experience Years"
             className="w-full p-3 mb-2 border border-[#5E9ED9] rounded-md"
             value={form.experienceYears}
+            min="0"
             onChange={handleChange}
+            onBlur={(e) => {
+              if (e.target.value < 0) {
+                setForm({ ...form, experienceYears: '0' });
+              }
+            }}
+            onWheel={(e) => e.target.blur()}
           />
           <input
             type="number"
@@ -226,7 +233,15 @@ function TherapistSignUpSection({ form, handleChange, handleGenderSelect, handle
             placeholder="Monthly Rate"
             className="w-full p-3 mb-4 border border-[#5E9ED9] rounded-md"
             value={form.monthlyRate}
+            min="0"
+            step="0.01"
             onChange={handleChange}
+            onBlur={(e) => {
+              if (e.target.value < 0) {
+                setForm({ ...form, monthlyRate: '0' }); // Reset to 0 if negative
+              }
+            }}
+            onWheel={(e) => e.target.blur()}
           />
           <button
             type="submit"
