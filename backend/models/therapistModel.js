@@ -20,24 +20,6 @@ const createTherapist = async (
   }
 };
 
-// Find a therapist by id in the therapist table
-const findTherapistById = async (therapistId) => {
-  try {
-    const query = `
-            SELECT t.*, a.email
-            FROM therapists t
-            INNER JOIN users u ON t.user_id = u.id
-            INNER JOIN auth a ON u.id = a.user_id
-            WHERE t.id = $1;
-        `;
-    const result = await pool.query(query, [therapistId]);
-    return result.rows[0];
-  } catch (error) {
-    console.error("Error finding therapist by ID:", error);
-    throw new Error("Could not find therapist");
-  }
-};
-
 // Find a therapist by user id in the therapist table
 const findTherapistIdById = async (userId) => {
   try {
@@ -100,25 +82,57 @@ const isLicenseVerified = async (licenseNumber) => {
     throw new Error("Could not verify license");
   }
 };
-
-const toggleTherapistAvailability = async (therapistId) => {
-  const query = `
-    UPDATE therapists
-    SET availability = NOT availability, updated_at = NOW()
-    WHERE id = $1
-    RETURNING *;
-  `;
-
-  const result = await pool.query(query, [therapistId]);
-  return result.rows[0]; // Return the updated row
+// Check if the license number already exists in the therapists table
+const licenseExists = async (licenseNumber) => {
+    try {
+      const result = await pool.query(
+        `SELECT 1 FROM therapists WHERE license_number = $1`,
+        [licenseNumber]
+      );
+      return result.rowCount > 0;
+    } catch (error) {
+      console.error("Error checking license existence:", error);
+      throw new Error("Could not verify if license exists");
+    }
 };
 
+
+// Retrieve a therapist's details by user ID
+const findTherapistByUserId = async (userId) => {
+  try {
+      const query = `
+          SELECT 
+              t.user_id,               
+              u.first_name, 
+              u.last_name, 
+              a.email, 
+              t.experience_years, 
+              t.monthly_rate
+          FROM therapists t
+          INNER JOIN users u ON t.user_id = u.id
+          INNER JOIN auth a ON u.id = a.user_id
+          WHERE t.user_id = $1;
+      `;
+      const result = await pool.query(query, [userId]);
+
+      if (result.rows.length === 0) {
+          throw new Error("Therapist not found for this user ID");
+      }
+
+      return result.rows[0]; // Return the therapist's details
+  } catch (error) {
+      console.error("Error retrieving therapist details:", error);
+      throw error; // Rethrow error to be handled in the controller
+  }
+};
+
+
+
 module.exports = {
-  createTherapist,
-  findTherapistById,
-  findTherapistIdById,
-  getAvailableTherapists,
-  isLicenseVerified,
-  toggleTherapistAvailability,
-  updateTherapistAvailability,
+    createTherapist,
+    getAvailableTherapists,
+    isLicenseVerified,
+    licenseExists,
+    findTherapistByUserId,
+    findTherapistIdById
 };

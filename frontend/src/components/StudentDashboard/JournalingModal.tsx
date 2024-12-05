@@ -58,6 +58,9 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
       if (filterBy === "entry") {
         return entry.entryNumber.toString().includes(query);
       }
+      if (filterBy === "mood"){
+        return entry.mood.toLowerCase().includes(query);
+      }
       return false;
     });
   
@@ -283,10 +286,11 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
                 >
                   <option value="date">Date</option>
                   <option value="entry">Entry</option>
+                  <option value="mood">Mood</option>
                 </select>
                 <input
                   type="text"
-                  placeholder={`${filterBy === "date" ? "Date (MM/DD/YYYY)" : "Entry number"}`}
+                  placeholder={`${filterBy === "date" ? "Date (MM/DD/YYYY)" : filterBy === "entry" ? "Entry number": "Mood (e.g. Happy)" }`}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className=" w-44 p-2 border border-[#5E9ED9] rounded"
