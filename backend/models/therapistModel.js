@@ -38,6 +38,24 @@ const findTherapistById = async (therapistId) => {
   }
 };
 
+// Find a therapist by user id in the therapist table
+const findTherapistIdById = async (userId) => {
+  try {
+    const query = `
+            SELECT t.*, a.email
+            FROM therapists t
+            INNER JOIN users u ON t.user_id = u.id
+            INNER JOIN auth a ON u.id = a.user_id
+            WHERE t.user_id = $1;
+        `;
+    const result = await pool.query(query, [userId]);
+    return result.rows[0];
+  } catch (error) {
+    console.error("Error finding therapist by ID:", error);
+    throw new Error("Could not find therapist");
+  }
+};
+
 // Get the available therapists using availability in the therapist table
 const getAvailableTherapists = async () => {
   try {
@@ -56,6 +74,19 @@ const getAvailableTherapists = async () => {
   }
 };
 
+// Update therapist availability
+const updateTherapistAvailability = async (therapistId, availability) => {
+  const query = `
+    UPDATE therapists
+    SET availability = $1, updated_at = CURRENT_TIMESTAMP
+    WHERE id = $2
+    RETURNING availability;
+  `;
+  const values = [availability, therapistId];
+  const result = await pool.query(query, values);
+  return result.rows[0];
+};
+
 // Check if the therapist's license is valid in the verified_licenses table
 const isLicenseVerified = async (licenseNumber) => {
   try {
@@ -70,9 +101,24 @@ const isLicenseVerified = async (licenseNumber) => {
   }
 };
 
+const toggleTherapistAvailability = async (therapistId) => {
+  const query = `
+    UPDATE therapists
+    SET availability = NOT availability, updated_at = NOW()
+    WHERE id = $1
+    RETURNING *;
+  `;
+
+  const result = await pool.query(query, [therapistId]);
+  return result.rows[0]; // Return the updated row
+};
+
 module.exports = {
   createTherapist,
   findTherapistById,
+  findTherapistIdById,
   getAvailableTherapists,
   isLicenseVerified,
+  toggleTherapistAvailability,
+  updateTherapistAvailability,
 };

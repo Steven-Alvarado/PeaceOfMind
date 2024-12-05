@@ -4,11 +4,9 @@ import HeaderStudentDashboard from "../components/StudentDashboard/HeaderStudent
 import Footer from "../components/Footer";
 import StudentMenuSection from "../components/StudentDashboard/StudentMenuSection";
 import TherapistSection from "../components/StudentDashboard/TherapistSection";
-import WeeklySurvey from "../components/StudentDashboard/WeeklySurvey";
 
 const StudentDashboard: React.FC = () => {
   const { user, fetchUser } = useAuth();
-  const [isSurveyOpen, setIsSurveyOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -39,15 +37,18 @@ const StudentDashboard: React.FC = () => {
       <HeaderStudentDashboard />
       <header className="bg-blue-50 p-4">
         <h1 className="text-4xl font-bold text-center text-blue-500">
-          Welcome, {user.first_name} {user.last_name}
+          Welcome, {user.first_name} {user.last_name}!
         </h1>
       </header>
-      <main className="flex-grow grid grid-cols-1 md:grid-cols-2 gap-6 px-6 py-10">
-        <TherapistSection user={user} /> {/* Pass user as a prop */}
-        <StudentMenuSection user={user} onSurveyClick={() => setIsSurveyOpen(true)} />
+      <main className="flex flex-col-1 items-center justify-center px-6 py-10 space-y-6">
+        <div className="w-full max-w-2xl">
+          <TherapistSection user={user} /> {/* Pass user as a prop */}
+        </div>
+        <div className="w-full max-w-2xl">
+          <StudentMenuSection user={user} />
+        </div>
       </main>
       <Footer />
-      <WeeklySurvey isOpen={isSurveyOpen} onClose={() => setIsSurveyOpen(false)} user={user} />
     </div>
   );
 };

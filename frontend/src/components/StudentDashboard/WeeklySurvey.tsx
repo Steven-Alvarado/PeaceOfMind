@@ -1,136 +1,188 @@
-import React, { useState } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import axios from "axios";
-import { User } from "../../context/AuthContext"; // Use the User type from AuthContext
+import { motion, AnimatePresence } from "framer-motion";
+import { X, CheckCircle, AlertCircle, ChevronRight } from "lucide-react";
+import { AuthContext, User } from "../../context/AuthContext";
 
 type QuestionType = {
   id: number;
   question: string;
-  answer: boolean | null;
+  answer: string | null;
 };
 
 type WeeklySurveyProps = {
   isOpen: boolean;
   onClose: () => void;
-  user: User | null; // Use the User type from AuthContext
+  user?: User | null;
 };
 
 const weeklyQuestions: QuestionType[] = [
-  { id: 1, question: "Are you feeling well-rested this week?", answer: null },
-  { id: 2, question: "Did you feel overwhelmed at work or school?", answer: null },
-  { id: 3, question: "Have you been able to connect with friends or family?", answer: null },
-  { id: 4, question: "Are you able to focus on your tasks?", answer: null },
-  { id: 5, question: "Do you feel motivated to achieve your goals?", answer: null },
+  { id: 1, question: "I felt well-rested throughout the week.", answer: null },
+  { id: 2, question: "I was able to manage my workload effectively this week.", answer: null },
+  { id: 3, question: "I maintained meaningful connections with friends or family this week.", answer: null },
+  { id: 4, question: "I could stay focused on my tasks this week.", answer: null },
+  { id: 5, question: "I felt motivated to achieve my goals this week.", answer: null },
+];
+
+const assignedSurveys = [
+  { id: 1, title: "Stress Management Assessment", description: "Assess your current stress levels." },
+  { id: 2, title: "Weekly Mood Tracker", description: "Track your mood and emotions over the week." },
+  { id: 3, title: "Anxiety Level Evaluation", description: "Evaluate your anxiety levels for this week." },
 ];
 
 const WeeklySurvey: React.FC<WeeklySurveyProps> = ({ isOpen, onClose, user }) => {
+  const { user: authUser } = useContext(AuthContext);
+  const effectiveUser = user || authUser;
+
   const [questions, setQuestions] = useState<QuestionType[]>(weeklyQuestions);
-  const [error, setError] = useState<string | null>(null);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
 
-  if (!isOpen || !user) {
-    return null;
-  }
+  useEffect(() => {
+    if (!isOpen) {
+      setCurrentQuestionIndex(0);
+      setSubmitStatus("idle");
+      setQuestions(weeklyQuestions.map((q) => ({ ...q, answer: null })));
+    }
+  }, [isOpen]);
 
-  const handleAnswer = (id: number, answer: boolean) => {
-    setQuestions(questions.map((q) => (q.id === id ? { ...q, answer } : q)));
-    setError(null);
+  const handleAnswer = (id: number, answer: string) => {
+    setQuestions((prev) => prev.map((q) => (q.id === id ? { ...q, answer } : q)));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Validate that all questions have been answered
-    if (questions.some((q) => q.answer === null)) {
-      setError("Please answer all questions before submitting.");
-      return;
+  const handleNext = () => {
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex((prev) => prev + 1);
     }
+  };
 
-    // Prepare survey content for submission
-    const surveyContent = questions.reduce((content, q) => {
-      content[`question${q.id}`] = q.answer ? "Yes" : "No";
-      return content;
-    }, {} as Record<string, string>);
+  const handleBack = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex((prev) => prev - 1);
+    }
+  };
 
+  const handleSubmit = async () => {
+    if (!effectiveUser) return;
+
+    setIsSubmitting(true);
     try {
-      setIsSubmitting(true);
+      const surveyContent = questions.reduce((content, q) => {
+        content[q.question] = q.answer;
+        return content;
+      }, {} as Record<string, string>);
+
       await axios.post(
         "http://localhost:5000/api/surveys",
         {
-          userId: user.id,
+          userId: effectiveUser.id,
           content: JSON.stringify(surveyContent),
         },
         {
           headers: {
-            Authorization: `Bearer ${user.token}`, // Use token for authentication
+            Authorization: `Bearer ${effectiveUser.token}`,
           },
         }
       );
-      alert("Survey submitted successfully!");
-      onClose();
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to submit survey. Please try again.");
+      setSubmitStatus("success");
+    } catch {
+      setSubmitStatus("error");
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  if (!isOpen || !effectiveUser) {
+    return null;
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="relative bg-white rounded-lg p-6 w-full max-w-3xl shadow-lg">
-        <button
-          onClick={onClose}
-          className="absolute top-0 right-0 text-black text-lg p-2 m-2 hover:text-gray-900"
-        >
-          &#x2715;
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="relative bg-white rounded-lg w-full max-w-2xl shadow-lg overflow-y-auto"
+        style={{ maxHeight: "90vh" }}
+      >
+        <button onClick={onClose} className="absolute top-2 right-2 p-2 hover:bg-gray-100 rounded-full">
+          <X className="w-5 h-5 text-gray-500" />
         </button>
-        <h2 className="text-3xl font-semibold text-center text-[#5E9ED9] mb-6">
-          Weekly Survey
-        </h2>
-        {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {questions.map(({ id, question, answer }) => (
-            <div
-              key={id}
-              className="flex justify-between items-center bg-gray-100 p-4 rounded-md shadow-sm"
-            >
-              <span className="text-lg">{question}</span>
-              <div className="flex space-x-4">
+        <div className="p-6">
+          <h2 className="text-3xl font-semibold text-center text-[#5E9ED9] mb-6">Weekly Survey</h2>
+
+          {submitStatus === "idle" ? (
+            <>
+              <div className="mb-8">
+                <div className="h-2 bg-gray-100 rounded-full">
+                  <div
+                    className="h-2 bg-[#5E9ED9] rounded-full transition-all duration-300"
+                    style={{ width: `${((currentQuestionIndex + 1) / questions.length) * 100}%` }}
+                  />
+                </div>
+              </div>
+
+              <motion.div key={currentQuestionIndex} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                <h3 className="text-lg font-semibold mb-4">{questions[currentQuestionIndex].question}</h3>
+                <div className="space-y-3">
+                  {["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"].map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => handleAnswer(questions[currentQuestionIndex].id, option)}
+                      className={`block w-full text-left px-4 py-2 rounded-md ${
+                        questions[currentQuestionIndex].answer === option
+                          ? "bg-blue-100 border border-blue-500"
+                          : "bg-gray-100 border border-gray-400"
+                      }`}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+
+              <div className="flex justify-between mt-4">
                 <button
-                  type="button"
-                  onClick={() => handleAnswer(id, true)}
-                  className={`px-4 py-2 rounded-md ${
-                    answer === true
-                      ? "bg-blue-100 border border-blue-500"
-                      : "bg-gray-100 border border-gray-400"
-                  }`}
+                  onClick={handleBack}
+                  disabled={currentQuestionIndex === 0}
+                  className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 disabled:opacity-50"
                 >
-                  Yes
+                  Back
                 </button>
                 <button
-                  type="button"
-                  onClick={() => handleAnswer(id, false)}
-                  className={`px-4 py-2 rounded-md ${
-                    answer === false
-                      ? "bg-blue-100 border border-blue-500"
-                      : "bg-gray-100 border border-gray-400"
-                  }`}
+                  onClick={currentQuestionIndex === questions.length - 1 ? handleSubmit : handleNext}
+                  disabled={!questions[currentQuestionIndex].answer || isSubmitting}
+                  className="px-6 py-2 bg-[#5E9ED9] text-white rounded-lg hover:bg-[#4a8ac9] disabled:opacity-50"
                 >
-                  No
+                  {currentQuestionIndex === questions.length - 1
+                    ? isSubmitting
+                      ? "Submitting..."
+                      : "Submit"
+                    : "Next"}
                 </button>
               </div>
+            </>
+          ) : (
+            <div className="text-center py-8">
+              {submitStatus === "success" ? (
+                <>
+                  <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold">Thank you for your feedback!</h3>
+                  <p className="text-gray-600 mt-2">Your responses have been recorded successfully.</p>
+                </>
+              ) : (
+                <>
+                  <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold">Submission failed</h3>
+                  <p className="text-gray-600 mt-2">Please try again later.</p>
+                </>
+              )}
             </div>
-          ))}
-          <div className="flex justify-center">
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="bg-[#5E9ED9] text-white px-6 py-2 rounded-md hover:bg-[#4a8ac9] disabled:opacity-50"
-            >
-              {isSubmitting ? "Submitting..." : "Submit"}
-            </button>
-          </div>
-        </form>
-      </div>
+          )}
+        </div>
+      </motion.div>
     </div>
   );
 };

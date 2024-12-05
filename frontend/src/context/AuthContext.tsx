@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import {sendPasswordResetEmail as apiSendPasswordResetEmail} from "../api/authApi";
 
 // Define User interface
 export interface User {
@@ -10,6 +11,7 @@ export interface User {
   firstName: string;
   lastName: string;
   token: string;
+  therapistId?: number;
 }
 
 // Define the AuthContext properties
@@ -38,6 +40,9 @@ interface AuthContextProps {
   logout: () => void;
   isAuthenticated: boolean;
   fetchUser: () => Promise<void>;
+  sendPasswordResetEmail: (
+    email: string
+  ) => Promise<void>;
 }
 
 // Create AuthContext
@@ -202,13 +207,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         firstName: data.user.first_name || "Unknown",
         lastName: data.user.last_name || "User",
         token,
+        therapistId: data.user.therapist_id || "Unknown",
       });
     } catch (error) {
       console.error("Failed to fetch user profile:", error);
       logout();
     }
   };
-  
+
+  const sendPasswordResetEmail = async (email: string): Promise<void> => {
+    try {
+      await apiSendPasswordResetEmail(email);
+    } catch (error: any) {
+      throw new Error(error.response?.data?.error || "Failed to send password reset email");
+    }
+  };
 
   return (
     <AuthContext.Provider value={{  
@@ -219,6 +232,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       logout, 
       isAuthenticated: !!user, 
       fetchUser,
+      sendPasswordResetEmail,
       }}
       >
       {children}

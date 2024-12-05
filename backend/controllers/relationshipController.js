@@ -1,29 +1,32 @@
-const { 
-  createRelationship, 
-  findRelationship, 
-  requestTherapistSwitch, 
+const {
+  createRelationship,
+  requestRelationship,
+  findRelationship,
+  requestTherapistSwitch,
   approveTherapistSwitch,
   getAllRelationships,
   getRelationshipsByTherapistId,
-  endRelationship
-} = require('../models/relationshipsModel');
+  endRelationship,
+} = require("../models/relationshipsModel");
 
 // Assign a therapist to a student
 const assignTherapist = async (req, res) => {
   const { studentId, therapistId } = req.body;
-  
+
   // Validation
   if (!studentId || !therapistId) {
-    return res.status(400).json({ error: "Both studentId and therapistId are required." });
+    return res
+      .status(400)
+      .json({ error: "Both studentId and therapistId are required." });
   }
-  
+
   try {
     // Check if a relationship already exists
     const existingRelationship = await findRelationship(studentId);
     if (existingRelationship) {
       return res.status(409).json({ message: "Relationship already exists." });
     }
-    
+
     // Create a new relationship
     const relationship = await createRelationship(studentId, therapistId);
     res.status(201).json({ message: "Therapist assigned", relationship });
@@ -33,17 +36,43 @@ const assignTherapist = async (req, res) => {
   }
 };
 
+const requestTherapist = async (req, res) => {
+  const { studentId, therapistId } = req.body;
+
+  // Validation
+  if (!studentId || !therapistId) {
+    return res
+      .status(400)
+      .json({ error: "Both studentId and therapistId are required." });
+  }
+
+  try {
+    // Check if a relationship already exists
+    const existingRelationship = await findRelationship(studentId);
+    if (existingRelationship) {
+      return res.status(409).json({ message: "Relationship already exists." });
+    }
+
+    // Request new relationship
+    const relationship = await requestRelationship(studentId, therapistId);
+    res.status(201).json({ message: "Therapist requested", relationship });
+  } catch (error) {
+    console.error("Error requesting therapist:", error);
+    res.status(500).json({ error: "Failed to request therapist" });
+  }
+};
+
 // Get relationship by student ID
 const getRelationshipByStudentId = async (req, res) => {
   const { studentId } = req.params;
-  
+
   try {
     const relationship = await findRelationship(studentId);
-    
+
     if (!relationship) {
       return res.status(404).json({ message: "Relationship not found" });
     }
-    
+
     res.status(200).json({ relationship });
   } catch (error) {
     console.error("Error retrieving relationship:", error);
@@ -65,13 +94,15 @@ const getAllStudentTherapistRelationships = async (req, res) => {
 // Get relationships by therapist ID
 const getTherapistRelationships = async (req, res) => {
   const { therapistId } = req.params;
-  
+
   try {
     const relationships = await getRelationshipsByTherapistId(therapistId);
     res.status(200).json({ relationships });
   } catch (error) {
     console.error("Error retrieving therapist relationships:", error);
-    res.status(500).json({ error: "Failed to retrieve therapist relationships" });
+    res
+      .status(500)
+      .json({ error: "Failed to retrieve therapist relationships" });
   }
 };
 
@@ -79,20 +110,29 @@ const getTherapistRelationships = async (req, res) => {
 const requestTherapistSwitchHandler = async (req, res) => {
   const { studentId } = req.params;
   const { requestedTherapistId } = req.body;
-  
+
   // Validation
   if (!requestedTherapistId) {
-    return res.status(400).json({ error: "Requested therapistId is required." });
+    return res
+      .status(400)
+      .json({ error: "Requested therapistId is required." });
   }
-  
+
   try {
-    const relationship = await requestTherapistSwitch(studentId, requestedTherapistId);
-    
+    const relationship = await requestTherapistSwitch(
+      studentId,
+      requestedTherapistId
+    );
+
     if (!relationship) {
-      return res.status(404).json({ message: "Student relationship not found" });
+      return res
+        .status(404)
+        .json({ message: "Student relationship not found" });
     }
-    
-    res.status(200).json({ message: "Therapist switch requested", relationship });
+
+    res
+      .status(200)
+      .json({ message: "Therapist switch requested", relationship });
   } catch (error) {
     console.error("Error requesting therapist switch:", error);
     res.status(500).json({ error: "Failed to request therapist switch" });
@@ -102,15 +142,19 @@ const requestTherapistSwitchHandler = async (req, res) => {
 // Approve therapist switch
 const approveTherapistSwitchHandler = async (req, res) => {
   const { studentId } = req.params;
-  
+
   try {
     const relationship = await approveTherapistSwitch(studentId);
-    
+
     if (!relationship) {
-      return res.status(404).json({ message: "No pending therapist switch found" });
+      return res
+        .status(404)
+        .json({ message: "No pending therapist switch found" });
     }
-    
-    res.status(200).json({ message: "Therapist switch approved", relationship });
+
+    res
+      .status(200)
+      .json({ message: "Therapist switch approved", relationship });
   } catch (error) {
     console.error("Error approving therapist switch:", error);
     res.status(500).json({ error: "Failed to approve therapist switch" });
@@ -120,10 +164,10 @@ const approveTherapistSwitchHandler = async (req, res) => {
 // End relationship
 const endRelationshipHandler = async (req, res) => {
   const { studentId } = req.params;
-  
+
   try {
     const relationship = await endRelationship(studentId);
-    
+
     res.status(200).json({ message: "Relationship ended", relationship });
   } catch (error) {
     console.error("Error ending relationship:", error);
@@ -133,10 +177,11 @@ const endRelationshipHandler = async (req, res) => {
 
 module.exports = {
   assignTherapist,
+  requestTherapist,
   getRelationshipByStudentId,
   getAllStudentTherapistRelationships,
   getTherapistRelationships,
   requestTherapistSwitchHandler,
   approveTherapistSwitchHandler,
-  endRelationshipHandler
+  endRelationshipHandler,
 };

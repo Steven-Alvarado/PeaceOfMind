@@ -1,4 +1,5 @@
-const pool = require('../config/db');
+const { request } = require("express");
+const pool = require("../config/db");
 
 // Create a new student-therapist relationship
 const createRelationship = async (studentId, therapistId) => {
@@ -9,6 +10,22 @@ const createRelationship = async (studentId, therapistId) => {
     ON CONFLICT (student_id) DO UPDATE 
     SET current_therapist_id = $2, 
         status = 'active', 
+        updated_at = CURRENT_TIMESTAMP
+    RETURNING *`,
+    [studentId, therapistId]
+  );
+  return result.rows[0];
+};
+
+// Request a new student-therapist relationship
+const requestRelationship = async (studentId, therapistId) => {
+  const result = await pool.query(
+    `INSERT INTO student_therapist_relationships 
+    (student_id, requested_therapist_id, status) 
+    VALUES ($1, $2, 'pending') 
+    ON CONFLICT (student_id) DO UPDATE 
+    SET requested_therapist_id = $2, 
+        status = 'pending', 
         updated_at = CURRENT_TIMESTAMP
     RETURNING *`,
     [studentId, therapistId]
@@ -127,13 +144,13 @@ const endRelationship = async (studentId) => {
 
 module.exports = { endRelationship };
 
-
 module.exports = {
   createRelationship,
+  requestRelationship,
   findRelationship,
   requestTherapistSwitch,
   approveTherapistSwitch,
   getAllRelationships,
   getRelationshipsByTherapistId,
-  endRelationship
+  endRelationship,
 };

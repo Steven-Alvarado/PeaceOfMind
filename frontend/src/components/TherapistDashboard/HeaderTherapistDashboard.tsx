@@ -1,6 +1,12 @@
 import React, { useState } from "react";
-import { FaBars, FaTimes, FaHome } from "react-icons/fa";
-import { IoIosNotifications, IoMdSettings } from "react-icons/io";
+
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
+
+import { FaBars, FaTimes } from "react-icons/fa";
+import { IoMdSettings } from "react-icons/io";
+import { MdOutlineLogout } from "react-icons/md";
+
 import Logo from "../../assets/images/logobetter.png";
 
 const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
@@ -150,14 +156,56 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
   );
 };
 
+const LogoutConfirmationModal = ({ isOpen, onConfirm, onCancel }: { isOpen: boolean; onConfirm: () => void; onCancel: () => void }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+      <div className="bg-white rounded-lg p-6 w-full max-w-md">
+        <h2 className="text-lg font-bold text-center text-black mb-4">Confirm Logout</h2>
+        <p className="text-center text-black mb-6">Are you sure you want to log out?</p>
+        <div className="flex justify-between">
+          <button
+            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+            onClick={onConfirm}
+          >
+            Yes, Log Out
+          </button>
+          <button
+            className="bg-gray-300 text-black px-4 py-2 rounded hover:bg-gray-400"
+            onClick={onCancel}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const HeaderTherapistDashboard = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+
+
+  const { logout } = useAuth(); 
+  const navigate = useNavigate(); 
+
   const toggleMenu = () => {
     setIsOpen(!isOpen);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("jwt");
+
+    if (logout) {
+      logout();
+    }
+
+    navigate("/login");
+  };
+  
   return (
     <header className="bg-[#5E9ED9] text-white sticky top-0 z-50">
       <div className="container mx-auto flex justify-between items-center p-4">
@@ -174,28 +222,24 @@ const HeaderTherapistDashboard = () => {
 
         {/* Desktop Navigation */}
         <nav className="hidden font-bold md:flex space-x-1">
-            <div className="justify-center flex cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4] space-x-1">
-                <FaHome className="mt-1"/>
-                <a href="Link for Dashboard" className="cursor-pointer rounded hover:bg-[#4b8cc4]">
-                    Dashboard
-                </a>
-            </div>
-            <div className="justify-center flex cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4] space-x-1">
-                <IoIosNotifications className="mt-1" />
-                <a href="Link for Notifications" className="cursor-pointer rounded hover:bg-[#4b8cc4]">
-                    Notifications
-                </a>
-            </div>
-            <div className="justify-center flex cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4] space-x-1">
-                <IoMdSettings className="mt-1" />
-                <button 
-                  className="cursor-pointer rounded hover:bg-[#4b8cc4]"
-                  onClick={() => setIsSettingsOpen(true)}
-                >
-                    Settings
-                </button>
-                <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
-            </div>
+          <div className="justify-center flex cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4] space-x-1">
+            <button 
+              className="cursor-pointer rounded hover:bg-[#4b8cc4]"
+              onClick={() => setIsSettingsOpen(true)}
+            >
+              <IoMdSettings className="inline mr-1 mb-0.5" />
+              Settings
+            </button>
+            <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+          </div>
+          <div className="justify-center flex space-x-1 px-3 py-2 rounded hover:bg-[#4b8cc4]">
+            <button
+              onClick={() => setIsLogoutModalOpen(true)}
+              >
+              <MdOutlineLogout className="inline mr-1 mb-0.5"/>
+              Logout
+            </button>
+          </div>
         </nav>
 
         {/* Mobile Hamburger Icon */}
@@ -209,20 +253,24 @@ const HeaderTherapistDashboard = () => {
         <nav className="md:hidden text-center font-bold bg-[#5E9ED9] text-white p-4 space-y-2">
           <div className="space-y-2">
             <div className="justify-center flex space-x-1 px-3 py-2 rounded hover:bg-[#4b8cc4]">
-                <FaHome className="mt-1"/>
-                <a href="Link for Dashboard"> Dashboard </a>
+              <a href="Link for Dashboard"> <IoMdSettings className="inline mr-1 mb-0.5"/> Settings </a>
             </div>
             <div className="justify-center flex space-x-1 px-3 py-2 rounded hover:bg-[#4b8cc4]">
-                <IoIosNotifications className="mt-1"/>
-                <a href="Link for Dashboard"> Notification </a>
-            </div>
-            <div className="justify-center flex space-x-1 px-3 py-2 rounded hover:bg-[#4b8cc4]">
-                <IoMdSettings className="mt-1"/>
-                <a href="Link for Dashboard"> Settings </a>
+              <button
+              onClick={() => setIsLogoutModalOpen(true)}
+              >
+                <MdOutlineLogout className="inline mr-1 mb-0.5"/>
+                Logout
+              </button>
             </div>
           </div>
         </nav>
       )}
+      <LogoutConfirmationModal
+        isOpen={isLogoutModalOpen}
+        onConfirm={handleLogout}
+        onCancel={() => setIsLogoutModalOpen(false)}
+      />
     </header>
   );
 };

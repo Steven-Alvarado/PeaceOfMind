@@ -1,5 +1,10 @@
-import React from "react";
-import { FaQuestionCircle, FaUserPlus, FaTasks, FaFileInvoice } from "react-icons/fa";
+import React, { useState } from "react";
+import {
+  FaQuestionCircle,
+  FaUserPlus,
+  FaTasks,
+  FaFileInvoice,
+} from "react-icons/fa";
 import Switch from "@mui/material/Switch";
 
 interface TherapistMenuSectionProps {
@@ -16,8 +21,8 @@ const TherapistMenuSection: React.FC<TherapistMenuSectionProps> = ({
   onRequestClick,
 }) => {
     return (
-        <div className="bg-blue-100 rounded-lg shadow-lg p-6 border border-[#5E9ED9]">
-          <h2 className="text-4xl text-center font-bold text-[#5E9ED9]">Menu</h2>
+        <div className="bg-blue-100 rounded-lg shadow-lg p-6 border-2 border-[#5E9ED9]">
+          <h2 className="text-4xl text-center max-h-full font-bold text-[#5E9ED9]">Menu</h2>
           <div className="space-y-4 mt-4">
             <div className="flex items-center justify-center space-x-2">
               <span>Not Available</span>
