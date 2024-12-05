@@ -63,7 +63,7 @@ exports.uploadProfilePicture = async (req, res) => {
         SELECT u.profile_picture_url
         FROM therapists t
         INNER JOIN users u ON t.user_id = u.id
-        WHERE t.id = $1; -- Query by therapist ID
+        WHERE t.id = $1; 
       `;
   
       const values = [id];
