@@ -261,7 +261,7 @@ const InvoicingModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
                 Cancel
               </button>
               <button
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                className="px-4 py-2 bg-[#5E9ED9] text-white rounded hover:bg-[#4a7cab]"
                 onClick={handlePay}
               >
                 Pay

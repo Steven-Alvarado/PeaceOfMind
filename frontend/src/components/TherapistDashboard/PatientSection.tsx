@@ -72,7 +72,7 @@ const PatientSection: React.FC<PatientListComponentProps> = ({
   return (
     <div className="flex flex-row w-full h-full p-6 space-x-4">
       <div className="flex-grow bg-blue-100 border-2 border-[#5E9ED9] rounded-lg p-6">
-        <h1>Therapist ID: {therapistId}</h1>
+        {/* <h1>Therapist ID: {therapistId}</h1> */}
         <h2 className="text-3xl font-semibold text-center text-[#5E9ED9] mb-6">
           My Patients
         </h2>

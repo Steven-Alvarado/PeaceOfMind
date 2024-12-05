@@ -25,14 +25,15 @@ const TherapistDashboard: React.FC = () => {
 
   const toggleAvailability = async () => {
     try {
-        const response = await axios.put(`/api/therapists/${therapistId.id}/availability`, {
-            availability: !isAvailable,
-        });
-        setIsAvailable(response.data.availability);
+      if (!therapistId) return; 
+  
+      const response = await axios.put(`/api/therapists/toggleAvailability/${therapistId.id}`);
+      
+      setIsAvailable(response.data.therapist.availability);
     } catch (error) {
-        console.error("Failed to toggle availability:", error);
+      console.error("Failed to toggle availability:", error);
     }
-};
+  };
 
   const handleRefresh = () => {
     setRefresh((prev) => !prev);
@@ -44,8 +45,10 @@ const TherapistDashboard: React.FC = () => {
       if (!user) return;
       try {
         const response = await axios.get(`/api/therapists/find/${user.id}`);
-        console.log("Therapist ID Response:", response.data); // Debugging
+        // console.log("Therapist ID Response:", response.data); // Debugging
+
         setTherapistId(response.data.therapist);
+        setIsAvailable(response.data.therapist.availability);
       } catch (error) {
         console.error("Error making GET request:", error);
       }
@@ -61,14 +64,14 @@ const TherapistDashboard: React.FC = () => {
         <h1 className="text-4xl font-bold text-center text-[#5E9ED9]">
           Welcome, {user?.first_name} {user?.last_name}!
         </h1>
-        <h2>
+        {/* <h2>
           Therapist ID:{" "}
           {therapistId != null ? (
             <span>{therapistId.id}</span>
           ) : (
             <span>Getting Id...</span>
           )}
-        </h2>
+        </h2> */}
       </header>
       <div className="flex-grow grid grid-cols-1 md:grid-cols-3 px-6 py-10">
         {/* Patients Section */}
@@ -96,7 +99,10 @@ const TherapistDashboard: React.FC = () => {
             </div>
             <div className="flex items-center justify-center space-x-2 border-[#5E9ED9] border-2 rounded-2xl">
               <span className=" p-2 rounded-3xl text-[#5E9ED9] font-bold">Not Available</span>
-              <Switch className="" checked={isAvailable} onChange={toggleAvailability} />
+              <Switch
+                checked={isAvailable || false}
+                onChange={toggleAvailability}
+              />
               <span className=" p-2 rounded-3xl text-[#5E9ED9] font-bold">Available</span>
             </div>
             <button
