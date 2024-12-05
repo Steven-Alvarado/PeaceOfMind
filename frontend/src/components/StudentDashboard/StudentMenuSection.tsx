@@ -1,8 +1,11 @@
 import React, { useState } from "react";
-import {  FaBook, FaClipboardQuestion } from "react-icons/fa6";
-import { FaQuestionCircle } from "react-icons/fa";
+import { FaBook, FaChartPie, FaFileInvoiceDollar, FaQuestionCircle} from "react-icons/fa";
+import { FaClipboardQuestion } from "react-icons/fa6"
 import HelpModal from "./StudentHelpModal";
 import JournalingModal from "./JournalingModal";
+import JournalAnalyticsModal from "./JournalAnalyticsModal";
+import WeeklySurvey from "./WeeklySurvey";
+import InvoicingModal from "./InvoicingModal";
 import {User} from "../../context/AuthContext";
 
 interface StudentMenuSectionProps {
@@ -13,9 +16,14 @@ interface StudentMenuSectionProps {
 const StudentMenuSection: React.FC<StudentMenuSectionProps> = ({ user, onSurveyClick }) => {
     const [isHelpOpen, setIsHelpOpen] = useState(false);
     const [isJournalOpen, setIsJournalOpen] = useState(false);
+    const [isSurveyOpen, setIsSurveyOpen] = useState(false);
+    const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
+    const [isInvoicingOpen, setIsInvoicingOpen] = useState(false);
+
 
     return (
-        <div className="bg-blue-100 border border-[#5E9ED9] rounded-lg p-6 shadow-lg">
+        <div className="p-6 mt-4">
+        <div className="bg-blue-100 border-2 border-[#5E9ED9] rounded-lg shadow-lg p-1">
             <div className="items-center justify-between mb-6">
                 <h2 className="text-2xl text-center font-bold text-[#5E9ED9] mt-2">Menu</h2>
                 <div className="flex justify-center md:mt-5 md:mb-5">
@@ -31,36 +39,46 @@ const StudentMenuSection: React.FC<StudentMenuSectionProps> = ({ user, onSurveyC
                 </div>
             </div>
             <div className="space-y-6">
-                <div className="flex justify-center space-x-2">
+                <div className="justify-center flex">
                     <button
-                        className=" w-2/4 bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center"
+                        className=" w-full bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center"
                         onClick={() => setIsJournalOpen(true)}
                     >
                         <FaBook className="mr-3" /> Journal
                     </button>
+                </div>
+                <div className="justify-center flex">
                     <button
-                        className=" w-2/4 bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center"
+                        className=" w-full bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center"
+                        onClick={() => setIsAnalyticsOpen(true)}
                     >
-                        <FaBook className="mr-3" /> Analytics
+                        <FaChartPie className="mr-3" /> Analytics
                     </button>
                 </div>
-                <div className="flex justify-center space-x-2">
+                <div className="justify-center flex">
                     <button
-                        className="w-2/4 bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center"
-                        onClick={onSurveyClick}
+                        className="w-full bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center"
+                        onClick={()=> setIsSurveyOpen(true)}
                     >
                         <FaClipboardQuestion className="mr-3" /> Surveys
                     </button>
+                </div>
+                <div className="justify-center flex">
                     <button
-                        className=" w-2/4 bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center"
+                        className=" w-full bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center"
+                        onClick={() => setIsInvoicingOpen(true)}
                     >
-                        <FaBook className="mr-3" /> Invoices
+                        <FaFileInvoiceDollar className="mr-3" /> Invoices
                     </button>
                 </div>
             </div>
             <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
             <JournalingModal isOpen={isJournalOpen} onClose={() => setIsJournalOpen(false)} />
+            <JournalAnalyticsModal isOpen={isAnalyticsOpen} onClose={() =>setIsAnalyticsOpen(false)} />
+            <WeeklySurvey isOpen={isSurveyOpen} onClose={() => setIsSurveyOpen(false)} user={user} />
+            <InvoicingModal isOpen={isInvoicingOpen} onClose={() => setIsInvoicingOpen(false)} />
         </div>
+      </div>
     );
 };
 

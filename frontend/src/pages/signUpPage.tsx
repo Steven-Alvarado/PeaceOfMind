@@ -7,7 +7,9 @@ import { FaMale, FaFemale, FaGenderless } from "react-icons/fa";
 import Lottie from "lottie-react";
 import SignUpPageAnimation from "../assets/lotties/SignUpPageAnimation.json";
 
+
 type GenderOptionType = "male" | "female" | "other" | "";
+
 
 const SignUp = () => {
   return (
@@ -23,6 +25,9 @@ const SignUp = () => {
   );
 };
 
+
+
+
 function SignUpSection() {
   const { registerUser } = useAuth();
   const [formData, setFormData] = useState({
@@ -37,28 +42,38 @@ function SignUpSection() {
   const [isRegistered, setIsRegistered] = useState(false);
   const navigate = useNavigate();
 
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+
   const handleGenderSelect = (selectedGender: GenderOptionType) =>
     setFormData((prev) => ({ ...prev, gender: selectedGender }));
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Check if gender is selected
-    if (!formData.gender) {
-      setError("Please select a gender.");
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password || !formData.confirmPassword ||!formData.gender) {
+      setError('Please fill in all fields');
       return;
     }
-
-    // Check if passwords match
+    {/*Not sure if needed*/}
+    if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      return 'Please enter a valid email';
+    }
     if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match.");
+      setError('Passwords do not match');
       return;
     }
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters');
+      return;
+    }
+    setError('');
+
 
     try {
       await registerUser(
@@ -72,6 +87,7 @@ function SignUpSection() {
       setIsRegistered(true);
       setError(null);
 
+
       // Delay navigation by 3 seconds
       setTimeout(() => 3000);
     } catch (err: any) {
@@ -79,10 +95,13 @@ function SignUpSection() {
     }
   };
 
+
+
+
   return (
     <section className="flex flex-col items-center justify-center py-10 px-6 bg-white">
-      <div className="flex flex-col md:flex-row items-center justify-center mb-10 w-full max-w-5xl">
-        <div className="text-left md:w-1/2 p-6">
+      <div className="flex flex-col md:flex-row items-center justify-center mb-10 w-full max-w-6xl">
+        <div className="text-left md:w-1/2 p-6 md:pl-12">
           <h1 className="text-4xl font-bold text-[#5E9ED9] text-center mb-4">
             Join Peace of Mind
           </h1>
@@ -97,12 +116,18 @@ function SignUpSection() {
             <li>📝 Private journaling features to track your progress over time.</li>
             <li>🌍 Community resources to learn from others' experiences.</li>
           </ul>
-        </div>
+       
+
 
         <div className="md:w-1/2 w-3/4 max-w-sm mx-auto md:ml-8">
-          <Lottie animationData={SignUpPageAnimation} loop={true} />
+          <Lottie
+            animationData={SignUpPageAnimation}
+            loop={true}
+            style={{ width: '400px', height: '400px' }}
+          />
         </div>
       </div>
+
 
       <div className="bg-blue-100 rounded-lg shadow-md p-6 w-full border border-[#5E9ED9] max-w-md text-center">
         {isRegistered ? (
@@ -118,14 +143,13 @@ function SignUpSection() {
         ) : (
           // Registration Form
           <>
-            <h2 className="text-3xl font-extrabold text-[#5E9ED9] mb-4">Sign Up</h2>
-            {error && <p className="text-red-500 mb-4">{error}</p>}
+            <h2 className="text-3xl font-extrabold text-[#5E9ED9] mb-4">Sign Up as a Patient</h2>
             <form className="flex flex-col items-center" onSubmit={handleSubmit}>
               <input
                 type="text"
                 name="firstName"
                 placeholder="First Name"
-                className="w-full p-3 mb-4 border border-[#5E9ED9] rounded-md"
+                className="w-full p-3 mb-2 border border-[#5E9ED9] rounded-md"
                 value={formData.firstName}
                 onChange={handleInputChange}
                 required
@@ -134,7 +158,7 @@ function SignUpSection() {
                 type="text"
                 name="lastName"
                 placeholder="Last Name"
-                className="w-full p-3 mb-4 border border-[#5E9ED9] rounded-md"
+                className="w-full p-3 mb-2 border border-[#5E9ED9] rounded-md"
                 value={formData.lastName}
                 onChange={handleInputChange}
                 required
@@ -143,7 +167,7 @@ function SignUpSection() {
                 type="email"
                 name="email"
                 placeholder="Email"
-                className="w-full p-3 mb-4 border border-[#5E9ED9] rounded-md"
+                className="w-full p-3 mb-2 border border-[#5E9ED9] rounded-md"
                 value={formData.email}
                 onChange={handleInputChange}
                 required
@@ -152,7 +176,7 @@ function SignUpSection() {
                 type="password"
                 name="password"
                 placeholder="Password"
-                className="w-full p-3 mb-4 border border-[#5E9ED9] rounded-md"
+                className="w-full p-3 mb-2 border border-[#5E9ED9] rounded-md"
                 value={formData.password}
                 onChange={handleInputChange}
                 required
@@ -161,11 +185,12 @@ function SignUpSection() {
                 type="password"
                 name="confirmPassword"
                 placeholder="Confirm Password"
-                className="w-full p-3 mb-6 border border-[#5E9ED9] rounded-md"
+                className="w-full p-3 mb-2 border border-[#5E9ED9] rounded-md"
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
                 required
               />
+
 
               <div className="w-full mb-6">
                 <label className="block mb-2 text-[#5E9ED9] font-semibold">Gender</label>
@@ -191,6 +216,7 @@ function SignUpSection() {
                 </div>
               </div>
 
+
               <button
                 type="submit"
                 className="w-full bg-[#5E9ED9] text-white font-semibold p-3 rounded-md hover:bg-[#4a8ac9]"
@@ -198,12 +224,20 @@ function SignUpSection() {
                 Sign Up
               </button>
             </form>
-          </>
-        )}
-      </div>
-    </section>
+            {error && (
+              <div className="mt-4 text-red-500 font-medium">
+                {error}
+              </div>
+              )}
+            </>
+            )}
+          </div>
+        </div>
+      </section>
   );
 }
+
+
 
 
 interface GenderOptionProps {
@@ -212,6 +246,7 @@ interface GenderOptionProps {
   isSelected: boolean;
   onClick: () => void;
 }
+
 
 function GenderOption({ icon, label, isSelected, onClick }: GenderOptionProps) {
   return (
@@ -227,4 +262,8 @@ function GenderOption({ icon, label, isSelected, onClick }: GenderOptionProps) {
   );
 }
 
+
 export default SignUp;
+
+
+

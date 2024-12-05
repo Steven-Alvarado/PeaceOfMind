@@ -21,6 +21,7 @@ const invoiceRoutes = require("./invoices");
 
 const accountSettingsRoutes = require("./accountSettings");
 
+const profilePictureRoutes = require("./profilePicture"); 
 
 // Mount routes on `/api`
 router.use("/users", userRoutes);
@@ -35,8 +36,6 @@ router.use("/journals", journalRoutes);
 router.use("/documents", documentRoutes);
 router.use("/relationships", relationshipRoutes);
 router.use("/invoices", invoiceRoutes);
-router.use("/accountSettings", accountSettingsRoutes );
-
 
  
 

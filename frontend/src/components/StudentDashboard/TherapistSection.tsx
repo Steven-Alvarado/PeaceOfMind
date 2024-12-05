@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from "react";
-import {
-  FaCalendar,
-  FaComments } from "react-icons/fa";
-import { FaClipboardList } from "react-icons/fa6";
+import { FaPersonWalkingArrowRight } from "react-icons/fa6";
 import { CiStar, CiBadgeDollar } from "react-icons/ci";
 import { MdOutlineWorkHistory, MdOutlineMail } from "react-icons/md";
 import { MessageCircle, Search, Star, Calendar } from "lucide-react";
 
+import Alert from "@mui/material/Alert";
 import TherapistModal from "./TherapistModal";
+import DropModal from "./DropTherapist";
 import axios from "axios";
 import { User } from "../../context/AuthContext";
 import MessagingInterface from "../Messaging/MessagingInterface";
+import ProfilePicture from "../ProfilePicture";
 
 interface TherapistSectionProps {
   user: User;
@@ -20,17 +20,25 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
   const [therapistName, setTherapistName] = useState<string | null>(null);
   const [therapistDetails, setTherapistDetails] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [error] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [refresh, setRefresh] = useState(false);
+  const [sentAlert, setSentAlert] = useState(false);
+  const [sentDrop, setSentDrop] = useState(false);
 
   const [isTherListOpen, setIsTherListOpen] = useState(false);
+  const [isDropOpen, setIsDropOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
+
+  const handleRefresh = () => setRefresh((prev) => !prev);
+  const handleAlert = () => setSentAlert((prev) => !prev);
+  const handleDrop = () => setSentDrop((prev) => !prev);
 
   useEffect(() => {
     const fetchTherapistRelationship = async () => {
       try {
         const response = await axios.get(`/api/relationships/${user.id}`);
         const relationship = response.data.relationship;
-
+        
         if (relationship?.current_therapist_id) {
           setTherapistName(
             `${relationship.current_therapist_first_name} ${relationship.current_therapist_last_name}`
@@ -40,48 +48,69 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
           setTherapistName(null);
           setTherapistDetails(null);
         }
-      } catch (err) {
-        console.error("Failed to load therapist relationship:", err);
-        setTherapistName(null);
-        setTherapistDetails(null);
+      } catch (err: any) {
+        if (err.response?.status === 404) {
+          // Explicitly handle 404 (No therapist relationship)
+          setTherapistName(null);
+          setTherapistDetails(null);
+        } else {
+          console.error("Failed to load therapist relationship:", err);
+          setError("Unable to load therapist relationship.");
+        }
       } finally {
         setLoading(false);
       }
+      console.log(therapistDetails.id);
     };
-
     const fetchTherapistDetails = async (therapistId: number) => {
       try {
         const response = await axios.get(`/api/therapists/${therapistId}`);
         setTherapistDetails(response.data.therapist);
       } catch (err) {
         console.error("Error fetching therapist details:", err);
-        setTherapistDetails(null);
       }
     };
 
     fetchTherapistRelationship();
-  }, [user]);
+  }, [user, refresh]);
 
   if (loading) return <div>Loading therapist details...</div>;
   if (error) return <div className="text-red-500">Error: {error}</div>;
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="bg-white rounded-lg shadow-lg p-6">
+    <div className="p-6 mt-4">
+      <div className="bg-blue-100 border-2 border-[#5E9ED9] rounded-lg shadow-lg p-12">
+        {sentAlert && (
+          <Alert severity="info" onClose={handleAlert}>
+            Your request has been sent.
+          </Alert>
+        )}
+        {sentDrop && (
+          <Alert severity="error" onClose={handleDrop}>
+            Your therapist has been dropped.
+          </Alert>
+        )}
+        <div className="flex items-center justify-center mb-6">
+          <h2 className="text-2xl font-bold text-[#5E9ED9]">Therapist Details</h2>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Therapist Image Section */}
-          <div className="flex flex-col items-center justify-center">
-            <div className="relative w-48 h-48 md:w-64 md:h-64">
-              <img
-                src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-4.0.3"
-                alt={therapistName || "Therapist"}
-                className="rounded-full object-cover w-full h-full shadow-md transition duration-300 hover:shadow-lg"
+          <div className="relative mx-auto">
+            {/* Pass therapistId if userRole is "therapist", otherwise userId */}
+            {therapistDetails?.id && (
+              <ProfilePicture
+                userRole={user.role === "therapist" ? "therapist" : "student"}
+                userId={user.role === "student" ? user.id : undefined}
+                therapistId={user.role === "therapist" ? therapistDetails.id : undefined}
+                className="w-full h-full rounded-full object-cover" 
+                style={{ width: "200px", height: "200px" }} // Explicitly set dimensions
               />
-              <div className="absolute bottom-2 right-2 bg-white rounded-full p-1 shadow-md">
-                <Star className="w-6 h-6 text-yellow-400" />
-              </div>
+            )}
+            <div className="absolute right-2 bg-white rounded-full p-1 shadow-md">
+              <Star className="w-6 h-6 text-yellow-400" />
             </div>
           </div>
+
 
           {/* Therapist Info Section */}
           <div className="flex flex-col justify-center space-y-6">
@@ -104,8 +133,8 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
                     {therapistDetails.email}
                   </p>
                   <p className="text-gray-600 mt-2 flex items-center">
-                    <CiBadgeDollar className="w-5 h-5 mr-2 text-[#5E9ED9]" />
-                    ${therapistDetails.monthly_rate} monthly
+                    <CiBadgeDollar className="w-5 h-5 mr-2 text-[#5E9ED9]" />$
+                    {therapistDetails.monthly_rate} monthly
                   </p>
                 </>
               )}
@@ -120,6 +149,16 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
                   {therapistName ? "Switch Therapist" : "Find Therapist"}
                 </span>
               </button>
+
+              {therapistDetails && (
+                <button
+                  onClick={() => setIsDropOpen(true)}
+                  className="flex items-center justify-center space-x-2 bg-[#5E9ED9] text-white py-3 px-6 rounded-lg hover:bg-[#4b8bc4] transition duration-300 shadow-md hover:shadow-lg"
+                >
+                  <FaPersonWalkingArrowRight className="w-5 h-5" />
+                  <span>Drop Therapist</span>
+                </button>
+              )}
 
               <button
                 onClick={() => setIsChatOpen(true)}
@@ -140,28 +179,30 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
 
       {/* Chat Modal */}
       {isChatOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="relative bg-white rounded-lg p-6 max-w-md w-full">
-            <button
-              onClick={() => setIsChatOpen(false)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 focus:outline-none"
-              aria-label="Close"
-            >
-              ✕
-            </button>
-            <MessagingInterface
-              userId={user.id}
-              userRole={user.role}
-              onClose={() => setIsChatOpen(false)}
-            />
-          </div>
-        </div>
+        <MessagingInterface
+          userId={user.id}
+          userRole={user.role}
+          onClose={() => setIsChatOpen(false)}
+        />
       )}
 
-      {/* Therapist Modal */}
+      <DropModal
+        isOpen={isDropOpen}
+        sentDrop={handleDrop}
+        onClose={() => {
+          setIsDropOpen(false);
+          handleRefresh();
+        }}
+      />
+
       <TherapistModal
         isOpen={isTherListOpen}
-        onClose={() => setIsTherListOpen(false)}
+        refresh={refresh}
+        sentAlert={handleAlert}
+        onClose={() => {
+          setIsTherListOpen(false);
+          handleRefresh();
+        }}
       />
     </div>
   );
