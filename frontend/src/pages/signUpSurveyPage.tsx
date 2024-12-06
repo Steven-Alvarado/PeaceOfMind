@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../hooks/useAuth"; // Assuming this handles user authentication
+import { motion } from "framer-motion";
+import { X, CheckCircle, AlertCircle } from "lucide-react";
+import { useAuth } from "../hooks/useAuth";
 import HeaderSignUpLoginPage from "../components/HeaderSignUpLoginPage";
 import FooterLandingPage from "../components/Footer";
 import axios from "axios";
@@ -8,55 +10,84 @@ import axios from "axios";
 type QuestionType = {
   id: number;
   question: string;
-  answer: boolean | null;
+  answer: string | null;
 };
 
 const initialQuestions: QuestionType[] = [
-  { id: 1, question: "Do you often seem sad, tired, restless, or out of sorts?", answer: null },
-  { id: 2, question: "Do you spend a lot of time alone?", answer: null },
-  { id: 3, question: "Have low self-esteem?", answer: null },
-  { id: 4, question: "Have trouble getting along with family, friends, and peers?", answer: null },
-  { id: 5, question: "Have frequent outbursts of shouting, complaining, or crying?", answer: null },
-  { id: 6, question: "Show sudden changes of eating patterns?", answer: null },
-  { id: 7, question: "Show signs of using drugs and/or alcohol?", answer: null },
-  { id: 8, question: "Feel overwhelmed or stressed often?", answer: null },
-  { id: 9, question: "Feel anxious or worried frequently?", answer: null },
+  { id: 1, question: "I often feel sad, restless, or emotionally drained.", answer: null },
+  { id: 2, question: "I spend a significant amount of time alone and disconnected from others.", answer: null },
+  { id: 3, question: "I feel confident in myself and my abilities.", answer: null },
+  { id: 4, question: "I experience challenges in building and maintaining relationships.", answer: null },
+  { id: 5, question: "I frequently express emotions through yelling, complaining, or crying.", answer: null },
+  { id: 6, question: "I have noticed sudden changes in my eating patterns.", answer: null },
+  { id: 7, question: "I have engaged in behaviors involving drugs or alcohol.", answer: null },
+  { id: 8, question: "I often feel overwhelmed or stressed by my responsibilities.", answer: null },
+  { id: 9, question: "I frequently feel anxious or overly worried about things.", answer: null },
+];
+
+const answerOptions = [
+  "Strongly Disagree",
+  "Disagree",
+  "Neutral",
+  "Agree",
+  "Strongly Agree",
 ];
 
 const SignUpSurveyPage = () => {
-  const [questions, setQuestions] = useState(initialQuestions);
+  const [questions, setQuestions] = useState<QuestionType[]>(initialQuestions);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { user } = useAuth(); // Assuming user is available after sign-up
+  const { user } = useAuth();
 
-  const handleAnswer = (id: number, answer: boolean) => {
-    setQuestions(questions.map((q) => (q.id === id ? { ...q, answer } : q)));
+  const handleAnswer = (id: number, answer: string) => {
+    setQuestions((prev) =>
+      prev.map((q) => (q.id === id ? { ...q, answer } : q))
+    );
     setError(null); // Clear error when an answer is provided
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleNext = () => {
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex((prev) => prev + 1);
+    }
+  };
 
+  const handleBack = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex((prev) => prev - 1);
+    }
+  };
+
+  const handleSubmit = async () => {
     // Validate that all questions have been answered
     if (questions.some((q) => q.answer === null)) {
       setError("Please answer all questions before submitting.");
       return;
     }
 
-    // Prepare survey content for submission
-    const surveyContent = questions.reduce((content, q) => {
-      content[`question${q.id}`] = q.answer ? "Yes" : "No";
-      return content;
-    }, {} as Record<string, string>);
-
+    setIsSubmitting(true);
     try {
+      const surveyContent = questions.reduce((content, q) => {
+        content[`question${q.id}`] = q.answer;
+        return content;
+      }, {} as Record<string, string>);
+
       await axios.post("/api/surveys", {
         userId: user?.id,
         content: surveyContent,
       });
-      navigate("/student-dashboard"); // Redirect to the dashboard or desired page
+
+      setSubmitStatus("success");
+      setTimeout(() => {
+        navigate("/student-dashboard"); // Redirect after success
+      }, 2000);
     } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to submit survey. Please try again.");
+      setSubmitStatus("error");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -64,75 +95,120 @@ const SignUpSurveyPage = () => {
     <div className="flex flex-col min-h-screen">
       <HeaderSignUpLoginPage />
       <div className="flex-grow flex items-center justify-center bg-blue-50 py-10">
-        <SurveySection questions={questions} onAnswer={handleAnswer} onSubmit={handleSubmit} error={error} />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          className="relative bg-white rounded-lg w-full max-w-2xl shadow-lg overflow-y-auto p-6"
+        >
+          {submitStatus === "idle" ? (
+            <>
+              <h2 className="text-3xl font-semibold text-center text-[#5E9ED9] mb-6">
+                New User Survey
+              </h2>
+
+              {/* Progress Bar */}
+              <div className="mb-6">
+                <div className="h-2 bg-gray-100 rounded-full">
+                  <div
+                    className="h-2 bg-[#5E9ED9] rounded-full transition-all duration-300"
+                    style={{
+                      width: `${
+                        ((currentQuestionIndex + 1) / questions.length) * 100
+                      }%`,
+                    }}
+                  />
+                </div>
+              </div>
+
+              {error && (
+                <p className="text-red-500 mb-4 text-center">{error}</p>
+              )}
+
+              <motion.div
+                key={currentQuestionIndex}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="mb-8"
+              >
+                <h3 className="text-lg font-semibold mb-4">
+                  {questions[currentQuestionIndex].question}
+                </h3>
+                <div className="space-y-3">
+                  {answerOptions.map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() =>
+                        handleAnswer(questions[currentQuestionIndex].id, option)
+                      }
+                      className={`w-full px-4 py-2 rounded-md text-left ${
+                        questions[currentQuestionIndex].answer === option
+                          ? "bg-blue-100 border border-blue-500"
+                          : "bg-gray-100 border border-gray-400"
+                      }`}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+
+              <div className="flex justify-between">
+                <button
+                  onClick={handleBack}
+                  disabled={currentQuestionIndex === 0}
+                  className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 disabled:opacity-50"
+                >
+                  Back
+                </button>
+                <button
+                  onClick={
+                    currentQuestionIndex === questions.length - 1
+                      ? handleSubmit
+                      : handleNext
+                  }
+                  disabled={
+                    questions[currentQuestionIndex].answer === null ||
+                    isSubmitting
+                  }
+                  className="px-6 py-2 bg-[#5E9ED9] text-white rounded-lg hover:bg-[#4a8ac9] disabled:opacity-50"
+                >
+                  {currentQuestionIndex === questions.length - 1
+                    ? isSubmitting
+                      ? "Submitting..."
+                      : "Submit"
+                    : "Next"}
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-8">
+              {submitStatus === "success" ? (
+                <>
+                  <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold">
+                    Thank you for completing the survey!
+                  </h3>
+                  <p className="text-gray-600 mt-2">
+                    Redirecting to your dashboard...
+                  </p>
+                </>
+              ) : (
+                <>
+                  <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold">Submission failed</h3>
+                  <p className="text-gray-600 mt-2">
+                    Please try again later.
+                  </p>
+                </>
+              )}
+            </div>
+          )}
+        </motion.div>
       </div>
       <FooterLandingPage />
     </div>
-  );
-};
-
-const SurveySection = ({
-  questions,
-  onAnswer,
-  onSubmit,
-  error,
-}: {
-  questions: QuestionType[];
-  onAnswer: (id: number, answer: boolean) => void;
-  onSubmit: (e: React.FormEvent) => void;
-  error: string | null;
-}) => {
-  return (
-    <section className="bg-blue-100 p-6 rounded-lg shadow-md w-full max-w-3xl"
-    style={{ scrollBehavior: "smooth" }} //Fixed so it does not start page at bottom
-    >
-      <h2 className="text-3xl font-semibold text-center text-[#5E9ED9] mb-6">
-        New User - Survey
-      </h2>
-      {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
-      <form className="space-y-4" onSubmit={onSubmit}>
-        {questions.map(({ id, question, answer }) => (
-          <div
-            key={id}
-            className="flex justify-between items-center bg-white p-4 rounded-md shadow-sm"
-          >
-            <span className="text-lg">{question}</span>
-            <div className="flex space-x-4">
-              <button
-                type="button"
-                onClick={() => onAnswer(id, true)}
-                className={`px-4 py-2 rounded-md ${
-                  answer === true
-                    ? "bg-blue-100 border border-[#44719b]"
-                    : "bg-gray-100 border border-gray-400"
-                }`}
-              >
-                Yes
-              </button>
-              <button
-                type="button"
-                onClick={() => onAnswer(id, false)}
-                className={`px-4 py-2 rounded-md ${
-                  answer === false
-                    ? "bg-blue-100 border border-[#44719b]"
-                    : "bg-gray-100 border border-gray-400"
-                }`}
-              >
-                No
-              </button>
-            </div>
-          </div>
-        ))}
-        <div className="flex justify-center">
-          <button
-            type="submit"
-            className="w-2/4 bg-[#5E9ED9] text-white font-semibold p-3 rounded-md hover:bg-[#4a8ac9]"
-          >
-            Submit
-          </button>
-        </div>
-      </form>
-    </section>
   );
 };
 

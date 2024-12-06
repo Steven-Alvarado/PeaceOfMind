@@ -4,6 +4,7 @@ import VideoCall from "./VideoCall";
 import { Video, Send, X } from "lucide-react";
 import socket from "../../socket";
 import ProfilePicture from "../ProfilePicture";
+import axios from "axios";
 interface MessagingInterfaceProps {
   userId: number;
   userRole: "student" | "therapist";
@@ -168,12 +169,54 @@ const MessagingInterface: React.FC<MessagingInterfaceProps> = ({
   const handleStartConversation = async (studentId: number, therapistId: number) => {
     try {
       const response = await createConversation(studentId, therapistId);
-      console.log("Create conversation response:", response);
-      
-      if (response?.conversation) {  // Check for the conversation property
-        setCurrentConversation(response.conversation); // Access the conversation object
-        fetchMessages(response.conversation.id); // Use the conversation id
-        setShowPotentialPartners(false); 
+  
+      if (response?.conversation) {
+        let conversation = response.conversation;
+  
+        // If participant names are missing, fetch them
+        if (!conversation.therapist_first_name || !conversation.student_first_name) {
+          try {
+            if (userRole === "student") {
+              // Fetch therapist details
+              const therapistResponse = await axios.get(
+                `http://localhost:5000/api/therapists/${therapistId}`
+              );
+              const therapist = therapistResponse.data.therapist;
+  
+              conversation = {
+                ...conversation,
+                therapist_first_name: therapist.first_name,
+                therapist_last_name: therapist.last_name,
+              };
+            } else if (userRole === "therapist") {
+              // Fetch student details
+              const studentResponse = await axios.get(
+                `http://localhost:5000/api/users/${studentId}`
+              );
+              const student = studentResponse.data;
+  
+              conversation = {
+                ...conversation,
+                student_first_name: student.first_name,
+                student_last_name: student.last_name,
+              };
+            }
+          } catch (error) {
+            console.error("Error fetching participant details:", error);
+          }
+        }
+  
+        // Update the conversation state
+        setCurrentConversation(conversation);
+  
+        // Add the new conversation to the list of conversations
+        fetchConversations(userId, userRole);
+  
+        // Fetch messages for the new conversation
+        fetchMessages(conversation.id);
+  
+        // Close the potential partners view
+        setShowPotentialPartners(false);
       } else {
         console.error("Invalid conversation data returned from API:", response);
         alert("Failed to create conversation properly.");
@@ -183,6 +226,7 @@ const MessagingInterface: React.FC<MessagingInterfaceProps> = ({
       alert("Failed to create a conversation.");
     }
   };
+  
   
   
 

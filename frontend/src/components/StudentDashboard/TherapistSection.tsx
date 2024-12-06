@@ -100,8 +100,8 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
 
   return (
     <div className="p-8 mt-1">
-      <div className="p-6 mt-4 flex flex-col min-h-[400px]">
-        <div className="bg-blue-100 border-2 border-[#5E9ED9] rounded-lg shadow-lg p-12 flex flex-col h-full">
+      <div className="p-6 mt-5 flex flex-col min-h-[400px]">
+        <div className="bg-blue-100 border-2 border-[#5E9ED9] rounded-lg shadow-lg p-9 flex flex-col h-full">
           {sentAlert && (
             <Alert severity="info" onClose={handleAlert}>
               Your request has been sent.
@@ -165,7 +165,7 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
 
           {/* Centered Buttons */}
           <div className="mt-auto flex justify-center py-4 items-center">
-            <div className="grid grid-cols-2  gap-4">
+            <div className="grid grid-cols-2 gap-4 w-full max-w-lg">
               <button
                 onClick={() => setIsTherListOpen(true)}
                 className="flex items-center justify-center space-x-2 bg-[#5E9ED9] text-white py-3 px-6 rounded-lg hover:bg-[#4b8bc4] transition duration-300 shadow-md hover:shadow-lg"
@@ -186,16 +186,6 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
                 </button>
               )}
 
-              {therapistDetails && (
-                <button
-                  onClick={() => setIsReviewOpen(true)}
-                  className="flex items-center justify-center space-x-2 bg-[#008000] text-white py-3 px-6 rounded-lg hover:bg-[#4b8bc4] transition duration-300 shadow-md hover:shadow-lg"
-                >
-                  <FaDiscourse className="w-5 h-5" />
-                  <span>Review Therapist</span>
-                </button>
-              )}
-
               <button
                 onClick={() => setIsChatOpen(true)}
                 className="flex items-center justify-center space-x-2 bg-white text-[#5E9ED9] border-2 border-[#5E9ED9] py-3 px-6 rounded-lg hover:bg-[#5E9ED9] hover:text-white transition duration-300 shadow-md hover:shadow-lg"
@@ -205,12 +195,22 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
               </button>
 
               <button
-                onClick={() => setIsScheduleOpen(true)} // Open the modal
+                onClick={() => setIsScheduleOpen(true)}
                 className="flex items-center justify-center space-x-2 bg-white text-[#5E9ED9] border-2 border-[#5E9ED9] py-3 px-6 rounded-lg hover:bg-[#5E9ED9] hover:text-white transition duration-300 shadow-md hover:shadow-lg"
               >
                 <Calendar className="w-5 h-5" />
                 <span>Schedule Appointment</span>
               </button>
+
+              {therapistDetails && (
+                <button
+                  onClick={() => setIsReviewOpen(true)}
+                  className="col-span-2 flex items-center justify-center space-x-2 bg-green-500 text-white py-3 px-6 rounded-lg hover:bg-green-600 transition duration-300 shadow-md hover:shadow-lg"
+                >
+                  <FaDiscourse className="w-5 h-5" />
+                  <span>Review Therapist</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -256,6 +256,15 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
           handleRefresh();
         }}
       />
+
+      {isScheduleOpen && therapistDetails && (
+        <ScheduleForStudents
+          isOpen={isScheduleOpen}
+          studentId={user.id}
+          therapistId={therapistDetails.therapist_id} 
+          onClose={() => setIsScheduleOpen(false)} // Close the modal
+        />
+      )}
     </div>
   );
 };

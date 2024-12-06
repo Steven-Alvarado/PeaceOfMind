@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../hooks/useAuth.ts"; // Custom hook for accessing AuthContext
+import { useAuth } from "../hooks/useAuth.ts"; 
 import HeaderSignUpLoginPage from "../components/HeaderSignUpLoginPage.tsx";
 import FooterLandingPage from "../components/Footer";
 import Lottie from "lottie-react";

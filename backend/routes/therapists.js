@@ -16,6 +16,4 @@ router.get('/user/:id', getTherapistDetailsByUserId) //get therapist by userid
 router.put("/toggleAvailability/:id", toggleAvailability); // Toggle availability by therapist id
 router.get("/find/:id", getTherapistIdByUserId); // Get therapist_id from user_id
 
-
-
 module.exports = router;
