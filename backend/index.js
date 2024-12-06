@@ -12,72 +12,59 @@ const apiRoutes = require("./routes/api");
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Create an HTTP server and attach socket.io to it
+// CORS Configuration
+const allowedOrigins = process.env.FRONTEND_URL || "http://localhost:3000";
+app.use(cors({ origin: allowedOrigins, credentials: true }));
+
+// Create HTTP server and attach Socket.IO
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:3000", // Frontend's URL
+    origin: allowedOrigins,
+    credentials: true,
     methods: ["GET", "POST"],
   },
 });
 
-// Serve static profile pic files from uploads folder
+// Serve static files
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Middleware
-app.use(cors({ origin: "http://localhost:3000" }));
 app.use(express.json());
 
 // Swagger setup
 const swaggerDocument = YAML.load("./swagger.yaml");
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-// Mount the API routes
+// Mount API routes
 app.use("/api", apiRoutes);
 
 // Socket.IO setup
 io.on("connection", (socket) => {
   console.log(`A user connected: ${socket.id}`);
 
-  // User joins a conversation room
   socket.on("joinConversation", (conversationId) => {
-    if (!conversationId) {
-      console.error("Invalid conversationId received.");
-      return;
-    }
-    console.log(`User joined conversation room: conversation_${conversationId}`);
+    if (!conversationId) return;
+    console.log(`User joined conversation_${conversationId}`);
     socket.join(`conversation_${conversationId}`);
   });
 
-  // Handle sending messages
   socket.on("sendMessage", async (message) => {
     const { conversationId, senderId, receiverId, messageContent } = message;
-  
-    if (!conversationId || !messageContent) {
-      console.error("Invalid message data.");
-      return;
-    }
-  
+    if (!conversationId || !messageContent) return;
+
     try {
-      // Save the message in the database
-      const insertedMessage = await db.query(
-        `INSERT INTO messages (conversation_id, sender_id, receiver_id, message_content) 
+      const result = await db.query(
+        `INSERT INTO messages (conversation_id, sender_id, receiver_id, message_content)
          VALUES ($1, $2, $3, $4) RETURNING *`,
         [conversationId, senderId, receiverId, messageContent]
       );
-  
-      const dbMessage = insertedMessage.rows[0];
-      if (dbMessage) {
-        console.log(`Message sent in conversation_${conversationId}:`, dbMessage);
-  
-        // Emit message only to the relevant room
-        io.to(`conversation_${conversationId}`).emit("receiveMessage", dbMessage);
-      }
+      const dbMessage = result.rows[0];
+      io.to(`conversation_${conversationId}`).emit("receiveMessage", dbMessage);
     } catch (error) {
-      console.error("Error processing message:", error.message);
+      console.error("Error processing message:", error);
     }
   });
-  
 
   // Video call signaling (offer/answer exchange)
   socket.on("videoCallSignal", ({ conversationId, signal }) => {
@@ -140,9 +127,15 @@ io.on("connection", (socket) => {
   });
 });
 
-
-// Start the server
-httpServer.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-  console.log(`Swagger documentation available at http://localhost:${PORT}/api-docs`);
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: "Internal Server Error" });
 });
+
+// Start server
+httpServer.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server is running on port ${PORT}`);
+  console.log(`Swagger documentation available at http://0.0.0.0:${PORT}/api-docs`);
+});
+
