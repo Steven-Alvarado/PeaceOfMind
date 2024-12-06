@@ -41,31 +41,29 @@ const WeeklySurvey: React.FC<WeeklySurveyProps> = ({ isOpen, onClose, user }) =>
   const [hasSubmittedThisWeek, setHasSubmittedThisWeek] = useState<boolean>(false);
 
   useEffect(() => {
-    const fetchSurveys = async () => {
-      try {
-        if (!effectiveUser) return;
+    const checkWeeklySubmission = async () => {
+      if (!effectiveUser) return;
 
-        const response = await axios.get<{ surveys: any[] }>(`http://localhost:5000/api/surveys/${effectiveUser.id}`);
+      try {
+        const response = await axios.get(`http://localhost:5000/api/surveys/user/${effectiveUser.id}`);
         const surveys = response.data.surveys;
 
-        const thisWeek = new Date();
-        const startOfWeek = new Date(thisWeek.setDate(thisWeek.getDate() - thisWeek.getDay()));
+        const today = new Date();
+        const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay()));
+        startOfWeek.setHours(0, 0, 0, 0);
 
-        // Check if a weekly survey exists in the current week
-        const hasWeeklySurvey = surveys.some((survey) => {
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(endOfWeek.getDate() + 6);
+        endOfWeek.setHours(23, 59, 59, 999);
+
+        // Check if a `weekly_survey` exists in the current week
+        const hasWeeklySurvey = surveys.some((survey: any) => {
           const surveyDate = new Date(survey.survey_date);
-          const isThisWeek = surveyDate >= startOfWeek;
-
-          // Parse survey content to identify weekly survey questions
-          const surveyContent = JSON.parse(survey.document_content || "{}");
-          const questions = Object.keys(surveyContent);
-
-          // Check for the unique weekly survey questions
-          const isWeeklySurvey =
-            questions.includes("I felt well-rested throughout the week.") &&
-            questions.includes("I was able to manage my workload effectively this week.");
-
-          return isThisWeek && isWeeklySurvey;
+          return (
+            survey.document_type === "weekly_survey" &&
+            surveyDate >= startOfWeek &&
+            surveyDate <= endOfWeek
+          );
         });
 
         setHasSubmittedThisWeek(hasWeeklySurvey);
@@ -74,8 +72,11 @@ const WeeklySurvey: React.FC<WeeklySurveyProps> = ({ isOpen, onClose, user }) =>
       }
     };
 
-    fetchSurveys();
-  }, [effectiveUser]);
+    if (isOpen) {
+      checkWeeklySubmission();
+    }
+  }, [isOpen, effectiveUser]);
+
 
   useEffect(() => {
     if (!isOpen) {
@@ -112,7 +113,7 @@ const WeeklySurvey: React.FC<WeeklySurveyProps> = ({ isOpen, onClose, user }) =>
       }, {} as Record<string, string>);
 
       await axios.post(
-        "http://localhost:5000/api/surveys",
+        "http://localhost:5000/api/surveys/weekly",
         {
           userId: effectiveUser.id,
           content: JSON.stringify(surveyContent),
@@ -136,7 +137,7 @@ const WeeklySurvey: React.FC<WeeklySurveyProps> = ({ isOpen, onClose, user }) =>
     return null;
   }
 
-  if (hasSubmittedThisWeek) {
+   if (hasSubmittedThisWeek) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
         <motion.div
@@ -151,7 +152,7 @@ const WeeklySurvey: React.FC<WeeklySurveyProps> = ({ isOpen, onClose, user }) =>
           <div className="text-center">
             <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
             <h3 className="text-xl font-semibold">This week's survey has already been submitted!</h3>
-            <p className="text-gray-600 mt-2">Please check back next week to complete another survey.</p>
+            <p className="text-gray-600 mt-2">You can submit another survey next week.</p>
           </div>
         </motion.div>
       </div>
