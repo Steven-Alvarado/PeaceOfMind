@@ -11,8 +11,6 @@ const ErrorPage = lazy(() => import("../pages/ErrorPage"));
 const StudentDashboard = lazy(() => import("../pages/StudentDashboard"));
 const TherapistDashboard = lazy(() => import("../pages/TherapistDashboard"));
 const ForgotPassword = lazy(() => import("../pages/ForgotPassword"));
-const ResetPassword = lazy(() => import("../pages/ResetPassword"));
-
 const AppRouter: React.FC = () => {
   return (
     <Suspense fallback={<div>Loading...</div>}>
@@ -24,7 +22,6 @@ const AppRouter: React.FC = () => {
         <Route path="/sign-up" element={<SignUp />} />
         <Route path="/sign-up-survey" element={<SignUpSurveyPage />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
         {/* <Route path="/student-dashboard" element={<StudentDashboard />} /> */}
 
         {/* Protected Routes */}

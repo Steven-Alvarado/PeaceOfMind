@@ -38,6 +38,44 @@ const WeeklySurvey: React.FC<WeeklySurveyProps> = ({ isOpen, onClose, user }) =>
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
+  const [hasSubmittedThisWeek, setHasSubmittedThisWeek] = useState<boolean>(false);
+
+  useEffect(() => {
+    const fetchSurveys = async () => {
+      try {
+        if (!effectiveUser) return;
+
+        const response = await axios.get<{ surveys: any[] }>(`http://localhost:5000/api/surveys/${effectiveUser.id}`);
+        const surveys = response.data.surveys;
+
+        const thisWeek = new Date();
+        const startOfWeek = new Date(thisWeek.setDate(thisWeek.getDate() - thisWeek.getDay()));
+
+        // Check if a weekly survey exists in the current week
+        const hasWeeklySurvey = surveys.some((survey) => {
+          const surveyDate = new Date(survey.survey_date);
+          const isThisWeek = surveyDate >= startOfWeek;
+
+          // Parse survey content to identify weekly survey questions
+          const surveyContent = JSON.parse(survey.document_content || "{}");
+          const questions = Object.keys(surveyContent);
+
+          // Check for the unique weekly survey questions
+          const isWeeklySurvey =
+            questions.includes("I felt well-rested throughout the week.") &&
+            questions.includes("I was able to manage my workload effectively this week.");
+
+          return isThisWeek && isWeeklySurvey;
+        });
+
+        setHasSubmittedThisWeek(hasWeeklySurvey);
+      } catch (error) {
+        console.error("Error fetching surveys:", error);
+      }
+    };
+
+    fetchSurveys();
+  }, [effectiveUser]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -86,6 +124,7 @@ const WeeklySurvey: React.FC<WeeklySurveyProps> = ({ isOpen, onClose, user }) =>
         }
       );
       setSubmitStatus("success");
+      setHasSubmittedThisWeek(true);
     } catch {
       setSubmitStatus("error");
     } finally {
@@ -95,6 +134,28 @@ const WeeklySurvey: React.FC<WeeklySurveyProps> = ({ isOpen, onClose, user }) =>
 
   if (!isOpen || !effectiveUser) {
     return null;
+  }
+
+  if (hasSubmittedThisWeek) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          className="relative bg-white rounded-lg w-full max-w-2xl shadow-lg p-6"
+        >
+          <button onClick={onClose} className="absolute top-2 right-2 p-2 hover:bg-gray-100 rounded-full">
+            <X className="w-5 h-5 text-gray-500" />
+          </button>
+          <div className="text-center">
+            <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold">This week's survey has already been submitted!</h3>
+            <p className="text-gray-600 mt-2">Please check back next week to complete another survey.</p>
+          </div>
+        </motion.div>
+      </div>
+    );
   }
 
   return (
