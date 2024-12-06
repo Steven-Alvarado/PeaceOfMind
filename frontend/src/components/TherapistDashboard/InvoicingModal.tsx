@@ -43,7 +43,7 @@ const InvoicingModal: React.FC<InvoicingModalProps> = ({ isOpen, onClose, therap
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<number | null>(null);
   const [patients, setPatients] = useState<{ id: number; name: string }[]>([]);
 
-  const invoicesPerPage = 9;
+  const invoicesPerPage = 10;
 
   useEffect(() => {
     if (isOpen && user?.id) {
@@ -308,20 +308,24 @@ const InvoicingModal: React.FC<InvoicingModalProps> = ({ isOpen, onClose, therap
                       </td>
                       <td className="border border-x-gray-100 text-center border-y-[#5E9ED9] p-2.5">
                         {invoice.status === "unpaid" ? (
-                          <span
-                            className="bg-red-500 text-white px-4 py-1 rounded w-20 h-10"
-                          >
-                            Pay
-                          </span>
+                          <div className="justify-center flex">
+                            <span
+                              className="bg-red-500 text-white px-3 py-1 rounded w-20 justify-center flex"
+                            >
+                              Pay
+                            </span>
+                          </div>
                         ) : invoice.status === "partial" ? (
-                          <span
-                            className="bg-yellow-500 text-white px-4 py-1 rounded w-20 h-10"
-                          >
-                            Partial
-                          </span>
+                          <div className="justify-center flex">
+                            <span
+                              className="bg-yellow-500 text-white px-3 py-1 rounded w-20 justify-center flex"
+                            >
+                              Partial
+                            </span>
+                          </div>
                         ) : (
                           <div className="justify-center flex">
-                            <span className="bg-green-500 text-white px-4 py-1 rounded w-20 h-10 flex items-center justify-center">
+                            <span className="bg-green-500 text-white px-3 py-1 rounded w-20 justify-center flex">
                               Paid
                             </span>
                           </div>

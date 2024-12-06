@@ -86,8 +86,8 @@ const PatientSection: React.FC<PatientListComponentProps> = ({
   };
 
   return (
-    <div className="flex flex-row w-full h-full p-6 space-x-4">
-      <div className="flex-grow bg-blue-100 shadow-md rounded-lg mt-1 border-2 border-[#5E9ED9] p-6">
+    <div className="flex w-full h-full p-6 space-x-4">
+      <div className="flex flex-col w-full bg-blue-100 shadow-md rounded-lg mt-1 border-2 border-[#5E9ED9] p-6">
         <h2 className="text-3xl font-semibold text-center text-[#5E9ED9] mb-6">
           My Patients
         </h2>
@@ -97,7 +97,7 @@ const PatientSection: React.FC<PatientListComponentProps> = ({
             placeholder="Search by name..."
             value={patientFilter}
             onChange={(e) => setPatientFilter(e.target.value)}
-            className="w-2/3 border border-gray-300 rounded-lg p-2 text-black focus:outline-none focus:ring-2 focus:ring-[#5E9ED9]"
+            className="w-2/3 border border-[#5E9ED9] rounded-lg p-2 text-black focus:outline-none focus:ring-2 focus:ring-[#5E9ED9]"
           />
         </div>
 
@@ -106,7 +106,7 @@ const PatientSection: React.FC<PatientListComponentProps> = ({
             currentPatients.map((patient) => (
               <div
                 key={patient.id}
-                className="flex items-center justify-between p-4 rounded-lg shadow-sm bg-gray-100 hover:bg-gray-200 transition"
+                className="flex items-center justify-between p-4 rounded-lg shadow-sm bg-white hover:bg-gray-100 transition"
               >
                 <div>
                   <h3 className="text-lg font-semibold text-gray-800">
@@ -145,7 +145,7 @@ const PatientSection: React.FC<PatientListComponentProps> = ({
         </div>
 
         {/* Pagination */}
-        <div className="flex justify-center items-center mt-14 space-x-4">
+        <div className="flex justify-center items-center pt-8 space-x-4 border-t mt-4 border-[#5E9ED9]">
           <button
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1}

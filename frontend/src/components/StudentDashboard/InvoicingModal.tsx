@@ -24,7 +24,7 @@ const InvoicingModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [payAmount, setPayAmount] = useState("");
 
-  const invoicesPerPage = 9;
+  const invoicesPerPage = 10;
 
   useEffect(() => {
     if (!isOpen || !user) return;
@@ -166,28 +166,32 @@ const InvoicingModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
                       </td>
                       <td className="border border-x-gray-100 text-center border-y-[#5E9ED9] p-2.5">
                         {invoice.status === "unpaid" ? (
-                          <button
-                            className="bg-red-500 text-white px-4 py-1 rounded w-20 h-10"
-                            onClick={() => {
-                              setPayModalOpen(true);
-                              setSelectedInvoice(invoice);
-                            }}
-                          >
-                            Pay
-                          </button>
+                          <div className="justify-center flex">
+                            <button
+                              className="bg-red-500 text-white px-4 py-1 rounded w-20"
+                              onClick={() => {
+                                setPayModalOpen(true);
+                                setSelectedInvoice(invoice);
+                              }}
+                            >
+                              Pay
+                            </button>
+                          </div>
                         ) : invoice.status === "partial" ? (
-                          <button
-                            className="bg-yellow-500 text-white px-4 py-1 rounded w-20 h-10"
-                            onClick={() => {
-                              setPayModalOpen(true);
-                              setSelectedInvoice(invoice);
-                            }}
-                          >
-                            Partial
-                          </button>
+                          <div className="justify-center flex">
+                            <button
+                              className="bg-yellow-500 text-white px-4 py-1 rounded w-20"
+                              onClick={() => {
+                                setPayModalOpen(true);
+                                setSelectedInvoice(invoice);
+                              }}
+                            >
+                              Partial
+                            </button>
+                          </div>
                         ) : (
                           <div className="justify-center flex">
-                            <span className="bg-green-500 text-white px-4 py-1 rounded w-20 h-10 flex items-center justify-center">
+                            <span className="bg-green-500 text-white px-4 py-1 rounded w-20">
                               Paid
                             </span>
                           </div>

@@ -95,7 +95,7 @@ const TherapistDashboard: React.FC = () => {
               </button>
             </div>
             <div className="flex justify-center">              
-              <div className="text-center p-2 text-[#5E9ED9] text-xl rounded-2xl "> Set your availability for Patient Requests.</div>
+              <div className="text-center p-2 text-[#5E9ED9] text-xl font-bold rounded-2xl "> Set your availability for Patient Requests.</div>
             </div>
             <div className="flex items-center justify-center space-x-2 border-[#5E9ED9] border-2 rounded-2xl">
               <span className=" p-2 rounded-3xl text-[#5E9ED9] font-bold">Not Available</span>
