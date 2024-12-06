@@ -230,27 +230,59 @@ const InvoicingModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
       {payModalOpen && selectedInvoice && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-1/3">
-            <h2 className="text-xl font-bold mb-4">Pay Invoice</h2>
-            <p>
-              <strong>Amount Owed:</strong> $
-              {Number(selectedInvoice.amount_due || 0).toFixed(2)}
-            </p>
-            <p>
-              <strong>Amount Paid:</strong> $
-              {Number(selectedInvoice.amount_paid || 0).toFixed(2)}
-            </p>
-            <input
-              type="number"
-              className="p-2 border rounded w-full mt-4"
-              value={payAmount}
-              onChange={(e) => setPayAmount(e.target.value)}
-              placeholder="Enter amount to pay"
-            />
-            {error && <p className="text-red-500 mt-2">{error}</p>}
-
-            <div className="flex justify-end mt-4 space-x-2">
+            <h2 className="text-xl text-[#5E9ED9] text-center font-bold mb-4">Pay Invoice</h2>
+            <div className="text-center mb-6">
+            {selectedInvoice.status === "unpaid" ? (
+                <span
+                  className="bg-red-500 text-white px-4 py-1 rounded w-20 h-10"
+                >
+                  Status: Have to Pay
+                </span>
+              ) : selectedInvoice.status === "partial" ? (
+                <span
+                  className="bg-yellow-500 text-white px-4 py-1 rounded w-20 h-10"
+                >
+                  Status: Partially Paid
+                </span>
+              ) : (
+                <div className="justify-center flex">
+                  <span className="bg-green-500 text-white px-4 py-1 rounded w-20 h-10 flex items-center justify-center">
+                    Status: Fully Paid
+                  </span>
+                </div>
+              )}
+            </div>
+            <div className=" justify-center space-x-5 flex">
+              <p className=" border border-red-500 p-2 rounded-lg">
+                <strong>Amount Owed:</strong> $
+                {Number(selectedInvoice.amount_due || 0).toFixed(2)}
+              </p>
+              <p className="border border-green-500 p-2 rounded-lg">
+                <strong>Amount Paid:</strong> $
+                {Number(selectedInvoice.amount_paid || 0).toFixed(2)}
+              </p>
+            </div>
+            <div className="justify-center flex space-x-3">
+              <p className="mt-6 text-lg">Enter amount to pay:</p>
+              <input
+                type="number"
+                className="p-2 border rounded mt-4 w-1/4 border-[#5E9ED9]"
+                value={payAmount}
+                onChange={(e) => setPayAmount(e.target.value)}
+                placeholder=""
+              />
+              {error && <p className="text-red-500 mt-2">{error}</p>}
+            </div>
+            <div className="flex justify-center mt-4 space-x-3">
               <button
-                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                className="px-4 py-2 bg-[#5E9ED9] text-white rounded w-20 h-10 hover:bg-[#5791c6]"
+                onClick={handlePay}
+              >
+                Pay
+              </button>
+
+              <button
+                className="px-4 py-2 bg-gray-400 text-white w-20 h-10 rounded hover:bg-gray-500"
                 onClick={() => {
                   setPayModalOpen(false);
                   setSelectedInvoice(null);
@@ -259,12 +291,6 @@ const InvoicingModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
                 }}
               >
                 Cancel
-              </button>
-              <button
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                onClick={handlePay}
-              >
-                Pay
               </button>
             </div>
           </div>

@@ -19,6 +19,10 @@ const PatientSection: React.FC<PatientListComponentProps> = ({
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const patientsPerPage = 4;
+
   useEffect(() => {
     const fetchRequests = async () => {
       if (!therapistId) return;
@@ -67,9 +71,23 @@ const PatientSection: React.FC<PatientListComponentProps> = ({
     setIsChatOpen(true);
   };
 
+  // Pagination logic
+  const indexOfLastPatient = currentPage * patientsPerPage;
+  const indexOfFirstPatient = indexOfLastPatient - patientsPerPage;
+  const currentPatients = filteredPatients.slice(
+    indexOfFirstPatient,
+    indexOfLastPatient
+  );
+
+  const totalPages = Math.ceil(filteredPatients.length / patientsPerPage);
+
+  const handlePageChange = (pageNumber: number) => {
+    setCurrentPage(pageNumber);
+  };
+
   return (
     <div className="flex flex-row w-full h-full p-6 space-x-4">
-      <div className="flex-grow bg-white shadow-md rounded-lg p-6">
+      <div className="flex-grow bg-blue-100 shadow-md rounded-lg mt-1 border-2 border-[#5E9ED9] p-6">
         <h2 className="text-3xl font-semibold text-center text-[#5E9ED9] mb-6">
           My Patients
         </h2>
@@ -84,8 +102,8 @@ const PatientSection: React.FC<PatientListComponentProps> = ({
         </div>
 
         <div className="space-y-4 mb-5">
-          {filteredPatients.length > 0 ? (
-            filteredPatients.map((patient) => (
+          {currentPatients.length > 0 ? (
+            currentPatients.map((patient) => (
               <div
                 key={patient.id}
                 className="flex items-center justify-between p-4 rounded-lg shadow-sm bg-gray-100 hover:bg-gray-200 transition"
@@ -125,7 +143,80 @@ const PatientSection: React.FC<PatientListComponentProps> = ({
             <p className="text-center text-gray-600">No patients found.</p>
           )}
         </div>
+
+        {/* Pagination */}
+        <div className="flex justify-center items-center mt-14 space-x-4">
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className={`px-4 py-2 border w-30 h-15 rounded-lg ${
+              currentPage === 1
+                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                : "bg-[#5E9ED9] text-white hover:bg-[#4b8bc4]"
+            } transition`}
+          >
+            Previous
+          </button>
+          <span className="text-lg font-medium">
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className={`px-4 py-2 border w-20 h-15 rounded-lg ${
+              currentPage === totalPages
+                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                : "bg-[#5E9ED9] text-white hover:bg-[#4b8bc4]"
+            } transition`}
+          >
+            Next
+          </button>
+        </div>
       </div>
+
+      {/* Details Modal */}
+      {selectedPatient && isDetailsOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="relative bg-white rounded-lg p-8 max-w-xl w-full shadow-lg">
+            <button
+              onClick={() => {
+                setIsDetailsOpen(false);
+                setSelectedPatient(null);
+                setPatEmail(null);
+              }}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 focus:outline-none"
+              aria-label="Close"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            <h3 className="text-2xl font-semibold text-center text-[#5E9ED9] mb-4">
+              {selectedPatient.student_first_name}{" "}
+              {selectedPatient.student_last_name}
+            </h3>
+            <div className="space-y-2">
+              <p className="text-gray-700">
+                <strong>Email: </strong> {patEmail || <span>Loading...</span>}
+              </p>
+              <p className="text-gray-700">
+                <strong>Notes:</strong> Add notes here
+              </p>
+            </div>
+            <div className="flex justify-around mt-6">
+              <button
+                className="flex items-center gap-2 px-4 py-2 bg-[#5E9ED9] text-white rounded-full hover:bg-[#4b8bc4] transition"
+                onClick={() => handleChat(selectedPatient)}
+              >
+                <MessageCircle className="w-5 h-5" />
+                Chat
+              </button>
+              <button className="flex items-center gap-2 px-4 py-2 bg-[#5E9ED9] text-white rounded-full hover:bg-[#4b8bc4] transition">
+                <FileText className="w-5 h-5" />
+                Notes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Details Modal */}
       {selectedPatient && isDetailsOpen && (
