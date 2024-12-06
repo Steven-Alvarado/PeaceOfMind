@@ -14,3 +14,4 @@ router.get('/me', authenticateToken, getProfile); // Fetch the current user’s 
 
 
 module.exports = router;
+module.exports = router;

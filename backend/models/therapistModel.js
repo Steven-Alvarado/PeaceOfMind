@@ -147,6 +147,8 @@ const findTherapistByUserId = async (userId) => {
   }
 };
 
+
+
 const toggleTherapistAvailability = async (therapistId) => {
   const query = 
     `UPDATE therapists
@@ -170,3 +172,4 @@ module.exports = {
     findTherapistById,
     toggleTherapistAvailability
 };
+

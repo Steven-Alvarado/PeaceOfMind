@@ -100,9 +100,17 @@ const getTherapistRelationships = async (req, res) => {
     res.status(200).json({ relationships });
   } catch (error) {
     console.error("Error retrieving therapist relationships:", error);
-    res
-      .status(500)
-      .json({ error: "Failed to retrieve therapist relationships" });
+    res.status(500).json({ error: "Failed to retrieve therapist relationships" });
+  }
+}; 
+// Get relationships by therapist ID
+const getTherapistRelationshipss = async (therapistId) => {
+  try {
+    const relationships = await getRelationshipsByTherapistId(therapistId);
+    return relationships;
+  } catch (error) {
+    console.error("Error retrieving therapist relationships:", error);
+    throw new Error("Failed to retrieve therapist relationships");
   }
 };
 
@@ -184,4 +192,5 @@ module.exports = {
   requestTherapistSwitchHandler,
   approveTherapistSwitchHandler,
   endRelationshipHandler,
+  getTherapistRelationshipss
 };

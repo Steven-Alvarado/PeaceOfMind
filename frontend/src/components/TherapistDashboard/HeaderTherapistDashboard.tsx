@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
@@ -9,6 +9,7 @@ import { MdOutlineLogout } from "react-icons/md";
 
 import Logo from "../../assets/images/logobetter.png";
 
+
 const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -17,18 +18,133 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [monthlyRate, setMonthlyRate] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const { user } = useAuth(); 
+  
+  useEffect(() => {
+    if (isOpen && user?.id) {
+      fetchTherapistDetails();
+    }
+  }, [isOpen, user?.id]);
 
+  const fetchTherapistDetails = async () => {
+    if (!user?.id) {
+      setErrorMessage("User ID is not available.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/therapists/user/${user.id}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setFirstName(data.therapist.first_name || '');
+        setLastName(data.therapist.last_name || '');
+        setEmail(data.therapist.email || '');
+        setExperienceYears(data.therapist.experience_years || '');
+        setMonthlyRate(data.therapist.monthly_rate || '');
+      } else {
+        setErrorMessage(data.message || "Failed to fetch therapist details.");
+      }
+    } catch (error) {
+      console.error("Error fetching therapist details:", error);
+      setErrorMessage(error.message || "Error fetching therapist details.");
+    }
+  };
+  const handleDeleteAccount = async () => {
+    console.log("Delete account button clicked");
+  
+    // Check if user contains necessary data
+    console.log("User data:", user);
+  
+    if (!user?.id) {
+      setErrorMessage("User ID is not available.");
+      return;
+    }
+  
+    const userId = user.id;  // The logged-in user's ID (from the 'auth' table)
+  
+    // Fetch therapist data using the user ID
+    try {
+      const therapistResponse = await fetch(`/api/therapists/find/${userId}`);
+      const therapistData = await therapistResponse.json();
+  
+      if (!therapistData?.therapist?.id) {
+        setErrorMessage("Therapist not found.");
+        return;
+      }
+  
+      const therapistId = therapistData.therapist.id; // This is the therapist_id we need (12 in your example)
+  
+      const confirmDelete = window.confirm("Are you sure you want to delete this account? This action is irreversible.");
+      if (!confirmDelete) return;
+  
+      // Proceed with deleting the account using both therapistId and userId
+      const response = await fetch(`/api/accountSettings/therapists/${therapistId}/user/${userId}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem("jwt")}`,
+          "Content-Type": "application/json",
+        },
+      });
+  
+      const data = await response.json();
+  
+      if (response.ok) {
+        alert("Account deleted successfully.");
+        window.location.href = "/"; // Or wherever you want to redirect
+      } else {
+        setErrorMessage(data.error || "Failed to delete account.");
+      }
+    } catch (error) {
+      console.error("Error fetching therapist data or deleting account:", error);
+      setErrorMessage("An error occurred while deleting the account.");
+    }
+  };
+  
+  const handleUpdate = async () => {
+    if (newPassword !== confirmPassword) {
+      setErrorMessage("Passwords do not match.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/accountSettings/therapist/${user.id}`, {
+        method: "PATCH", // Use PATCH to update the therapist details
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          first_name: firstName,
+          last_name: lastName,
+          email,
+          experience_years: experienceYears,
+          new_password: newPassword,
+          monthly_rate: monthlyRate,
+        }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        alert("Details updated successfully.");
+        onClose(); // Close the modal after successful update
+      } else {
+        setErrorMessage(data.message || "Failed to update details.");
+      }
+    } catch (error) {
+      console.error("Error updating therapist details:", error);
+      setErrorMessage(error.message || "Error updating therapist details.");
+    }
+  };
   if (!isOpen) return null;
-
-  const handleDeleteAccount = () => {
-    // Logic to delete account
-    console.log('Account deleted');
-  };
-
-  const handleUpdate = () => {
-    // Logic to update user details
-    console.log('User details updated');
-  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
