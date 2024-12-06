@@ -162,16 +162,16 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
 
   return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-        <div className="bg-white rounded-lg p-6 w-full max-w-lg outline outline-white outline-2 outline-offset-2">
+        <div className="bg-white rounded-lg w-full max-w-lg">
           <div className="flex">
             <div className="w-full p-8">
-              <div className="flex justify-between mb-4">
-                <h2 className="text-3xl font-extrabold text-center text-[#5E9ED9] mb-4">Settings</h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl text-[#5E9ED9] font-bold">Settings</h2>
                 <button
-                  className="bg-red-400 text-white px-4 py-2 rounded-full hover:bg-red-500"
-                  onClick={handleClose} // Close the modal and reset
+                  className="text-black px-2 rounded hover:text-gray-900"
+                  onClick={onClose}
                 >
-                  <FaTimes size={20} />
+                  X
                 </button>
               </div>
 
@@ -254,35 +254,37 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                   </div>
 
                   {/* Save Button and Error Message */}
-                  <div className="flex justify-center gap-4 mt-4">
-                    <button
-                      className="bg-[#5E9ED9] text-white px-4 py-2 rounded hover:bg-[#4a8ac9]"
-                      onClick={handleSave}
-                    >
-                      Save
-                    </button>
-                    {saveErrorMessage && (
-                      <p className="text-red-500 mt-2 text-sm">{saveErrorMessage}</p>
-                    )}
-                    {successMessage && (
-                      <p className="text-green-500 mt-2 text-sm">{successMessage}</p>
-                    )}
-                  </div>
+                  <div className="justify-between flex">
+                    <div className="flex justify-center gap-4 mt-4">
+                      <button
+                        className="bg-[#5E9ED9] text-white px-4 py-2 w-44 rounded hover:bg-[#4a8ac9]"
+                        onClick={handleSave}
+                      >
+                        Save
+                      </button>
+                      {saveErrorMessage && (
+                        <p className="text-red-500 mt-2 text-sm">{saveErrorMessage}</p>
+                      )}
+                      {successMessage && (
+                        <p className="text-green-500 mt-2 text-sm">{successMessage}</p>
+                      )}
+                    </div>
 
-                  {/* Delete Button and Error Message */}
-                  <div className="flex justify-center gap-4 mt-4">
-                    <button
-                      className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-400"
-                      onClick={handleDelete}
-                    >
-                      Delete Account
-                    </button>
-                    {deleteErrorMessage && (
-                      <p className="text-red-500 mt-2 text-sm">{deleteErrorMessage}</p>
-                    )}
-                    {successMessage && (
-                      <p className="text-green-500 mt-2 text-sm">{successMessage}</p>
-                    )}
+                    {/* Delete Button and Error Message */}
+                    <div className="flex justify-center gap-4 mt-4">
+                      <button
+                        className="bg-red-500 text-white px-4 py-2 w-44 rounded hover:bg-red-600"
+                        onClick={handleDelete}
+                      >
+                        Delete Account
+                      </button>
+                      {deleteErrorMessage && (
+                        <p className="text-red-500 mt-2 text-sm">{deleteErrorMessage}</p>
+                      )}
+                      {successMessage && (
+                        <p className="text-green-500 mt-2 text-sm">{successMessage}</p>
+                      )}
+                    </div>
                   </div>
                 </div>
               ) : (

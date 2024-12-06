@@ -42,36 +42,35 @@ const DropModal: React.FC<DropModalProps> = ({ isOpen, sentDrop, onClose }) => {
   return (
     isOpen && (
       <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
-        <div className="flex flex-col items-center bg-white rounded-lg shadow-lg p-6 w-full max-w-lg">
-          <h2 className="text-2xl font-bold mb-4">Drop Assigned Therapist?</h2>
-          {user ? (
-            <div className="flex flex-col items-center">
-              <h1>THIS ACTION CANNOT BE UNDONE</h1>
-              <button
-                onClick={() => {
-                  rejectSwitch(user.id);
-                  confirmDrop();
-                  onClose();
-                }}
-                className="mt-4 w-40 bg-red-500 text-white py-2 rounded hover:bg-red-500"
-              >
-                <div className="flex justify-center items-center space-x-2 p-1">
-                  <div className="font-bold">Drop Therapist</div>
-                  <FaX className="mt-0.5" />
-                </div>
+        <div className="flex flex-col bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl text-[#5E9ED9] font-bold">Drop Assigned Therapist</h2>
+            <button
+              className="text-black px-2 rounded hover:text-gray-900"
+              onClick={onClose}
+            >
+              X
+            </button>
+          </div>
+          {user ? ( 
+            <div className="flex flex-col justify-center">
+              <h1 className="text-center font-extrabold">This action can not be undone!</h1>
+              <div className="flex mt-3 justify-center">
+                <button
+                  onClick={() => {
+                    rejectSwitch(user.id);
+                    confirmDrop();
+                    onClose();
+                  }}
+                  className=" w-40 bg-red-500 text-white py-2 rounded hover:bg-red-600"
+                >
+                  Drop Therapist
               </button>
+              </div>
             </div>
           ) : (
             <span>Loading info...</span>
           )}
-          <button
-            onClick={() => {
-              onClose();
-            }}
-            className="mt-20 w-40 bg-blue-600 text-white py-2 rounded hover:bg-blue-500"
-          >
-            Close
-          </button>
         </div>
       </div>
     )

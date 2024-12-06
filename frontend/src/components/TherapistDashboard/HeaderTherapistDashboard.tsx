@@ -161,16 +161,16 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-lg outline outline-white outline-2 outline-offset-2">
-        <div className="flex justify-between mb-4">
-                <h2 className="text-3xl font-extrabold text-center text-[#5E9ED9] mb-4">Settings</h2>
-                <button
-                  className="bg-red-400 text-white px-4 py-2 rounded-full hover:bg-red-500"
-                  onClick={handleClose} // Close the modal and reset
-                >
-                  <FaTimes size={20} />
-                </button>
-              </div>
+      <div className="bg-white rounded-lg p-6 w-full max-w-lg">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl text-[#5E9ED9] font-bold">Settings</h2>
+          <button
+            className="text-black px-2 rounded hover:text-gray-900"
+            onClick={onClose}
+          >
+            X
+          </button>
+        </div>
         {/* First Name and Last Name on the same line */}
         <div className="flex space-x-4">
           <div className="w-full">
@@ -267,20 +267,17 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
         {/* Update, Delete Account, and Close buttons in the same row */}
         <div className="mt-6 flex justify-between">
           <button
-            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-400"
-            onClick={handleDeleteAccount}
-          >
-            Delete Account
-          </button>
-
-          <button
-            className="bg-[#5E9ED9] text-white px-4 py-2 rounded hover:bg-[#4a8ac9]"
+            className="bg-[#5E9ED9] text-white px-4 py-2 w-44 rounded hover:bg-[#4a8ac9]"
             onClick={handleUpdate}
           >
             Update
           </button>
-
-       
+          <button
+            className="bg-red-500 text-white px-4 py-2  w-44 rounded hover:bg-red-400"
+            onClick={handleDeleteAccount}
+          >
+            Delete Account
+          </button>
         </div>
       </div>
     </div>
