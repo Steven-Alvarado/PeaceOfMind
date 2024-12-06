@@ -1,10 +1,13 @@
 const bcrypt = require("bcryptjs");
 const {
   createTherapist,
-  findTherapistById,
+  findTherapistByUserId,
   findTherapistIdById,
   getAvailableTherapists,
   isLicenseVerified,
+  licenseExists,
+  toggleTherapistAvailability,
+  findTherapistById
 } = require("../models/therapistModel");
 const { createUser, findUserByEmail } = require("../models/authModel");
 
@@ -37,6 +40,10 @@ const registerTherapist = async (req, res) => {
   }
 
   try {
+    // Check if license already exists
+    if (await licenseExists(licenseNumber)) {
+        return res.status(409).json({ error: "License number already exists" });
+    }
     // Verify therapist license
     const licenseIsVerified = await isLicenseVerified(licenseNumber);
     if (!licenseIsVerified) {
@@ -71,6 +78,7 @@ const registerTherapist = async (req, res) => {
       monthlyRate
     );
 
+
     res.status(201).json({
       message: "Therapist registered successfully",
       therapist: {
@@ -89,20 +97,22 @@ const registerTherapist = async (req, res) => {
       },
     });
   } catch (error) {
-    if (
-      error.code === "23505" &&
-      error.constraint === "therapists_license_number_key"
-    ) {
-      res.status(409).json({
-        error: "Registration failed",
-        message: "A therapist with this license number is already registered",
-      });
-    } else {
-      res.status(500).json({
-        error: "Registration failed",
-        message: "An unexpected error occurred during registration",
-      });
+
+    if (error.message === "License number already exists") {
+      return res.status(409).json({ error: "License number already exists" });
     }
+    if (error.message === "License number is not verified") {
+      return res.status(403).json({ error: "License number is not verified" });
+    }
+    if (error.message === "User already exists with this email") {
+      return res.status(409).json({ error: "User already exists with this email" });
+    }
+
+    console.error("Registration error:", error);
+    res.status(500).json({
+      error: "Registration failed",
+      message: "An unexpected error occurred during registration",
+    });
   }
 };
 
@@ -126,7 +136,7 @@ const getTherapistDetails = async (req, res) => {
   }
 };
 
-const getTherapistId = async (req, res) => {
+const getTherapistIdByUserId = async (req, res) => {
   const userId = req.params.id;
   try {
     const therapist = await findTherapistIdById(userId);
@@ -161,9 +171,54 @@ const listAvailableTherapists = async (req, res) => {
   }
 };
 
-module.exports = {
-  registerTherapist,
-  getTherapistDetails,
-  listAvailableTherapists,
-  getTherapistId,
+const toggleAvailability = async (req, res) => {
+  const therapistId = parseInt(req.params.id, 10);
+
+  if (isNaN(therapistId)) {
+    return res.status(400).json({ error: "Invalid therapist ID" });
+  }
+
+  try {
+    const updatedTherapist = await toggleTherapistAvailability(therapistId);
+
+    if (!updatedTherapist) {
+      return res.status(404).json({ error: "Therapist not found" });
+    }
+
+    res.status(200).json({
+      message: "Therapist availability toggled successfully",
+      therapist: updatedTherapist,
+    });
+  } catch (error) {
+    console.error("Error toggling therapist availability:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
 };
+
+
+const getTherapistDetailsByUserId = async (req, res) => {
+  const userId = parseInt(req.params.id, 10); // Use req.params.id instead of userId
+
+  if (isNaN(userId)) {
+      return res.status(400).json({ error: "Invalid user ID" });
+  }
+
+  try {
+      const therapist = await findTherapistByUserId(userId);
+      if (!therapist) {
+          return res.status(404).json({ error: "Therapist not found" });
+      }
+      res.json({ message: "Therapist details retrieved successfully", therapist });
+  } catch (error) {
+      console.error("Error retrieving therapist details:", error);
+      res.status(500).json({ error: "Failed to fetch therapist details", message: error.message });
+  }
+};
+
+
+
+
+
+
+module.exports = { getTherapistIdByUserId, registerTherapist, getTherapistDetails, listAvailableTherapists, toggleAvailability, getTherapistDetailsByUserId};
+

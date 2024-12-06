@@ -1,7 +1,14 @@
-import React, { useState } from "react";
-import { FaBars, FaTimes, FaHome } from "react-icons/fa";
-import { IoIosNotifications, IoMdSettings } from "react-icons/io";
+import React, { useState, useEffect } from "react";
+
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
+
+import { FaBars, FaTimes } from "react-icons/fa";
+import { IoMdSettings } from "react-icons/io";
+import { MdOutlineLogout } from "react-icons/md";
+
 import Logo from "../../assets/images/logobetter.png";
+
 
 const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
   const [firstName, setFirstName] = useState('');
@@ -11,18 +18,133 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [monthlyRate, setMonthlyRate] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const { user } = useAuth(); 
+  
+  useEffect(() => {
+    if (isOpen && user?.id) {
+      fetchTherapistDetails();
+    }
+  }, [isOpen, user?.id]);
 
+  const fetchTherapistDetails = async () => {
+    if (!user?.id) {
+      setErrorMessage("User ID is not available.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/therapists/user/${user.id}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setFirstName(data.therapist.first_name || '');
+        setLastName(data.therapist.last_name || '');
+        setEmail(data.therapist.email || '');
+        setExperienceYears(data.therapist.experience_years || '');
+        setMonthlyRate(data.therapist.monthly_rate || '');
+      } else {
+        setErrorMessage(data.message || "Failed to fetch therapist details.");
+      }
+    } catch (error) {
+      console.error("Error fetching therapist details:", error);
+      setErrorMessage(error.message || "Error fetching therapist details.");
+    }
+  };
+  const handleDeleteAccount = async () => {
+    console.log("Delete account button clicked");
+  
+    // Check if user contains necessary data
+    console.log("User data:", user);
+  
+    if (!user?.id) {
+      setErrorMessage("User ID is not available.");
+      return;
+    }
+  
+    const userId = user.id;  // The logged-in user's ID (from the 'auth' table)
+  
+    // Fetch therapist data using the user ID
+    try {
+      const therapistResponse = await fetch(`/api/therapists/find/${userId}`);
+      const therapistData = await therapistResponse.json();
+  
+      if (!therapistData?.therapist?.id) {
+        setErrorMessage("Therapist not found.");
+        return;
+      }
+  
+      const therapistId = therapistData.therapist.id; // This is the therapist_id we need (12 in your example)
+  
+      const confirmDelete = window.confirm("Are you sure you want to delete this account? This action is irreversible.");
+      if (!confirmDelete) return;
+  
+      // Proceed with deleting the account using both therapistId and userId
+      const response = await fetch(`/api/accountSettings/therapists/${therapistId}/user/${userId}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem("jwt")}`,
+          "Content-Type": "application/json",
+        },
+      });
+  
+      const data = await response.json();
+  
+      if (response.ok) {
+        alert("Account deleted successfully.");
+        window.location.href = "/"; // Or wherever you want to redirect
+      } else {
+        setErrorMessage(data.error || "Failed to delete account.");
+      }
+    } catch (error) {
+      console.error("Error fetching therapist data or deleting account:", error);
+      setErrorMessage("An error occurred while deleting the account.");
+    }
+  };
+  
+  const handleUpdate = async () => {
+    if (newPassword !== confirmPassword) {
+      setErrorMessage("Passwords do not match.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/accountSettings/therapist/${user.id}`, {
+        method: "PATCH", // Use PATCH to update the therapist details
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          first_name: firstName,
+          last_name: lastName,
+          email,
+          experience_years: experienceYears,
+          new_password: newPassword,
+          monthly_rate: monthlyRate,
+        }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        alert("Details updated successfully.");
+        onClose(); // Close the modal after successful update
+      } else {
+        setErrorMessage(data.message || "Failed to update details.");
+      }
+    } catch (error) {
+      console.error("Error updating therapist details:", error);
+      setErrorMessage(error.message || "Error updating therapist details.");
+    }
+  };
   if (!isOpen) return null;
-
-  const handleDeleteAccount = () => {
-    // Logic to delete account
-    console.log('Account deleted');
-  };
-
-  const handleUpdate = () => {
-    // Logic to update user details
-    console.log('User details updated');
-  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -150,14 +272,56 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
   );
 };
 
+const LogoutConfirmationModal = ({ isOpen, onConfirm, onCancel }: { isOpen: boolean; onConfirm: () => void; onCancel: () => void }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+      <div className="bg-white rounded-lg p-6 max-w-md">
+        <h2 className="text-lg font-bold text-center text-black mb-4">Confirm Logout</h2>
+        <p className="text-center text-black mb-6">Are you sure you want to log out?</p>
+        <div className="flex justify-center space-x-3">
+          <button
+            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+            onClick={onConfirm}
+          >
+            Log Out
+          </button>
+          <button
+            className="bg-[#5E9ED9] text-white px-4 py-2 rounded hover:bg-[#73a3d0]"
+            onClick={onCancel}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const HeaderTherapistDashboard = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+
+
+  const { logout } = useAuth(); 
+  const navigate = useNavigate(); 
+
   const toggleMenu = () => {
     setIsOpen(!isOpen);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("jwt");
+
+    if (logout) {
+      logout();
+    }
+
+    navigate("/login");
+  };
+  
   return (
     <header className="bg-[#5E9ED9] text-white sticky top-0 z-50">
       <div className="container mx-auto flex justify-between items-center p-4">
@@ -174,28 +338,24 @@ const HeaderTherapistDashboard = () => {
 
         {/* Desktop Navigation */}
         <nav className="hidden font-bold md:flex space-x-1">
-            <div className="justify-center flex cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4] space-x-1">
-                <FaHome className="mt-1"/>
-                <a href="Link for Dashboard" className="cursor-pointer rounded hover:bg-[#4b8cc4]">
-                    Dashboard
-                </a>
-            </div>
-            <div className="justify-center flex cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4] space-x-1">
-                <IoIosNotifications className="mt-1" />
-                <a href="Link for Notifications" className="cursor-pointer rounded hover:bg-[#4b8cc4]">
-                    Notifications
-                </a>
-            </div>
-            <div className="justify-center flex cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4] space-x-1">
-                <IoMdSettings className="mt-1" />
-                <button 
-                  className="cursor-pointer rounded hover:bg-[#4b8cc4]"
-                  onClick={() => setIsSettingsOpen(true)}
-                >
-                    Settings
-                </button>
-                <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
-            </div>
+          <div className="justify-center flex cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4] space-x-1">
+            <button 
+              className="cursor-pointer rounded hover:bg-[#4b8cc4]"
+              onClick={() => setIsSettingsOpen(true)}
+            >
+              <IoMdSettings className="inline mr-1 mb-0.5" />
+              Settings
+            </button>
+            <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+          </div>
+          <div className="justify-center flex space-x-1 px-3 py-2 rounded hover:bg-[#4b8cc4]">
+            <button
+              onClick={() => setIsLogoutModalOpen(true)}
+              >
+              <MdOutlineLogout className="inline mr-1 mb-0.5"/>
+              Logout
+            </button>
+          </div>
         </nav>
 
         {/* Mobile Hamburger Icon */}
@@ -209,20 +369,24 @@ const HeaderTherapistDashboard = () => {
         <nav className="md:hidden text-center font-bold bg-[#5E9ED9] text-white p-4 space-y-2">
           <div className="space-y-2">
             <div className="justify-center flex space-x-1 px-3 py-2 rounded hover:bg-[#4b8cc4]">
-                <FaHome className="mt-1"/>
-                <a href="Link for Dashboard"> Dashboard </a>
+              <a href="Link for Dashboard"> <IoMdSettings className="inline mr-1 mb-0.5"/> Settings </a>
             </div>
             <div className="justify-center flex space-x-1 px-3 py-2 rounded hover:bg-[#4b8cc4]">
-                <IoIosNotifications className="mt-1"/>
-                <a href="Link for Dashboard"> Notification </a>
-            </div>
-            <div className="justify-center flex space-x-1 px-3 py-2 rounded hover:bg-[#4b8cc4]">
-                <IoMdSettings className="mt-1"/>
-                <a href="Link for Dashboard"> Settings </a>
+              <button
+              onClick={() => setIsLogoutModalOpen(true)}
+              >
+                <MdOutlineLogout className="inline mr-1 mb-0.5"/>
+                Logout
+              </button>
             </div>
           </div>
         </nav>
       )}
+      <LogoutConfirmationModal
+        isOpen={isLogoutModalOpen}
+        onConfirm={handleLogout}
+        onCancel={() => setIsLogoutModalOpen(false)}
+      />
     </header>
   );
 };

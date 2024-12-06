@@ -58,6 +58,9 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
       if (filterBy === "entry") {
         return entry.entryNumber.toString().includes(query);
       }
+      if (filterBy === "mood"){
+        return entry.mood.toLowerCase().includes(query);
+      }
       return false;
     });
   
@@ -268,7 +271,9 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
 
   return (
     isOpen && (
-      <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+      style={{ marginTop:"80px"}}
+      >
         <div className="bg-white rounded-lg shadow-lg w-4/5 h-4/5 max-w-6xl max-h-[90vh]">
           <div className="flex h-full">
             <div className="w-1/4 bg-blue-100 p-4 rounded-l-lg flex flex-col">
@@ -281,10 +286,11 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
                 >
                   <option value="date">Date</option>
                   <option value="entry">Entry</option>
+                  <option value="mood">Mood</option>
                 </select>
                 <input
                   type="text"
-                  placeholder={`${filterBy === "date" ? "Date (MM/DD/YYYY)" : "Entry number"}`}
+                  placeholder={`${filterBy === "date" ? "Date (MM/DD/YYYY)" : filterBy === "entry" ? "Entry number": "Mood (e.g. Happy)" }`}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className=" w-44 p-2 border border-[#5E9ED9] rounded"
@@ -318,9 +324,6 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
                             <p>
                               <strong>{entry.mood}</strong>
                             </p>
-                            {/* <p>
-                              {new Date(entry.date).toLocaleTimeString("en-US", { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone })}
-                            </p>*/}
                           </div>
                         </div>
                       </li>
@@ -362,7 +365,7 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
                     : "No Journal Entries Available."}
                 </h2>
                 <button
-                  className="bg-red-500 text-white px-2 rounded hover:bg-red-600"
+                  className="text-black px-2 rounded hover:text-gray-900"
                   onClick={onClose}
                 >
                   X

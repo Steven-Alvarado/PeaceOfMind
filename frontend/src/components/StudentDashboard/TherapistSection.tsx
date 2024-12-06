@@ -1,125 +1,269 @@
-import React, { useState, useEffect } from "react"; 
-import Lottie from "lottie-react";
-import StudentDashboardAnimation from "../../assets/lotties/StudentDashboardAnimation.json";
-import {
-  FaChevronDown,
-  FaUser,
-  FaBriefcase,
-  FaMapMarkerAlt,
-  FaCalendar,
-  FaComments,
-} from "react-icons/fa";
+import React, { useState, useEffect } from "react";
+import { FaPersonWalkingArrowRight, FaDiscourse } from "react-icons/fa6";
+import { CiStar, CiBadgeDollar } from "react-icons/ci";
+import { MdOutlineWorkHistory, MdOutlineMail } from "react-icons/md";
+import { MessageCircle, Search, Star, Calendar } from "lucide-react";
+
+import Alert from "@mui/material/Alert";
+import TherapistModal from "./TherapistModal";
+import DropModal from "./DropTherapist";
+import ReviewModal from "./ReviewTherapist";
 import axios from "axios";
 import { User } from "../../context/AuthContext";
 import MessagingInterface from "../Messaging/MessagingInterface";
+import ProfilePicture from "../ProfilePicture";
+import ScheduleForStudents from "./ScheduleForStudents";
 
 interface TherapistSectionProps {
-  user: User; // Define that user prop is of type User
+  user: User;
 }
 
 const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
-  const [therapist, setTherapist] = useState<any | null>(null); // State for therapist details
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [therapistName, setTherapistName] = useState<string | null>(null);
+  const [therapistDetails, setTherapistDetails] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isChatOpen, setIsChatOpen] = useState(false); // State to toggle chat interface
+  const [refresh, setRefresh] = useState(false);
+  const [sentAlert, setSentAlert] = useState(false);
+  const [sentDrop, setSentDrop] = useState(false);
+  const [sentReview, setSentReview] = useState(false);
+
+  const [isTherListOpen, setIsTherListOpen] = useState(false);
+  const [isReviewOpen, setIsReviewOpen] = useState(false);
+  const [isDropOpen, setIsDropOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isScheduleOpen, setIsScheduleOpen] = useState(false);
+
+  const handleRefresh = () => setRefresh((prev) => !prev);
+  const handleReview = () => setSentReview((prev) => !prev);
+  const handleAlert = () => setSentAlert((prev) => !prev);
+  const handleDrop = () => setSentDrop((prev) => !prev);
 
   useEffect(() => {
-    const fetchTherapistDetails = async () => {
+    const fetchTherapistDetails = async (therapistId: number) => {
       try {
-        if (user) {
-          const response = await axios.get(`/students/${user.id}/listTherapists/`);
-          setTherapist(response.data.therapist); // Adjust based on API response structure
-        } else {
-          throw new Error("User not authenticated");
-        }
-      } catch (err: any) {
-        setError(err.response?.data?.message || "Failed to load therapist details");
-      } finally {
-        setLoading(false);
+        const response = await axios.get(
+          `http://localhost:5000/api/therapists/${therapistId}`
+        );
+        setTherapistDetails(response.data.therapist);
+        console.log(response.data.therapist);
+      } catch (err) {
+        console.error("Error fetching therapist details:", err);
       }
     };
 
-    fetchTherapistDetails();
-  }, [user]);
+    const fetchTherapistRelationship = async () => {
+      try {
+        const response = await axios.get(
+          `http://localhost:5000/api/relationships/${user.id}`
+        );
+        console.log("User ID:", user.id);
+        const relationship = response.data.relationship;
+
+        if (relationship?.current_therapist_id) {
+          setTherapistName(
+            `${relationship.current_therapist_first_name} ${relationship.current_therapist_last_name}`
+          );
+          await fetchTherapistDetails(relationship.current_therapist_id);
+        } else {
+          setTherapistName(null);
+          setTherapistDetails(null);
+        }
+      } catch (err: any) {
+        if (err.response?.status === 404) {
+          // Explicitly handle 404 (No therapist relationship)
+          setTherapistName(null);
+          setTherapistDetails(null);
+        } else {
+          console.error("Failed to load therapist relationship:", err);
+          setError("Unable to load therapist relationship.");
+        }
+      } finally {
+        setLoading(false); // Set loading to false after everything completes
+      }
+    };
+
+    fetchTherapistRelationship();
+  }, [user, refresh]);
+
+  // DEBUGGING
+  /* useEffect(() => {
+     if (therapistDetails) {
+       console.log("Therapist details are now available:", therapistDetails);
+     } else {
+       //console.log("Therapist details are not available.");
+     }
+   }, [therapistDetails]); */
 
   if (loading) return <div>Loading therapist details...</div>;
   if (error) return <div className="text-red-500">Error: {error}</div>;
 
   return (
-    <div>
-      {/* Lottie Animation */}
-      <div className="flex justify-center bg-blue-100 rounded-lg border border-[#5E9ED9] shadow-lg mb-12">
-        <Lottie
-          animationData={StudentDashboardAnimation}
-          loop={true}
-          style={{ width: "45%", height: "45%" }}
-        />
-      </div>
-
-      {/* Therapist Details */}
-      <div className="bg-blue-100 rounded-lg shadow-lg p-6 border border-[#5E9ED9]">
-        <h2 className="text-2xl text-center font-bold text-[#5E9ED9] mb-10">
-          Your Therapist
-        </h2>
-        <p className="text-xl text-center font-medium text-gray-800 mb-10">
-          {therapist?.name || "No therapist assigned"}
-        </p>
-        <div className="mb-14">
-          <button
-            className="w-full bg-[#5E9ED9] text-white px-4 py-2 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center"
-            onClick={() => setIsExpanded(!isExpanded)}
-          >
-            View Details
-            <FaChevronDown
-              className={`ml-2 transition-transform ${isExpanded ? "rotate-180" : ""}`}
-            />
-          </button>
-          {isExpanded && therapist && (
-            <div className="mt-4 flex space-x-5 justify-center text-gray-700">
-              <p>
-                <FaUser className="inline mr-2 text-[#5E9ED9]" />
-                <span className="font-medium">Years of Experience:</span>{" "}
-                {therapist.experience_years || "N/A"}
-              </p>
-              <p>
-                <FaBriefcase className="inline mr-2 text-[#5E9ED9]" />
-                <span className="font-medium">Specialty:</span>{" "}
-                {therapist.specialization || "N/A"}
-              </p>
-              <p>
-                <FaMapMarkerAlt className="inline mr-2 text-[#5E9ED9]" />
-                <span className="font-medium">Location:</span>{" "}
-                {therapist.location || "N/A"}
-              </p>
-            </div>
+    <div className="p-8 mt-1">
+      <div className="p-6 mt-4 flex flex-col min-h-[400px]">
+        <div className="bg-blue-100 border-2 border-[#5E9ED9] rounded-lg shadow-lg p-12 flex flex-col h-full">
+          {sentAlert && (
+            <Alert severity="info" onClose={handleAlert}>
+              Your request has been sent.
+            </Alert>
           )}
-        </div>
-        <div className="mt-6 flex justify-center space-x-4 mb-5">
-          <button className="bg-[#5E9ED9] text-white px-4 py-2 rounded hover:bg-[#4a8ac9] transition">
-            <FaCalendar className="inline mr-2" /> Schedule Appointment
-          </button>
-          <button
-            className="bg-[#5E9ED9] text-white px-4 py-2 rounded hover:bg-[#4a8ac9] transition"
-            onClick={() => setIsChatOpen(true)} // Open chat modal
-          >
-            <FaComments className="inline mr-2" /> Chat
-          </button>
-        </div>
-      </div>
+          {sentDrop && (
+            <Alert severity="error" onClose={handleDrop}>
+              Your therapist has been dropped.
+            </Alert>
+          )}
+          {sentReview && (
+            <Alert severity="success" onClose={handleReview}>
+              Your review has been submitted.
+            </Alert>
+          )}
+          <div className="flex items-center justify-center mb-6">
+            <h2 className="text-2xl font-bold text-[#5E9ED9]">
+              Therapist Details
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Therapist Image Section */}
+            <div className="relative mx-auto">
+              <ProfilePicture
+                userRole="therapist"
+                therapistId={therapistDetails?.therapist_id}
+                className="w-full h-full rounded-full object-cover"
+                style={{ width: "200px", height: "200px" }}
+              />
+            </div>
 
-      {/* Chat Interface */}
-      {isChatOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="relative bg-white rounded-lg p-6 w-full max-w-3xl shadow-lg">
-            
-            <MessagingInterface
-              userId={user.id}
-              userRole={user.role}
-              onClose={() => setIsChatOpen(false)}
-            />
+            {/* Therapist Info Section */}
+            <div className="flex flex-col justify-center space-y-6">
+              <div>
+                <h2 className="text-2xl md:text-3xl font-semibold text-gray-800">
+                  {therapistName || "No Therapist Assigned"}
+                </h2>
+                {therapistDetails && (
+                  <>
+                    <p className="text-gray-600 mt-2 flex items-center">
+                      <CiStar className="w-5 h-5 mr-2 text-[#5E9ED9]" />
+                      {therapistDetails.specialization}
+                    </p>
+                    <p className="text-gray-600 mt-2 flex items-center">
+                      <MdOutlineWorkHistory className="w-5 h-5 mr-2 text-[#5E9ED9]" />
+                      {therapistDetails.experience_years} years experience
+                    </p>
+                    <p className="text-gray-600 mt-2 flex items-center">
+                      <MdOutlineMail className="w-5 h-5 mr-2 text-[#5E9ED9]" />
+                      {therapistDetails.email}
+                    </p>
+                    <p className="text-gray-600 mt-2 flex items-center">
+                      <CiBadgeDollar className="w-5 h-5 mr-2 text-[#5E9ED9]" />$
+                      {therapistDetails.monthly_rate} monthly
+                    </p>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Centered Buttons */}
+          <div className="mt-auto flex justify-center py-4 items-center">
+            <div className="grid grid-cols-2  gap-4">
+              <button
+                onClick={() => setIsTherListOpen(true)}
+                className="flex items-center justify-center space-x-2 bg-[#5E9ED9] text-white py-3 px-6 rounded-lg hover:bg-[#4b8bc4] transition duration-300 shadow-md hover:shadow-lg"
+              >
+                <Search className="w-5 h-5" />
+                <span>
+                  {therapistName ? "Switch Therapist" : "Find Therapist"}
+                </span>
+              </button>
+
+              {therapistDetails && (
+                <button
+                  onClick={() => setIsDropOpen(true)}
+                  className="flex items-center justify-center space-x-2 bg-[#5E9ED9] text-white py-3 px-6 rounded-lg hover:bg-[#4b8bc4] transition duration-300 shadow-md hover:shadow-lg"
+                >
+                  <FaPersonWalkingArrowRight className="w-5 h-5" />
+                  <span>Drop Therapist</span>
+                </button>
+              )}
+
+              {therapistDetails && (
+                <button
+                  onClick={() => setIsReviewOpen(true)}
+                  className="flex items-center justify-center space-x-2 bg-[#008000] text-white py-3 px-6 rounded-lg hover:bg-[#4b8bc4] transition duration-300 shadow-md hover:shadow-lg"
+                >
+                  <FaDiscourse className="w-5 h-5" />
+                  <span>Review Therapist</span>
+                </button>
+              )}
+
+              <button
+                onClick={() => setIsChatOpen(true)}
+                className="flex items-center justify-center space-x-2 bg-white text-[#5E9ED9] border-2 border-[#5E9ED9] py-3 px-6 rounded-lg hover:bg-[#5E9ED9] hover:text-white transition duration-300 shadow-md hover:shadow-lg"
+              >
+                <MessageCircle className="w-5 h-5" />
+                <span>Chat</span>
+              </button>
+
+              <button
+                onClick={() => setIsScheduleOpen(true)} // Open the modal
+                className="flex items-center justify-center space-x-2 bg-white text-[#5E9ED9] border-2 border-[#5E9ED9] py-3 px-6 rounded-lg hover:bg-[#5E9ED9] hover:text-white transition duration-300 shadow-md hover:shadow-lg"
+              >
+                <Calendar className="w-5 h-5" />
+                <span>Schedule Appointment</span>
+              </button>
+            </div>
           </div>
         </div>
+      </div>
+
+
+
+
+      {/* Chat Modal */}
+      {isChatOpen && (
+        <MessagingInterface
+          userId={user.id}
+          userRole={user.role}
+          onClose={() => setIsChatOpen(false)}
+        />
+      )}
+
+      <DropModal
+        isOpen={isDropOpen}
+        sentDrop={handleDrop}
+        onClose={() => {
+          setIsDropOpen(false);
+          handleRefresh();
+        }}
+      />
+
+      <ReviewModal
+        isOpen={isReviewOpen}
+        therapistId={therapistDetails?.therapist_id}
+        sentReview={handleReview}
+        onClose={() => {
+          setIsReviewOpen(false);
+          handleRefresh();
+        }}
+      />
+
+      <TherapistModal
+        isOpen={isTherListOpen}
+        refresh={refresh}
+        sentAlert={handleAlert}
+        onClose={() => {
+          setIsTherListOpen(false);
+          handleRefresh();
+        }}
+      />
+
+      {isScheduleOpen && therapistDetails && (
+        <ScheduleForStudents
+          isOpen={isScheduleOpen}
+          studentId={user.id}
+          therapistId={therapistDetails.therapist_id} 
+          onClose={() => setIsScheduleOpen(false)} // Close the modal
+        />
       )}
     </div>
   );

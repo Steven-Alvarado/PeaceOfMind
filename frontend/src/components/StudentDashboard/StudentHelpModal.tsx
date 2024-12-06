@@ -1,4 +1,4 @@
-import { FaBook, FaClipboardList, FaFileInvoice} from "react-icons/fa";
+import { FaBook, FaChartPie, FaFileInvoiceDollar} from "react-icons/fa";
 import { FaClipboardQuestion } from "react-icons/fa6"
 const StudentHelpModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
     if (!isOpen) return null;
@@ -12,16 +12,13 @@ const StudentHelpModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
               <FaBook className="inline mr-2" /> <strong>Journal:</strong> Reflect on your thoughts and emotions.
             </li>
             <li>
-              <FaClipboardList className="inline mr-2" /> <strong>View Therapists:</strong> Look for a new therapist.
-            </li>
-            <li>
-              <FaFileInvoice className="inline mr-2" /> <strong>Invoices:</strong> View and manage your payment details.
+              <FaChartPie className="inline mr-2" /> <strong>Analytics:</strong> View journal moods.
             </li>
             <li>
               <FaClipboardQuestion className="inline mr-2" /> <strong>Surveys:</strong> Answer weekly survey.
             </li>
             <li>
-              <FaFileInvoice className="inline mr-2" /> <strong>Invoices:</strong> View and manage your payment details.
+              <FaFileInvoiceDollar className="inline mr-2" /> <strong>Invoices:</strong> View and manage your payment details.
             </li>
           </ul>
           <div className="flex justify-center">

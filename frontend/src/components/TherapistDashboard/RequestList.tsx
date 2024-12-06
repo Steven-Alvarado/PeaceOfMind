@@ -3,17 +3,20 @@ import axios from "axios";
 import { FaCheck, FaX } from "react-icons/fa6";
 import { useAuth } from "../../hooks/useAuth";
 
-interface TherapistHelpModalProps {
+interface RequestListModalProps {
+  therapistId: number;
   isOpen: boolean;
+  refresh: boolean;
   onClose: () => void;
 }
 
-const RequestList: React.FC<TherapistHelpModalProps> = ({
+const RequestList: React.FC<RequestListModalProps> = ({
+  therapistId,
   isOpen,
+  refresh,
   onClose,
 }) => {
   const { user, fetchUser } = useAuth();
-  const [therapistId, setTherapistId] = useState<{ id: number } | null>(null);
   const [relations, setRelations] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -32,22 +35,6 @@ const RequestList: React.FC<TherapistHelpModalProps> = ({
     initializeUser();
   }, [user, fetchUser]);
 
-  // Fetch therapist ID when modal opens
-  useEffect(() => {
-    const fetchTherapistId = async () => {
-      if (!isOpen || !user) return;
-      try {
-        const response = await axios.get(`/api/therapists/find/${user.id}`);
-        console.log("Therapist ID Response:", response.data); // Debugging
-        setTherapistId(response.data.therapist);
-      } catch (error) {
-        console.error("Error making GET request:", error);
-      }
-    };
-
-    fetchTherapistId();
-  }, [isOpen, user]);
-
   // Automatically fetch requests when therapistId changes
   useEffect(() => {
     const fetchRequests = async () => {
@@ -55,7 +42,7 @@ const RequestList: React.FC<TherapistHelpModalProps> = ({
       setIsLoading(true);
       try {
         const response = await axios.get(
-          `/api/relationships/therapist/${therapistId.id}`
+          `/api/relationships/therapist/${therapistId}`
         );
         console.log("Relationships Response:", response.data); // Debugging
         setRelations(response.data.relationships || []);
@@ -67,7 +54,7 @@ const RequestList: React.FC<TherapistHelpModalProps> = ({
     };
 
     fetchRequests();
-  }, [therapistId]);
+  }, [therapistId, refresh]);
 
   const approveSwitch = async (studentId: number) => {
     try {
@@ -98,7 +85,7 @@ const RequestList: React.FC<TherapistHelpModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="relative bg-white rounded-lg p-6 w-100 max-w-lg outline outline-white outline-2 outline-offset-2">
+      <div className="relative bg-white rounded-lg p-6 w-250 max-w-xl outline outline-white outline-2 outline-offset-2">
         <button
           onClick={onClose}
           className="absolute top-0 right-0 text-black text-lg p-2 m-2 hover:text-gray-900"
@@ -110,7 +97,7 @@ const RequestList: React.FC<TherapistHelpModalProps> = ({
         </h2>
         {therapistId ? (
           <>
-            <h1 className="text-center">Therapist ID: {therapistId.id}</h1>
+            <h1 className="text-center">Therapist ID: {therapistId}</h1>
             {isLoading ? (
               <p className="text-center text-gray-500">Loading requests...</p>
             ) : pendingRelations.length > 0 ? (
@@ -120,13 +107,18 @@ const RequestList: React.FC<TherapistHelpModalProps> = ({
                     <div className="flex flex-row items-baseline justify-between gap-4">
                       <li
                         key={relation.id}
-                        className="flex grow text-center text-gray-700"
+                        className="flex grow w-40 text-center text-gray-700"
                       >
-                        {relation.student_first_name}{" "}
-                        {relation.student_last_name}
+                        <strong>
+                          {relation.student_first_name}{" "}
+                          {relation.student_last_name}
+                        </strong>
                       </li>
                       <button
-                        onClick={() => approveSwitch(relation.student_id)}
+                        onClick={() => {
+                          approveSwitch(relation.student_id);
+                          onClose();
+                        }}
                         className="mt-4 w-40 bg-green-500 text-white py-2 rounded hover:bg-green-500"
                       >
                         <div className="flex justify-center items-center space-x-2 p-1">
@@ -135,7 +127,10 @@ const RequestList: React.FC<TherapistHelpModalProps> = ({
                         </div>
                       </button>
                       <button
-                        onClick={() => rejectSwitch(relation.student_id)}
+                        onClick={() => {
+                          rejectSwitch(relation.student_id);
+                          onClose();
+                        }}
                         className="mt-4 w-40 bg-red-500 text-white py-2 rounded hover:bg-red-500"
                       >
                         <div className="flex justify-center items-center space-x-2 p-1">

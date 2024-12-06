@@ -1,4 +1,4 @@
-const pool = require('../config/db');
+const pool = require("../config/db");
 
 // Submit a new review for a therapist
 const createReview = async (studentId, therapistId, rating, reviewText) => {
@@ -12,7 +12,15 @@ const createReview = async (studentId, therapistId, rating, reviewText) => {
 
 // Fetch all reviews
 const getAllReviews = async () => {
-  const result = await pool.query(`SELECT * FROM therapist_reviews ORDER BY created_at DESC`);
+  const result = await pool.query(`
+    SELECT 
+      therapist_reviews.*, 
+      users.first_name, 
+      users.last_name 
+    FROM therapist_reviews
+    LEFT JOIN users ON therapist_reviews.student_id = users.id
+    ORDER BY therapist_reviews.created_at DESC
+  `);
   return result.rows;
 };
 
@@ -28,5 +36,5 @@ const getReviewsByTherapistId = async (therapistId) => {
 module.exports = {
   createReview,
   getAllReviews,
-  getReviewsByTherapistId
+  getReviewsByTherapistId,
 };

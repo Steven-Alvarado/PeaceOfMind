@@ -1,4 +1,4 @@
-const pool = require('../config/db');
+const pool = require("../config/db");
 
 // Retrieve all users
 const getAllUsers = async () => {
@@ -8,7 +8,21 @@ const getAllUsers = async () => {
 
 // Retrieve a specific user by ID
 const getUserById = async (id) => {
-  const result = await pool.query(`SELECT * FROM users WHERE id = $1`, [id]);
+  const result = await pool.query(
+    `SELECT 
+        u.id, 
+        u.first_name, 
+        u.last_name, 
+        u.gender, 
+        u.role, 
+        u.created_at, 
+        u.updated_at, 
+        a.email 
+     FROM users u
+     LEFT JOIN auth a ON u.id = a.user_id
+     WHERE u.id = $1`,
+    [id]
+  );
   return result.rows[0];
 };
 
@@ -21,8 +35,16 @@ const getUserAuditHistory = async (userId) => {
   return result.rows;
 };
 
+const getEmailById = async (userId) => {
+  const result = await pool.query(`SELECT auth.email FROM auth WHERE id = $1`, [
+    userId,
+  ]);
+  return result.rows[0];
+};
+
 module.exports = {
   getAllUsers,
-  getUserById, 
-  getUserAuditHistory
+  getUserById,
+  getUserAuditHistory,
+  getEmailById,
 };

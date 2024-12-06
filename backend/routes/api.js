@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const bcrypt = require('bcrypt');
 
 
 
@@ -16,6 +17,8 @@ const journalRoutes = require("./journal");
 const documentRoutes = require("./documents");
 const relationshipRoutes = require("./relationships");
 const invoiceRoutes = require("./invoices");
+const accountSettingsRoutes = require("./accountSettings");
+const profilePictureRoutes = require("./profilePicture"); 
 
 // Mount routes on `/api`
 router.use("/users", userRoutes);
@@ -30,5 +33,10 @@ router.use("/journals", journalRoutes);
 router.use("/documents", documentRoutes);
 router.use("/relationships", relationshipRoutes);
 router.use("/invoices", invoiceRoutes);
+router.use("/accountSettings", accountSettingsRoutes );
+router.use("/profilePicture", profilePictureRoutes);
+
+ 
+
 
 module.exports = router;

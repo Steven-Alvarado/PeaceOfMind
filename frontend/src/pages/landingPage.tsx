@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import axios from "axios";
 
 import "../assets/styles/index.css";
 import { Typewriter } from "react-simple-typewriter";
@@ -80,7 +81,6 @@ function IntroSection() {
     </section>
   );
 }
-
 
 function AboutSection() {
   return (
@@ -370,52 +370,27 @@ function FAQSection() {
   );
 }
 
-type Review = {
-  id: number;
-  name: string;
-  date: string;
-  text: string;
-  rating: number;
-};
-
 function ReviewsSection() {
-  const reviews: Review[] = [
-    {
-      id: 1,
-      name: "David Laskowski",
-      date: "March 2024",
-      text: "Peace of Mind has been a lifesaver during finals. The therapy sessions and journaling feature really helped me stay grounded.",
-      rating: 5,
-    },
-    {
-      id: 2,
-      name: "Steven Alvarado",
-      date: "February 2024",
-      text: "I love the daily check-ins! They keep me focused on my well-being. Highly recommend it!",
-      rating: 4,
-    },
-    {
-      id: 3,
-      name: "Daniel Lobo",
-      date: "January 2024",
-      text: "Affordable therapy sessions and great support resources. Perfect for students!",
-      rating: 5,
-    },
-    {
-      id: 4,
-      name: "Anas Sabir",
-      date: "January 2024",
-      text: "I love the daily check-ins! They keep me focused on my well-being. Highly recommend it!",
-      rating: 4,
-    },
-    {
-      id: 5,
-      name: "Nicolas Bermudez",
-      date: "January 2024",
-      text: "Peace of Mind has been a lifesaver during finals. The therapy sessions and journaling feature really helped me stay grounded.",
-      rating: 5,
-    },
-  ];
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const response = await axios.get("/api/reviews");
+        const reviewData = Array.isArray(response.data.data)
+          ? response.data.data
+          : [];
+        setReviews(reviewData);
+      } catch (error) {
+        console.error("Error fetching reviews:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchReviews();
+  }, []);
 
   const settings = {
     centerMode: true,
@@ -448,35 +423,45 @@ function ReviewsSection() {
         <h2 className="text-4xl font-bold text-center mb-12 text-[#5E9ED9]">
           Reviews
         </h2>
-        <Slider {...settings} className="p-8 bg-[#5E9ED9] rounded-xl">
-          {reviews.map((review) => (
-            <div
-              key={review.id}
-              className="p-8 bg-blue-50 rounded-lg space-x-4 shadow-md flex flex-col text-center"
-            >
-              <div className="flex justify-center">
-                <div className="w-20 h-20 bg-gray-300 rounded-full flex items-center justify-center mb-4">
-                  <span className="text-gray-600">Picture</span>
+        {isLoading ? (
+          <div className="text-center text-gray-500">Loading reviews...</div>
+        ) : reviews.length > 0 ? (
+          <Slider {...settings} className="p-8 bg-[#5E9ED9] rounded-xl">
+            {reviews.map((review) => {
+              const truncatedDate = review.updated_at.split("T")[0];
+
+              return (
+                <div
+                  key={review.id}
+                  className="p-8 bg-blue-50 rounded-lg space-x-4 shadow-md flex flex-col text-center"
+                >
+                  <div className="flex justify-center">
+                    <div className="w-20 h-20 bg-gray-300 rounded-full flex items-center justify-center mb-4">
+                      <span className="text-gray-600">Picture</span>
+                    </div>
+                  </div>
+                  <strong>
+                    {review.first_name} {review.last_name}
+                  </strong>
+                  <p className="text-sm text-gray-700">{truncatedDate}</p>
+                  <p className="text-gray-700 mt-4 mb-6 max-w-md">
+                    {review.review_text}
+                  </p>
+                  <div className="flex justify-center mb-4">
+                    {Array.from({ length: review.rating }, (_, i) => (
+                      <FaStar key={i} className="text-yellow-500" />
+                    ))}
+                    {Array.from({ length: 5 - review.rating }, (_, i) => (
+                      <FaStar key={i} className="text-gray-300" />
+                    ))}
+                  </div>
                 </div>
-              </div>
-
-              <h3 className="text-lg font-semibold text-[#5E9ED9]">
-                {review.name}
-              </h3>
-              <p className="text-sm text-gray-700">{review.date}</p>
-              <p className="text-gray-700 mt-4 mb-6 max-w-md">{review.text}</p>
-
-              <div className="flex justify-center mb-4">
-                {Array.from({ length: review.rating }, (_, i) => (
-                  <FaStar key={i} className="text-yellow-500" />
-                ))}
-                {Array.from({ length: 5 - review.rating }, (_, i) => (
-                  <FaStar key={i} className="text-gray-300" />
-                ))}
-              </div>
-            </div>
-          ))}
-        </Slider>
+              );
+            })}
+          </Slider>
+        ) : (
+          <div className="text-center text-gray-500">No reviews available.</div>
+        )}
       </motion.div>
     </section>
   );

@@ -5,6 +5,7 @@ const {
   createUser,
   findUserByEmail,
   findUserById,
+  updateUserPassword
 } = require("../models/authModel");
 
 const register = async (req, res) => {
@@ -72,4 +73,39 @@ const getProfile = async (req, res) => {
   }
 };
 
-module.exports = { register, login, logout, getProfile };
+const checkEmail = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await findUserByEmail(email);
+    if (!user) {
+      return res.status(404).json({ error: "Email does not exist" });
+    }
+    res.status(200).json({ message: "Email exists" });
+  } catch (error) {
+    console.error("Check email error:", error);
+    res.status(500).json({ error: "Failed to verify email" });
+  }
+};
+const resetPasswordDirect = async (req, res) => {
+  const { email, newPassword } = req.body;
+
+  try {
+    const user = await findUserByEmail(email); // Ensure this checks the `auth` table
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await updateUserPassword(email, hashedPassword);
+
+    res.status(200).json({ message: "Password reset successfully" });
+  } catch (error) {
+    console.error("Reset password error:", error);
+    res.status(500).json({ error: "Failed to reset password" });
+  }
+};
+
+
+
+module.exports = { register, login, logout, getProfile, checkEmail, resetPasswordDirect };

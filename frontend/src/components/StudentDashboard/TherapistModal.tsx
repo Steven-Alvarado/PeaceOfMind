@@ -2,23 +2,33 @@ import React, { useState, useEffect } from "react";
 import { FaArrowRightArrowLeft, FaArrowRightToBracket } from "react-icons/fa6";
 import { useAuth } from "../../hooks/useAuth";
 import axios from "axios";
+import ProfilePicture from "../ProfilePicture";
 
-const TherapistModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
+interface TherapistModalProps {
+  isOpen: boolean;
+  refresh: boolean;
+  sentAlert: () => void;
+  onClose: () => void;
+}
+
+const TherapistModal: React.FC<TherapistModalProps> = ({
   isOpen,
+  refresh,
+  sentAlert,
   onClose,
 }) => {
   const { user, fetchUser } = useAuth();
   const [therapists, setTherapists] = useState<any[]>([]);
   const [relations, setRelations] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 2;
+  const itemsPerPage = 4; // Adjust the number of therapists per page
 
   useEffect(() => {
     const initializeUser = async () => {
       if (!user) {
         try {
           await fetchUser();
-          console.log("User fetched successfully:", user); // Debugging after fetch
+          console.log("User fetched successfully:", user);
         } catch (error) {
           console.error("Failed to fetch user data:", error);
         }
@@ -29,7 +39,7 @@ const TherapistModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
 
   useEffect(() => {
     if (isOpen && user) fetchTherapists();
-  }, [isOpen, user]);
+  }, [isOpen, user, refresh]);
 
   const fetchTherapists = async () => {
     try {
@@ -38,8 +48,8 @@ const TherapistModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
       const data1 = await response1.json();
       setTherapists(data1.therapists || []);
 
-      const response2 = await fetch(`api/relationships/${user.id}`);
-      if (!response2.ok) throw new Error("Failed to Fetch relationships");
+      const response2 = await fetch(`/api/relationships/${user.id}`);
+      if (!response2.ok) setRelations([]);
       const data2 = await response2.json();
       setRelations(data2.relationship || []);
     } catch (error) {
@@ -53,17 +63,24 @@ const TherapistModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
     startIndex + itemsPerPage
   );
 
-  const requestStatus = () => {
-    if (relations.requested_therapist_id != null) {
-      return <h1>Request Status: {relations.status}</h1>;
+  const requestStatus = (therapistId: number) => {
+    if (
+      relations.requested_therapist_id != null &&
+      therapistId === relations.requested_therapist_id
+    ) {
+      return (
+        <span className="text-blue-600 text-sm font-medium">
+          Request Status: {relations.status}
+        </span>
+      );
     } else {
-      return <div></div>;
+      return <></>;
     }
   };
 
   const requestTherapist = async (studentId: number, therapistId: number) => {
     try {
-      const response = await axios.post("/api/relationships", {
+      const response = await axios.post("/api/relationships/request", {
         studentId: studentId,
         therapistId: therapistId,
       });
@@ -87,11 +104,19 @@ const TherapistModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
     }
   };
 
+  const checkPending = () => relations.status === "pending";
+
+  const sentConfirm = () => {
+    sentAlert();
+  };
+
   return (
     isOpen && (
-      <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
-        <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-3xl">
-          <h2 className="text-2xl font-bold mb-4">Available Therapists</h2>
+      <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
+        <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-3xl">
+          <h2 className="text-2xl font-bold text-blue-600 mb-4">
+            Available Therapists
+          </h2>
           {therapists.length === 0 ? (
             <p className="text-center text-gray-500">
               No therapists available at the moment.
@@ -99,57 +124,66 @@ const TherapistModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
           ) : (
             <ul className="space-y-4">
               {currentTherapists.map((therapist) => (
-                <div className="flex flex-row items-center justify-between">
-                  <li
-                    key={therapist.id}
-                    className="flex items-center justify-between"
-                  >
+                <li
+                  key={therapist.id}
+                  className="flex items-center justify-between bg-blue-50 p-4 rounded-lg shadow-sm"
+                >
+                  <div className="flex items-center space-x-4">
+                    <ProfilePicture
+                      userRole="therapist"
+                      therapistId={therapist.id}
+                      className="rounded-full shadow-md"
+                      style={{ width: "60px", height: "60px" }}
+                    />
                     <div>
-                      <p className="font-bold">{`${therapist.first_name} ${therapist.last_name}`}</p>
+                      <p className="font-bold text-gray-800">{`${therapist.first_name} ${therapist.last_name}`}</p>
                       <p className="text-sm text-gray-500">{`Specialization: ${therapist.specialization}`}</p>
                       <p className="text-sm text-gray-500">{`Experience: ${therapist.experience_years} years`}</p>
                       <p className="text-sm text-gray-500">{`Rate: $${therapist.monthly_rate}/month`}</p>
                     </div>
-                  </li>
-                  {relations.current_therapist_id != null ? (
-                    <div className="w-80 flex flex-row items-center justify-between">
-                      {requestStatus()}
+                  </div>
+                  <div className="flex flex-col items-end space-y-2">
+                    {requestStatus(therapist.id)}
+                    {relations.current_therapist_id != null ? (
                       <button
-                        onClick={() => switchTherapist(user.id, therapist.id)}
-                        className="mt-4 w-40 bg-blue-600 text-white py-2 rounded hover:bg-blue-500"
+                        disabled={checkPending()}
+                        onClick={() => {
+                          switchTherapist(user.id, therapist.id);
+                          sentConfirm();
+                          onClose();
+                        }}
+                        className="bg-blue-600 text-white py-2 px-4 rounded-lg shadow hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
                       >
-                        <div className="flex justify-center items-center space-x-2 p-1">
-                          <div className="font-bold">Switch Request</div>
-                          <FaArrowRightArrowLeft className="mt-0.5" />
-                        </div>
+                        Switch Therapist
                       </button>
-                    </div>
-                  ) : (
-                    <div className="w-80 flex flex-row items-center justify-between">
-                      {requestStatus()}
+                    ) : (
                       <button
-                        onClick={() => requestTherapist(user.id, therapist.id)}
-                        className="mt-4 w-60 bg-blue-600 text-white py-2 rounded hover:bg-blue-500"
+                        onClick={() => {
+                          requestTherapist(user.id, therapist.id);
+                          sentConfirm();
+                          onClose();
+                        }}
+                        className="bg-green-600 text-white py-2 px-4 rounded-lg shadow hover:bg-green-700"
                       >
-                        <div className="flex justify-center items-center space-x-2 p-1">
-                          <div className="font-bold">Request Therapist</div>
-                          <FaArrowRightToBracket className="mt-0.5" />
-                        </div>
+                        Request Therapist
                       </button>
-                    </div>
-                  )}
-                </div>
+                    )}
+                  </div>
+                </li>
               ))}
             </ul>
           )}
-          <div className="flex justify-between mt-4">
+          <div className="flex justify-between items-center mt-6">
             <button
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
-              className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 disabled:bg-gray-100"
             >
               Previous
             </button>
+            <span className="text-sm text-gray-500">
+              Page {currentPage} of {Math.ceil(therapists.length / itemsPerPage)}
+            </span>
             <button
               onClick={() =>
                 setCurrentPage((prev) =>
@@ -162,14 +196,14 @@ const TherapistModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
               disabled={
                 currentPage === Math.ceil(therapists.length / itemsPerPage)
               }
-              className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 disabled:bg-gray-100"
             >
               Next
             </button>
           </div>
           <button
             onClick={onClose}
-            className="mt-4 w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-500"
+            className="mt-4 w-full bg-red-600 text-white py-2 rounded-lg hover:bg-red-700"
           >
             Close
           </button>
