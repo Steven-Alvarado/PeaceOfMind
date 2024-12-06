@@ -58,6 +58,10 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
       setErrorMessage(error.message || "Error fetching therapist details.");
     }
   };
+
+
+
+
   const handleDeleteAccount = async () => {
     console.log("Delete account button clicked");
   
@@ -108,13 +112,15 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
       setErrorMessage("An error occurred while deleting the account.");
     }
   };
-  
+
   const handleUpdate = async () => {
+    // Check if passwords match before proceeding
     if (newPassword !== confirmPassword) {
+      window.alert("Passwords do not match. Please try again."); // Show a pop-up alert
       setErrorMessage("Passwords do not match.");
       return;
     }
-
+  
     try {
       const response = await fetch(`/api/accountSettings/therapist/${user.id}`, {
         method: "PATCH", // Use PATCH to update the therapist details
@@ -127,14 +133,16 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
           last_name: lastName,
           email,
           experience_years: experienceYears,
-          new_password: newPassword,
+          ...(newPassword && { password: newPassword }), // Send as "password" if provided
           monthly_rate: monthlyRate,
         }),
       });
-
+  
       const data = await response.json();
+  
       if (response.ok) {
         alert("Details updated successfully.");
+        setErrorMessage(""); // Clear error message on success
         onClose(); // Close the modal after successful update
       } else {
         setErrorMessage(data.message || "Failed to update details.");
@@ -144,13 +152,25 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
       setErrorMessage(error.message || "Error updating therapist details.");
     }
   };
+  
+  
+  const handleClose = () => {
+    onClose();  
+  };
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-lg outline outline-white outline-2 outline-offset-2">
-        <h2 className="text-3xl font-extrabold text-center text-[#5E9ED9] mb-4">Settings</h2>
-
+        <div className="flex justify-between mb-4">
+                <h2 className="text-3xl font-extrabold text-center text-[#5E9ED9] mb-4">Settings</h2>
+                <button
+                  className="bg-red-400 text-white px-4 py-2 rounded-full hover:bg-red-500"
+                  onClick={handleClose} // Close the modal and reset
+                >
+                  <FaTimes size={20} />
+                </button>
+              </div>
         {/* First Name and Last Name on the same line */}
         <div className="flex space-x-4">
           <div className="w-full">
@@ -260,12 +280,7 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
             Update
           </button>
 
-          <button
-            className="bg-[#5E9ED9] text-white px-4 py-2 rounded hover:bg-[#4a8ac9]"
-            onClick={onClose}
-          >
-            Close
-          </button>
+       
         </div>
       </div>
     </div>
