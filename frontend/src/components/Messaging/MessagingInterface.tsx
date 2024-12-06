@@ -352,10 +352,10 @@ const MessagingInterface: React.FC<MessagingInterfaceProps> = ({
                         <p className="text-xs mt-1 text-gray-500">
                           {message.sent_at
                             ? new Intl.DateTimeFormat("en-US", {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                                timeZone: "America/New_York",
-                              }).format(new Date(message.sent_at))
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              timeZone: "America/New_York",
+                            }).format(new Date(new Date(message.sent_at).getTime() - 5 * 60 * 60 * 1000)) // Subtract 5 hours
                             : "Unknown time"}
                         </p>
                       </div>

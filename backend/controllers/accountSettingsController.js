@@ -1,5 +1,5 @@
 const bcrypt = require('bcrypt');
-const { updateUserAccountSettings, updateTherapistAccountSettings, deleteTherapist,deleteUser  } = require('../models/accountSettingsModel');
+const { updateUserAccountSettings, updateTherapistAccountSettings, deleteUser  } = require('../models/accountSettingsModel');
 const {getTherapistRelationshipss } = require('../controllers/relationshipController');
 const { getAllInvoices, getInvoicesByStudentId } = require('../models/invoicesModel');
  
@@ -40,47 +40,49 @@ const updateTherapist = async (req, res) => {
   }
 };
 
+const handleDeleteUserAndTherapist = async (req, res) => {
+  const { therapistId, studentId } = req.params;
 
-
-const handleDeleteTherapist = async (req, res) => {
-  const { therapistId } = req.params;
-
-  // Validate therapist ID
-  if (!therapistId) {
-    return res.status(400).json({ error: "Therapist ID is required" });
+  // Validate inputs
+  if (!therapistId || !studentId) {
+    return res.status(400).json({ error: "Therapist ID and Student ID are required." });
   }
 
   try {
-    // Check if the therapist has any active relationships
+    // Check for active relationships
     const relationships = await getTherapistRelationshipss(therapistId);
-    const activeRelationships = relationships.filter(relationship => relationship.status === 'active');
+    const activeRelationships = relationships.filter(
+      (relationship) => relationship.status === "active"
+    );
 
     if (activeRelationships.length > 0) {
       return res.status(400).json({
-        error: "Therapist cannot be deleted because there are active relationships with students."
+        error: "Therapist cannot be deleted because there are active relationships with students.",
       });
     }
 
-    // Get all invoices associated with the therapist
+    // Check for unpaid invoices
     const invoices = await getAllInvoices();
-    const unpaidInvoices = invoices.filter(invoice => invoice.therapist_id === parseInt(therapistId) && invoice.status !== 'paid');
+    const unpaidInvoices = invoices.filter(
+      (invoice) => invoice.therapist_id === parseInt(therapistId) && invoice.status !== "paid"
+    );
 
     if (unpaidInvoices.length > 0) {
       return res.status(400).json({
-        error: "Therapist cannot be deleted because there are unpaid invoices."
+        error: "Therapist cannot be deleted because there are unpaid invoices.",
       });
     }
 
-    // Proceed with deleting the therapist (implement the actual deletion)
-    const deletedTherapist = await deleteTherapist(therapistId); 
+    // Proceed with deleting the user
+    const deletedUser = await deleteUser(studentId);
 
     res.status(200).json({
-      message: "Therapist deleted successfully",
-      therapist: deletedTherapist
+      message: "Therapist and user deleted successfully.",
+      user: deletedUser,
     });
   } catch (error) {
-    console.error("Error deleting therapist:", error);
-    res.status(500).json({ error: "Failed to delete therapist" });
+    console.error("Error deleting user and therapist:", error);
+    res.status(500).json({ error: "Failed to delete user and therapist." });
   }
 };
 
@@ -125,4 +127,4 @@ const handleDeleteStudent = async (req, res) => {
   }
 };
 
-module.exports = { updateUser,handleDeleteTherapist,handleDeleteStudent, updateTherapist};
+module.exports = { updateUser,handleDeleteUserAndTherapist,handleDeleteStudent, updateTherapist};

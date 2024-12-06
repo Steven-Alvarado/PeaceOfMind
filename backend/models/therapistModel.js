@@ -1,5 +1,39 @@
 const pool = require("../config/db");
 
+
+const findTherapistById = async (therapistId) => {
+  try {
+    const query = `
+      SELECT 
+        t.id AS therapist_id, 
+        t.user_id,
+        t.license_number,
+        t.specialization,
+        t.experience_years,
+        t.monthly_rate,
+        t.availability,
+        u.first_name,
+        u.last_name,
+        u.gender,
+        a.email
+      FROM therapists t
+      INNER JOIN users u ON t.user_id = u.id
+      INNER JOIN auth a ON u.id = a.user_id
+      WHERE t.id = $1;
+    `;
+    const result = await pool.query(query, [therapistId]);
+
+    if (result.rows.length === 0) {
+      return null; // No therapist found
+    }
+
+    return result.rows[0]; // Return therapist details
+  } catch (error) {
+    console.error("Error fetching therapist details by ID:", error);
+    throw new Error("Could not fetch therapist details");
+  }
+};
+
 const createTherapist = async (
   userId,
   licenseNumber,
@@ -56,19 +90,6 @@ const getAvailableTherapists = async () => {
   }
 };
 
-// Update therapist availability
-const updateTherapistAvailability = async (therapistId, availability) => {
-  const query = `
-    UPDATE therapists
-    SET availability = $1, updated_at = CURRENT_TIMESTAMP
-    WHERE id = $2
-    RETURNING availability;
-  `;
-  const values = [availability, therapistId];
-  const result = await pool.query(query, values);
-  return result.rows[0];
-};
-
 // Check if the therapist's license is valid in the verified_licenses table
 const isLicenseVerified = async (licenseNumber) => {
   try {
@@ -81,6 +102,19 @@ const isLicenseVerified = async (licenseNumber) => {
     console.error("Error verifying license:", error);
     throw new Error("Could not verify license");
   }
+};
+// Check if the license number already exists in the therapists table
+const licenseExists = async (licenseNumber) => {
+    try {
+      const result = await pool.query(
+        `SELECT 1 FROM therapists WHERE license_number = $1`,
+        [licenseNumber]
+      );
+      return result.rowCount > 0;
+    } catch (error) {
+      console.error("Error checking license existence:", error);
+      throw new Error("Could not verify if license exists");
+    }
 };
 
 
@@ -113,6 +147,8 @@ const findTherapistByUserId = async (userId) => {
   }
 };
 
+
+
 const toggleTherapistAvailability = async (therapistId) => {
   const query = 
     `UPDATE therapists
@@ -130,8 +166,10 @@ module.exports = {
     createTherapist,
     getAvailableTherapists,
     isLicenseVerified,
+    licenseExists,
     findTherapistByUserId,
-    findTherapistIdById,
-    toggleTherapistAvailability,
-    updateTherapistAvailability
+    findTherapistIdById, 
+    findTherapistById,
+    toggleTherapistAvailability
 };
+

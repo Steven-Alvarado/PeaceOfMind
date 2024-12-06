@@ -72,4 +72,3 @@ const getSurveys = async (req, res) => {
 };
 
 module.exports = { createSurvey, updateSurvey, getSurvey, getSurveys };
-
