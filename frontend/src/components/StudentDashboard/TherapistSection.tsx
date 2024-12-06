@@ -256,6 +256,15 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
           handleRefresh();
         }}
       />
+
+      {isScheduleOpen && therapistDetails && (
+        <ScheduleForStudents
+          isOpen={isScheduleOpen}
+          studentId={user.id}
+          therapistId={therapistDetails.therapist_id} 
+          onClose={() => setIsScheduleOpen(false)} // Close the modal
+        />
+      )}
     </div>
   );
 };
