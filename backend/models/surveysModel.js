@@ -60,4 +60,3 @@ const getSurveysByUserId = async (userId) => {
 };
 
 module.exports = { createSurveyResponse, updateSurveyResponse, getSurveyById, getSurveysByUserId };
-
