@@ -11,6 +11,7 @@ import axios from "axios";
 import { User } from "../../context/AuthContext";
 import MessagingInterface from "../Messaging/MessagingInterface";
 import ProfilePicture from "../ProfilePicture";
+import ScheduleForStudents from "./ScheduleForStudents";
 
 interface TherapistSectionProps {
   user: User;
@@ -28,6 +29,7 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
   const [isTherListOpen, setIsTherListOpen] = useState(false);
   const [isDropOpen, setIsDropOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isScheduleOpen, setIsScheduleOpen] = useState(false);
 
   const handleRefresh = () => setRefresh((prev) => !prev);
   const handleAlert = () => setSentAlert((prev) => !prev);
@@ -162,32 +164,33 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
 
         {therapistDetails && (
           <button
-            onClick={() => setIsDropOpen(true)}
-            className="flex items-center justify-center space-x-2 bg-[#5E9ED9] text-white py-3 px-6 rounded-lg hover:bg-[#4b8bc4] transition duration-300 shadow-md hover:shadow-lg"
-          >
-            <FaPersonWalkingArrowRight className="w-5 h-5" />
-            <span>Drop Therapist</span>
-          </button>
-        )}
+                  onClick={() => setIsDropOpen(true)}
+                  className="flex items-center justify-center space-x-2 bg-[#5E9ED9] text-white py-3 px-6 rounded-lg hover:bg-[#4b8bc4] transition duration-300 shadow-md hover:shadow-lg"
+                >
+                  <FaPersonWalkingArrowRight className="w-5 h-5" />
+                  <span>Drop Therapist</span>
+                </button>
+              )}
 
-        <button
-          onClick={() => setIsChatOpen(true)}
-          className="flex items-center justify-center space-x-2 bg-white text-[#5E9ED9] border-2 border-[#5E9ED9] py-3 px-6 rounded-lg hover:bg-[#5E9ED9] hover:text-white transition duration-300 shadow-md hover:shadow-lg"
-        >
-          <MessageCircle className="w-5 h-5" />
-          <span>Chat</span>
-        </button>
+              <button
+                onClick={() => setIsChatOpen(true)}
+                className="flex items-center justify-center space-x-2 bg-white text-[#5E9ED9] border-2 border-[#5E9ED9] py-3 px-6 rounded-lg hover:bg-[#5E9ED9] hover:text-white transition duration-300 shadow-md hover:shadow-lg"
+              >
+                <MessageCircle className="w-5 h-5" />
+                <span>Chat</span>
+              </button>
 
-        <button
-          className="flex items-center justify-center space-x-2 bg-white text-[#5E9ED9] border-2 border-[#5E9ED9] py-3 px-6 rounded-lg hover:bg-[#5E9ED9] hover:text-white transition duration-300 shadow-md hover:shadow-lg"
-        >
-          <Calendar className="w-5 h-5" />
-          <span>Schedule Appointment</span>
-        </button>
+              <button
+                onClick={() => setIsScheduleOpen(true)} // Open the modal
+                className="flex items-center justify-center space-x-2 bg-white text-[#5E9ED9] border-2 border-[#5E9ED9] py-3 px-6 rounded-lg hover:bg-[#5E9ED9] hover:text-white transition duration-300 shadow-md hover:shadow-lg"
+              >
+                <Calendar className="w-5 h-5" />
+                <span>Schedule Appointment</span>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
-</div>
 
 
 
