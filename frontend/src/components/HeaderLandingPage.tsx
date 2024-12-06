@@ -1,17 +1,47 @@
 import React, { useState } from "react";
 import { FaBars, FaTimes } from "react-icons/fa";
 import { Link } from "react-scroll";
+import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import Logo from "../assets/images/logobetter.png";
 
 const HeaderLandingPage = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
   };
 
+  const handleNavigation = (path: string) => {
+    setIsOpen(false); // Close the menu for mobile navigation
+    setTimeout(() => {
+      navigate(path); // Navigate after menu animation completes
+    }, 200); // Match the duration of the menu close animation
+  };
+
+  const linkVariants = {
+    hover: { scale: 1.1, transition: { type: "spring", stiffness: 300 } },
+  };
+
+  const headerVariants = {
+    hidden: { opacity: 0, y: -20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+  };
+
+  const menuVariants = {
+    hidden: { opacity: 0, scale: 0.95 },
+    visible: { opacity: 1, scale: 1, transition: { duration: 0.3 } },
+    exit: { opacity: 0, scale: 0.95, transition: { duration: 0.2 } },
+  };
+
   return (
-    <header className="bg-[#5E9ED9] text-white sticky top-0 z-50">
+    <motion.header
+      className="bg-[#5E9ED9] text-white sticky top-0 z-50"
+      variants={headerVariants}
+      initial="hidden"
+      animate="visible"
+    >
       <div className="container mx-auto flex justify-between items-center p-4">
         <div className="flex items-center cursor-pointer">
           <a href="/" className="flex items-center">
@@ -26,55 +56,45 @@ const HeaderLandingPage = () => {
 
         {/* Desktop Navigation */}
         <nav className="hidden font-bold md:flex space-x-1">
-          <Link
-            to="about"
-            smooth={true}
-            duration={500}
+          {[
+            { to: "about", label: "About" },
+            { to: "advice", label: "Advice" },
+            { to: "faq", label: "FAQ" },
+            { to: "reviews", label: "Reviews" },
+            { to: "contact", label: "Contact Us" },
+          ].map(({ to, label }) => (
+            <motion.div
+              key={to}
+              variants={linkVariants}
+              whileHover="hover"
+              className="cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]"
+            >
+              <Link to={to} smooth={true} duration={500}>
+                {label}
+              </Link>
+            </motion.div>
+          ))}
+          <motion.div
+            whileHover="hover"
             className="cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]"
+            onClick={() => handleNavigation("/for-therapists")}
           >
-            About
-          </Link>
-          <Link
-            to="advice"
-            smooth={true}
-            duration={500}
+            For Therapists
+          </motion.div>
+          <motion.div
+            whileHover="hover"
             className="cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]"
+            onClick={() => handleNavigation("/sign-up")}
           >
-            Advice
-          </Link>
-          <Link
-            to="faq"
-            smooth={true}
-            duration={500}
+            Sign Up
+          </motion.div>
+          <motion.div
+            whileHover="hover"
             className="cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]"
+            onClick={() => handleNavigation("/login")}
           >
-            FAQ
-          </Link>
-          <Link
-            to="reviews"
-            smooth={true}
-            duration={500}
-            className="cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]"
-          >
-            Reviews
-          </Link>
-          <Link
-            to="contact"
-            smooth={true}
-            duration={500}
-            className="cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]"
-          >
-            Contact Us
-          </Link>
-          <a href="/for-therapists" className="cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]">
-              For Therapists
-          </a>
-          <a href="/sign-up" className="cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]">
-              Sign Up
-          </a>
-          <a href="/login" className="cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]">
-              Login
-          </a>
+            Login
+          </motion.div>
         </nav>
 
         {/* Mobile Hamburger Icon */}
@@ -84,71 +104,65 @@ const HeaderLandingPage = () => {
       </div>
 
       {/* Mobile Menu */}
-      {isOpen && (
-        <nav className="md:hidden text-center font-bold bg-[#5E9ED9] text-white p-4 space-y-2">
-          <Link
-            to="about"
-            smooth={true}
-            duration={500}
-            className="block cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]"
+      <AnimatePresence>
+        {isOpen && (
+          <motion.nav
+            variants={menuVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="md:hidden text-center font-bold bg-[#5E9ED9] text-white p-4 space-y-2"
           >
-            About
-          </Link>
-          <Link
-            to="advice"
-            smooth={true}
-            duration={500}
-            className="block cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]"
-          >
-            Advice
-          </Link>
-          <Link
-            to="faq"
-            smooth={true}
-            duration={500}
-            className="block cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]"
-          >
-            FAQ
-          </Link>
-          <Link
-            to="reviews"
-            smooth={true}
-            duration={500}
-            className="block cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]"
-          >
-            Reviews
-          </Link>
-          <Link
-            to="contact"
-            smooth={true}
-            duration={500}
-            className="block cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]"
-          >
-            Contact Us
-          </Link>
-          <div className="space-y-2">
-            <a
-              href="/for-therapists"
-              className="block cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]"
-            >
-              For Therapists
-            </a>
-            <a
-              href="/sign-up"
-              className="block cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]"
-            >
-              Sign Up
-            </a>
-            <a
-              href="/login"
-              className="block cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]"
-            >
-              Login
-            </a>
-          </div>
-        </nav>
-      )}
-    </header>
+            {[
+              { to: "about", label: "About" },
+              { to: "advice", label: "Advice" },
+              { to: "faq", label: "FAQ" },
+              { to: "reviews", label: "Reviews" },
+              { to: "contact", label: "Contact Us" },
+            ].map(({ to, label }) => (
+              <motion.div
+                key={to}
+                variants={linkVariants}
+                whileHover="hover"
+                className="block cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]"
+              >
+                <Link
+                  to={to}
+                  smooth={true}
+                  duration={500}
+                  onClick={() => setIsOpen(false)}
+                >
+                  {label}
+                </Link>
+              </motion.div>
+            ))}
+            <div className="space-y-2">
+              <motion.div
+                whileHover="hover"
+                className="block cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]"
+                onClick={() => handleNavigation("/for-therapists")}
+              >
+                For Therapists
+              </motion.div>
+              <motion.div
+                whileHover="hover"
+                className="block cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]"
+                onClick={() => handleNavigation("/sign-up")}
+              >
+                Sign Up
+              </motion.div>
+              <motion.div
+                whileHover="hover"
+                className="block cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4]"
+                onClick={() => handleNavigation("/login")}
+              >
+                Login
+              </motion.div>
+            </div>
+          </motion.nav>
+        )}
+      </AnimatePresence>
+    </motion.header>
   );
 };
 

@@ -19,7 +19,6 @@ const PatientSection: React.FC<PatientListComponentProps> = ({
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
-  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const patientsPerPage = 4;
 
@@ -71,7 +70,6 @@ const PatientSection: React.FC<PatientListComponentProps> = ({
     setIsChatOpen(true);
   };
 
-  // Pagination logic
   const indexOfLastPatient = currentPage * patientsPerPage;
   const indexOfFirstPatient = indexOfLastPatient - patientsPerPage;
   const currentPatients = filteredPatients.slice(
@@ -101,7 +99,7 @@ const PatientSection: React.FC<PatientListComponentProps> = ({
           />
         </div>
 
-        <div className="space-y-4 mb-5">
+        <div className="space-y-4 mb-5 md:h-[370px] h-[380px] overflow-y-auto">
           {currentPatients.length > 0 ? (
             currentPatients.map((patient) => (
               <div

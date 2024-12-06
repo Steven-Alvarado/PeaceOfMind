@@ -19,6 +19,9 @@ const RequestList: React.FC<RequestListModalProps> = ({
   const { user, fetchUser } = useAuth();
   const [relations, setRelations] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const itemsPerPage = 5;
 
   // Ensure user is initialized
   useEffect(() => {
@@ -83,80 +86,111 @@ const RequestList: React.FC<RequestListModalProps> = ({
     (relation) => relation.status === "pending"
   );
 
+  const totalPages = Math.ceil(pendingRelations.length / itemsPerPage);
+  const paginatedRelations = pendingRelations.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const handlePrevious = () => {
+    if (currentPage > 1) setCurrentPage((prev) => prev - 1);
+  };
+
+  const handleNext = () => {
+    if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="relative bg-white rounded-lg p-6 w-250 max-w-xl outline outline-white outline-2 outline-offset-2">
-        <button
-          onClick={onClose}
-          className="absolute top-0 right-0 text-black text-lg p-2 m-2 hover:text-gray-900"
-        >
-          &#x2715;
-        </button>
-        <h2 className="text-3xl font-extrabold text-center text-[#5E9ED9] mb-4">
-          List of Patient Requests
-        </h2>
-        {therapistId ? (
-          <>
-            <h1 className="text-center">Therapist ID: {therapistId}</h1>
-            {isLoading ? (
-              <p className="text-center text-gray-500">Loading requests...</p>
-            ) : pendingRelations.length > 0 ? (
-              <div className="flex flex-row items-center justify-between gap-4">
-                <ul className="mt-4">
-                  {pendingRelations.map((relation) => (
-                    <div className="flex flex-row items-baseline justify-between gap-4">
-                      <li
-                        key={relation.id}
-                        className="flex grow w-40 text-center text-gray-700"
-                      >
-                        <strong>
-                          {relation.student_first_name}{" "}
-                          {relation.student_last_name}
-                        </strong>
-                      </li>
-                      <button
-                        onClick={() => {
-                          approveSwitch(relation.student_id);
-                          onClose();
-                        }}
-                        className="mt-4 w-40 bg-green-500 text-white py-2 rounded hover:bg-green-500"
-                      >
-                        <div className="flex justify-center items-center space-x-2 p-1">
-                          <div className="font-bold">Accept</div>
-                          <FaCheck className="mt-0.5" />
-                        </div>
-                      </button>
-                      <button
-                        onClick={() => {
-                          rejectSwitch(relation.student_id);
-                          onClose();
-                        }}
-                        className="mt-4 w-40 bg-red-500 text-white py-2 rounded hover:bg-red-500"
-                      >
-                        <div className="flex justify-center items-center space-x-2 p-1">
-                          <div className="font-bold">Reject</div>
-                          <FaX className="mt-0.5" />
-                        </div>
-                      </button>
-                    </div>
-                  ))}
-                </ul>
-              </div>
-            ) : (
-              <p className="text-center text-gray-500">
-                No pending patient requests found.
-              </p>
-            )}
-          </>
-        ) : (
-          <h1 className="text-center text-gray-500">No ID yet</h1>
-        )}
-        <div className="flex justify-center">
+    <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
+      <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-xl">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl text-[#5E9ED9] font-bold">List of Requests</h2>
           <button
-            className="mt-6 bg-[#5E9ED9] text-white px-4 py-2 rounded hover:bg-[#4a8ac9]"
+            className="text-black px-2 rounded hover:text-gray-900"
             onClick={onClose}
           >
-            Close
+            X
+          </button>
+        </div>
+
+        <div className="h-[450px] overflow-y-auto">
+          {therapistId ? (
+            <>
+              {isLoading ? (
+                <p className="text-center text-gray-500">Loading requests...</p>
+              ) : paginatedRelations.length > 0 ? (
+                <div>
+                  {paginatedRelations.map((relation) => (
+                    <div
+                      key={relation.id}
+                      className="flex justify-between items-center bg-gray-100 rounded-lg p-4 mb-4 shadow-sm"
+                    >
+                      <span className="text-lg font-medium text-gray-700">
+                        {relation.student_first_name} {relation.student_last_name}
+                      </span>
+
+                      <div className="flex space-x-3">
+                        <button
+                          onClick={() => {
+                            approveSwitch(relation.student_id);
+                            onClose();
+                          }}
+                          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 flex items-center space-x-2"
+                        >
+                          <FaCheck className="inline" />
+                          <span>Accept</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            rejectSwitch(relation.student_id);
+                            onClose();
+                          }}
+                          className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 flex items-center space-x-2"
+                        >
+                          <FaX className="inline" />
+                          <span>Reject</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-center text-gray-500">
+                  No pending patient requests found.
+                </p>
+              )}
+            </>
+          ) : (
+            <h1 className="text-center text-gray-500">No ID yet</h1>
+          )}
+        </div>
+
+        {/* Pagination */}
+        <div className="flex justify-between items-center mt-4">
+          <button
+            className={`px-4 py-2 rounded ${
+              currentPage === 1
+                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                : "bg-[#5E9ED9] text-white hover:bg-[#538bc0]"
+            }`}
+            onClick={handlePrevious}
+            disabled={currentPage === 1}
+          >
+            Previous
+          </button>
+          <span className="text-gray-600">
+            Page {currentPage} of {totalPages || 1}
+          </span>
+          <button
+            className={`px-4 py-2 rounded ${
+              currentPage === totalPages || totalPages === 0
+                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                : "bg-[#5E9ED9] text-white hover:bg-[#538bc0]"
+            }`}
+            onClick={handleNext}
+            disabled={currentPage === totalPages || totalPages === 0}
+          >
+            Next
           </button>
         </div>
       </div>
