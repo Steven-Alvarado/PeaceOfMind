@@ -16,11 +16,8 @@ const surveyRoutes = require("./survey");
 const journalRoutes = require("./journal");
 const documentRoutes = require("./documents");
 const relationshipRoutes = require("./relationships");
-
 const invoiceRoutes = require("./invoices");
-
 const accountSettingsRoutes = require("./accountSettings");
-
 const profilePictureRoutes = require("./profilePicture"); 
 
 // Mount routes on `/api`
@@ -37,7 +34,7 @@ router.use("/documents", documentRoutes);
 router.use("/relationships", relationshipRoutes);
 router.use("/invoices", invoiceRoutes);
 router.use("/accountSettings", accountSettingsRoutes );
-
+router.use("/profilePicture", profilePictureRoutes);
 
  
 
