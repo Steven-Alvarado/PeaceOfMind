@@ -5,12 +5,9 @@ import { useAuth } from "../../hooks/useAuth";
 
 import { FaBars, FaTimes } from "react-icons/fa";
 import { IoMdSettings } from "react-icons/io";
-import { IoMdSettings } from "react-icons/io";
-
 import { MdOutlineLogout } from "react-icons/md";
 
 import Logo from "../../assets/images/logobetter.png";
-import { useAuth } from "../../hooks/useAuth";
 
 
 const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
@@ -22,9 +19,8 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
   const [confirmPassword, setConfirmPassword] = useState('');
   const [monthlyRate, setMonthlyRate] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
-  const [therapistId, setTherapistId] = useState(null);
-  const { user } = useAuth();  // Get user data from useAuth hook
-
+  const { user } = useAuth(); 
+  
   useEffect(() => {
     if (isOpen && user?.id) {
       fetchTherapistDetails();
@@ -62,7 +58,57 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
       setErrorMessage(error.message || "Error fetching therapist details.");
     }
   };
-
+  const handleDeleteAccount = async () => {
+    console.log("Delete account button clicked");
+  
+    // Check if user contains necessary data
+    console.log("User data:", user);
+  
+    if (!user?.id) {
+      setErrorMessage("User ID is not available.");
+      return;
+    }
+  
+    const userId = user.id;  // The logged-in user's ID (from the 'auth' table)
+  
+    // Fetch therapist data using the user ID
+    try {
+      const therapistResponse = await fetch(`/api/therapists/find/${userId}`);
+      const therapistData = await therapistResponse.json();
+  
+      if (!therapistData?.therapist?.id) {
+        setErrorMessage("Therapist not found.");
+        return;
+      }
+  
+      const therapistId = therapistData.therapist.id; // This is the therapist_id we need (12 in your example)
+  
+      const confirmDelete = window.confirm("Are you sure you want to delete this account? This action is irreversible.");
+      if (!confirmDelete) return;
+  
+      // Proceed with deleting the account using both therapistId and userId
+      const response = await fetch(`/api/accountSettings/therapists/${therapistId}/user/${userId}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem("jwt")}`,
+          "Content-Type": "application/json",
+        },
+      });
+  
+      const data = await response.json();
+  
+      if (response.ok) {
+        alert("Account deleted successfully.");
+        window.location.href = "/"; // Or wherever you want to redirect
+      } else {
+        setErrorMessage(data.error || "Failed to delete account.");
+      }
+    } catch (error) {
+      console.error("Error fetching therapist data or deleting account:", error);
+      setErrorMessage("An error occurred while deleting the account.");
+    }
+  };
+  
   const handleUpdate = async () => {
     if (newPassword !== confirmPassword) {
       setErrorMessage("Passwords do not match.");
@@ -98,93 +144,12 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
       setErrorMessage(error.message || "Error updating therapist details.");
     }
   };
-  const handleDeleteAccount = async () => {
-    if (!user?.id) {
-      setErrorMessage("User ID is not available.");
-      return;
-    }
-  
-    const fetchTherapistId = async () => {
-      if (!user?.id) {
-        setErrorMessage("User ID is not available.");
-        return null; // Return null if there's no user ID
-      }
-  
-      try {
-        const response = await fetch(`/api/therapists/find/${user.id}`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("jwt")}`,
-            "Content-Type": "application/json",
-          },
-        });
-  
-        if (!response.ok) {
-          const errorText = await response.text(); // Read as text to understand error response
-          setErrorMessage(errorText || "Failed to fetch therapist ID.");
-          return null;
-        }
-  
-        const data = await response.json();
-        console.log("Therapist ID Response:", data);
-  
-        if (data.therapist?.id) {
-          return data.therapist.id; // Return the therapist ID
-        } else {
-          setErrorMessage("Therapist ID is not available in the response.");
-          return null;
-        }
-      } catch (error) {
-        console.error("Error fetching therapist ID:", error);
-        setErrorMessage(error.message || "Error fetching therapist ID.");
-        return null;
-      }
-    };
-  
-    // Proceed with deleting the therapist
-    const therapistId = await fetchTherapistId();
-  
-    if (!therapistId) {
-      return; // If no therapist ID is found, exit the function
-    }
-  
-    if (window.confirm("Are you sure you want to delete your account?")) {
-      try {
-        const response = await fetch(`/api/accountSettings/therapist/delete/${therapistId}`, {
-          method: "DELETE", // Use DELETE for account deletion
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("jwt")}`,
-            "Content-Type": "application/json",
-          },
-        });
-  
-        const data = await response.json(); // Parse the response JSON
-  
-        if (!response.ok) {
-          // Handle error: check for error messages like unpaid invoices or active relationships
-          console.error("Error response:", data); // Log error response for debugging
-          setErrorMessage(data.error || "Failed to delete account.");
-          return;
-        }
-  
-        // If the deletion was successful
-        alert("Account deleted successfully.");
-        onClose(); // Close the modal after successful deletion
-      } catch (error) {
-        console.error("Error deleting account:", error);
-        setErrorMessage(error.message || "Error deleting account.");
-      }
-    }
-  };
-  
-  
-  
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-lg outline outline-white outline-2 outline-offset-2">
-        <h2 className="text-3xl font-extrabold text-center text-[#5E9ED9] mb-4">Therapist Settings</h2>
+        <h2 className="text-3xl font-extrabold text-center text-[#5E9ED9] mb-4">Settings</h2>
 
         {/* First Name and Last Name on the same line */}
         <div className="flex space-x-4">
@@ -230,13 +195,13 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
             <input
               id="experienceYears"
               type="number"
-              min="0"
+              min="0" // Prevent negative values
               className="w-full p-2 border border-gray-300 rounded text-black"
               value={experienceYears}
               onChange={(e) => setExperienceYears(e.target.value)}
               placeholder="Enter years of experience"
-            />
-          </div>
+          />
+        </div>
         </div>
 
         {/* New Password and Confirm Password */}
@@ -267,45 +232,72 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
 
         {/* Monthly Rate */}
         <div className="mt-4">
-          <label htmlFor="monthlyRate" className="block text-gray-700 font-bold mb-2">Monthly Rate</label>
-          <input
-            id="monthlyRate"
-            type="number"
-            min="0"
-            className="w-full p-2 border border-gray-300 rounded text-black"
-            value={monthlyRate}
-            onChange={(e) => setMonthlyRate(e.target.value)}
-            placeholder="Enter your monthly rate"
-          />
-        </div>
-
-        {/* Error Message */}
-        {errorMessage && (
-          <div className="text-red-500 text-center mt-4">
-            <p>{errorMessage}</p>
+        <label htmlFor="monthlyRate" className="block text-gray-700 font-bold mb-2">Monthly Rate</label>
+        <input
+          id="monthlyRate"
+          type="number"
+          min="0" // Prevent negative values
+          className="w-full p-2 border border-gray-300 rounded text-black"
+          value={monthlyRate}
+          onChange={(e) => setMonthlyRate(e.target.value)}
+          placeholder="Enter your monthly rate"
+        />
           </div>
-        )}
 
-        <div className="flex justify-between mt-4">
-          <button onClick={onClose} className="bg-gray-300 p-2 rounded-md hover:bg-gray-400">
+        {/* Update, Delete Account, and Close buttons in the same row */}
+        <div className="mt-6 flex justify-between">
+          <button
+            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-400"
+            onClick={handleDeleteAccount}
+          >
+            Delete Account
+          </button>
+
+          <button
+            className="bg-[#5E9ED9] text-white px-4 py-2 rounded hover:bg-[#4a8ac9]"
+            onClick={handleUpdate}
+          >
+            Update
+          </button>
+
+          <button
+            className="bg-[#5E9ED9] text-white px-4 py-2 rounded hover:bg-[#4a8ac9]"
+            onClick={onClose}
+          >
             Close
           </button>
-          <div className="flex space-x-4">
-            <button onClick={handleDeleteAccount} className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600">
-              Delete Account
-            </button>
-            <button onClick={handleUpdate} className="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600">
-              Save Changes
-            </button>
-          </div>
         </div>
       </div>
     </div>
   );
 };
 
+const LogoutConfirmationModal = ({ isOpen, onConfirm, onCancel }: { isOpen: boolean; onConfirm: () => void; onCancel: () => void }) => {
+  if (!isOpen) return null;
 
-
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+      <div className="bg-white rounded-lg p-6 w-full max-w-md">
+        <h2 className="text-lg font-bold text-center text-black mb-4">Confirm Logout</h2>
+        <p className="text-center text-black mb-6">Are you sure you want to log out?</p>
+        <div className="flex justify-between">
+          <button
+            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+            onClick={onConfirm}
+          >
+            Yes, Log Out
+          </button>
+          <button
+            className="bg-gray-300 text-black px-4 py-2 rounded hover:bg-gray-400"
+            onClick={onCancel}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const HeaderTherapistDashboard = () => {
   const [isOpen, setIsOpen] = useState(false);

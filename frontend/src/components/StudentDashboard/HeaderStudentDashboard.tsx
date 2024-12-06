@@ -115,7 +115,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
       setDeleteErrorMessage("User ID is not available.");
       return;
     }
-
+  
     try {
       const response = await fetch(`/api/accountSettings/students/${user.id}`, {
         method: "DELETE",
@@ -124,11 +124,13 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
           "Content-Type": "application/json",
         },
       });
-
+  
       if (response.ok) {
         setSuccessMessage("Your account has been deleted successfully.");
         setDeleteErrorMessage(""); // Clear the delete error message if successful
-        onClose(); // Close the modal after deletion
+  
+        // Redirect to the home page after account deletion
+        window.location.href = "/"; // Change "/" to your desired redirection path if needed
       } else {
         const data = await response.json();
         setDeleteErrorMessage(data.error || "Failed to delete account.");
@@ -138,7 +140,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
       setDeleteErrorMessage(error.message || "Failed to delete account.");
     }
   };
-
+  
   const handleClose = () => {
     onClose(); // Close the modal
     // Reset error messages and success state when modal is closed
