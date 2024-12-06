@@ -113,75 +113,83 @@ const TherapistModal: React.FC<TherapistModalProps> = ({
   return (
     isOpen && (
       <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
-        <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-3xl">
-          <h2 className="text-2xl font-bold text-blue-600 mb-4">
-            Available Therapists
-          </h2>
-          {therapists.length === 0 ? (
-            <p className="text-center text-gray-500">
-              No therapists available at the moment.
-            </p>
-          ) : (
-            <ul className="space-y-4">
-              {currentTherapists.map((therapist) => (
-                <li
-                  key={therapist.id}
-                  className="flex items-center justify-between bg-blue-50 p-4 rounded-lg shadow-sm"
-                >
-                  <div className="flex items-center space-x-4">
-                    <ProfilePicture
-                      userRole="therapist"
-                      therapistId={therapist.id}
-                      className="rounded-full shadow-md"
-                      style={{ width: "60px", height: "60px" }}
-                    />
-                    <div>
-                      <p className="font-bold text-gray-800">{`${therapist.first_name} ${therapist.last_name}`}</p>
-                      <p className="text-sm text-gray-500">{`Specialization: ${therapist.specialization}`}</p>
-                      <p className="text-sm text-gray-500">{`Experience: ${therapist.experience_years} years`}</p>
-                      <p className="text-sm text-gray-500">{`Rate: $${therapist.monthly_rate}/month`}</p>
+        <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-4xl">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl text-[#5E9ED9] font-bold">Available Therapists</h2>
+            <button
+              className="text-black px-2 rounded hover:text-gray-900"
+              onClick={onClose}
+            >
+              X
+            </button>
+          </div>
+          <div className="h-[520px] overflow-y-auto">
+            {therapists.length === 0 ? (
+              <p className="text-center text-gray-500">
+                No therapists available at the moment.
+              </p>
+            ) : (
+              <ul className="space-y-4">
+                {currentTherapists.map((therapist) => (
+                  <li
+                    key={therapist.id}
+                    className="flex items-center justify-between bg-blue-50 p-4 rounded-lg shadow-sm"
+                  >
+                    <div className="flex items-center space-x-4">
+                      <ProfilePicture
+                        userRole="therapist"
+                        therapistId={therapist.id}
+                        className="rounded-full shadow-md"
+                        style={{ width: "60px", height: "60px" }}
+                      />
+                      <div>
+                        <p className="font-bold text-gray-800">{`${therapist.first_name} ${therapist.last_name}`}</p>
+                        <p className="text-sm text-gray-500">{`Specialization: ${therapist.specialization}`}</p>
+                        <p className="text-sm text-gray-500">{`Experience: ${therapist.experience_years} years`}</p>
+                        <p className="text-sm text-gray-500">{`Rate: $${therapist.monthly_rate}/month`}</p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex flex-col items-end space-y-2">
-                    {requestStatus(therapist.id)}
-                    {relations.current_therapist_id != null ? (
-                      <button
-                        disabled={checkPending()}
-                        onClick={() => {
-                          switchTherapist(user.id, therapist.id);
-                          sentConfirm();
-                          onClose();
-                        }}
-                        className="bg-blue-600 text-white py-2 px-4 rounded-lg shadow hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                      >
-                        Switch Therapist
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => {
-                          requestTherapist(user.id, therapist.id);
-                          sentConfirm();
-                          onClose();
-                        }}
-                        className="bg-green-600 text-white py-2 px-4 rounded-lg shadow hover:bg-green-700"
-                      >
-                        Request Therapist
-                      </button>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-          <div className="flex justify-between items-center mt-6">
+                    <div className="flex flex-col items-end space-y-2">
+                      {requestStatus(therapist.id)}
+                      {relations.current_therapist_id != null ? (
+                        <button
+                          disabled={checkPending()}
+                          onClick={() => {
+                            switchTherapist(user.id, therapist.id);
+                            sentConfirm();
+                            onClose();
+                          }}
+                          className="bg-[#5E9ED9] text-white py-2 px-4 rounded-lg shadow hover:bg-[#5996cf] disabled:bg-gray-300 disabled:cursor-not-allowed"
+                        >
+                          Switch Therapist
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            requestTherapist(user.id, therapist.id);
+                            sentConfirm();
+                            onClose();
+                          }}
+                          className="bg-green-600 text-white py-2 px-4 rounded-lg shadow hover:bg-green-700"
+                        >
+                          Request Therapist
+                        </button>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <div className="flex justify-center items-center space-x-4 mt-6">
             <button
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
-              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 disabled:bg-gray-100"
+              className="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg w-32 hover:bg-gray-400 disabled:bg-gray-100"
             >
               Previous
             </button>
-            <span className="text-sm text-gray-500">
+            <span className="text-sm text-black">
               Page {currentPage} of {Math.ceil(therapists.length / itemsPerPage)}
             </span>
             <button
@@ -193,20 +201,12 @@ const TherapistModal: React.FC<TherapistModalProps> = ({
                   )
                 )
               }
-              disabled={
-                currentPage === Math.ceil(therapists.length / itemsPerPage)
-              }
-              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 disabled:bg-gray-100"
+              disabled={currentPage === Math.ceil(therapists.length / itemsPerPage)}
+              className="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg w-32 hover:bg-gray-400 disabled:bg-gray-100"
             >
               Next
             </button>
           </div>
-          <button
-            onClick={onClose}
-            className="mt-4 w-full bg-red-600 text-white py-2 rounded-lg hover:bg-red-700"
-          >
-            Close
-          </button>
         </div>
       </div>
     )
