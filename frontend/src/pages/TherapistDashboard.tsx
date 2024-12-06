@@ -25,14 +25,15 @@ const TherapistDashboard: React.FC = () => {
 
   const toggleAvailability = async () => {
     try {
-        const response = await axios.put(`/api/therapists/${therapistId.id}/availability`, {
-            availability: !isAvailable,
-        });
-        setIsAvailable(response.data.availability);
+      if (!therapistId) return; 
+  
+      const response = await axios.put(`/api/therapists/toggleAvailability/${therapistId.id}`);
+      
+      setIsAvailable(response.data.therapist.availability);
     } catch (error) {
-        console.error("Failed to toggle availability:", error);
+      console.error("Failed to toggle availability:", error);
     }
-};
+  };
 
   const handleRefresh = () => {
     setRefresh((prev) => !prev);
@@ -44,8 +45,10 @@ const TherapistDashboard: React.FC = () => {
       if (!user) return;
       try {
         const response = await axios.get(`/api/therapists/find/${user.id}`);
-        console.log("Therapist ID Response:", response.data); // Debugging
+        // console.log("Therapist ID Response:", response.data); // Debugging
+
         setTherapistId(response.data.therapist);
+        setIsAvailable(response.data.therapist.availability);
       } catch (error) {
         console.error("Error making GET request:", error);
       }
@@ -57,18 +60,18 @@ const TherapistDashboard: React.FC = () => {
   return (
     <div className="therapist-dashboard flex flex-col min-h-screen">
       <HeaderTherapistDashboard />
-      <header className="bg-blue-100 p-3">
+      <header className="bg-blue-100  mt-5 p-3">
         <h1 className="text-4xl font-bold text-center text-[#5E9ED9]">
           Welcome, {user?.first_name} {user?.last_name}!
         </h1>
-        <h2>
+        {/* <h2>
           Therapist ID:{" "}
           {therapistId != null ? (
             <span>{therapistId.id}</span>
           ) : (
             <span>Getting Id...</span>
           )}
-        </h2>
+        </h2> */}
       </header>
       <div className="flex-grow grid grid-cols-1 md:grid-cols-3 px-6 py-10">
         {/* Patients Section */}
@@ -78,12 +81,12 @@ const TherapistDashboard: React.FC = () => {
             refresh={refresh}
           />
         </div>
-        <div className="col-span-1 bg-blue-100 rounded-lg shadow-lg p-6 border-2 border-[#5E9ED9]">
-          <h2 className="text-4xl text-center font-bold text-[#5E9ED9]">
+        <div className="col-span-1 bg-blue-100 rounded-lg shadow-lg p-6 border-2 mt-7 mb-6 border-[#5E9ED9]">
+          <h2 className="text-4xl text-center mt-10 font-bold text-[#5E9ED9]">
             Menu
           </h2>
-          <div className="space-y-4 mt-4">
-            <div className="flex justify-center md:mt-7 md:mb-20">
+          <div className="">
+            <div className="flex justify-center md:mt-7 md:mb-10">
               <button
                 className="bg-[#5E9ED9] text-white px-4 py-1 rounded-2xl hover:bg-[#4a8ac9] text-sm"
                 onClick={() => setIsHelpOpen(true)}
@@ -92,28 +95,33 @@ const TherapistDashboard: React.FC = () => {
               </button>
             </div>
             <div className="flex justify-center">              
-              <div className="text-center p-2 text-[#5E9ED9] rounded-2xl w-2/3"> Set your availability for Patient Requests.</div>
+              <div className="text-center p-2 text-[#5E9ED9] text-xl font-bold rounded-2xl "> Set your availability for Patient Requests.</div>
             </div>
             <div className="flex items-center justify-center space-x-2 border-[#5E9ED9] border-2 rounded-2xl">
               <span className=" p-2 rounded-3xl text-[#5E9ED9] font-bold">Not Available</span>
-              <Switch className="" checked={isAvailable} onChange={toggleAvailability} />
+              <Switch
+                checked={isAvailable || false}
+                onChange={toggleAvailability}
+              />
               <span className=" p-2 rounded-3xl text-[#5E9ED9] font-bold">Available</span>
             </div>
-            <button
-              className="w-full bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center"
-              onClick={() => setIsRequestOpen(true)}
-            >
-              <FaUserPlus className="mr-3" /> View New Patient Requests
-            </button>
-            <button className="w-full bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center">
-              <FaTasks className="mr-3" /> Manage Scheduling
-            </button>
-            <button 
-              className="w-full bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center"
-              onClick={() => setIsInvoicingOpen(true)}
-            >
-              <FaFileInvoice className="mr-3" /> Invoices
-            </button>
+            <div className="space-y-7 mt-16">
+              <button
+                className="w-full bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center"
+                onClick={() => setIsRequestOpen(true)}
+              >
+                <FaUserPlus className="mr-3" /> View New Patient Requests
+              </button>
+              <button className="w-full bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center">
+                <FaTasks className="mr-3" /> Manage Scheduling
+              </button>
+              <button 
+                className="w-full bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center"
+                onClick={() => setIsInvoicingOpen(true)}
+              >
+                <FaFileInvoice className="mr-3" /> Invoices
+              </button>
+            </div>
           </div>
         </div>
       </div>

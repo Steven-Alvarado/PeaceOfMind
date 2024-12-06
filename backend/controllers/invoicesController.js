@@ -24,20 +24,21 @@ const {
     const { id: studentId } = req.params;
   
     // Validate student ID
-    if (!studentId) {
-      return res.status(400).json({ error: "Student ID is required" });
+    if (!studentId || isNaN(Number(studentId))) {
+      return res.status(400).json({ error: "Valid Student ID is required" });
     }
   
     try {
       const invoices = await getInvoicesByStudentId(studentId);
-      
+  
+      // Return empty array if no invoices are found
       if (invoices.length === 0) {
-        return res.status(404).json({ message: "No invoices found for this student" });
+        return res.status(200).json({ invoices: [], message: "No invoices found for this student" });
       }
-      
+  
       res.status(200).json({ invoices });
     } catch (error) {
-      console.error("Error retrieving student invoices:", error);
+      console.error(`Error retrieving invoices for student ID ${studentId}:`, error);
       res.status(500).json({ error: "Failed to retrieve student invoices" });
     }
   };

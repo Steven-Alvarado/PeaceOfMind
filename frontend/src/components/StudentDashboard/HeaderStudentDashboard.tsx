@@ -128,18 +128,18 @@ const LogoutConfirmationModal = ({ isOpen, onConfirm, onCancel }: { isOpen: bool
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md">
+      <div className="bg-white rounded-lg p-6 max-w-md">
         <h2 className="text-lg font-bold text-center text-black mb-4">Confirm Logout</h2>
         <p className="text-center text-black mb-6">Are you sure you want to log out?</p>
-        <div className="flex justify-between">
+        <div className="flex justify-center space-x-3">
           <button
             className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
             onClick={onConfirm}
           >
-            Yes, Log Out
+            Log Out
           </button>
           <button
-            className="bg-gray-300 text-black px-4 py-2 rounded hover:bg-gray-400"
+            className="bg-[#5E9ED9] text-white px-4 py-2 rounded hover:bg-[#73a3d0]"
             onClick={onCancel}
           >
             Cancel
