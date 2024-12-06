@@ -113,6 +113,17 @@ const findTherapistByUserId = async (userId) => {
   }
 };
 
+const toggleTherapistAvailability = async (therapistId) => {
+  const query = 
+    `UPDATE therapists
+    SET availability = NOT availability, updated_at = NOW()
+    WHERE id = $1
+    RETURNING *;`
+  ;
+
+  const result = await pool.query(query, [therapistId]);
+  return result.rows[0]; // Return the updated row
+};
 
 
 module.exports = {
@@ -120,5 +131,7 @@ module.exports = {
     getAvailableTherapists,
     isLicenseVerified,
     findTherapistByUserId,
-    findTherapistIdById
+    findTherapistIdById,
+    toggleTherapistAvailability,
+    updateTherapistAvailability
 };

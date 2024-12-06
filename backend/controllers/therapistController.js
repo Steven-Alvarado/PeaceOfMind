@@ -227,4 +227,4 @@ const getTherapistDetailsByUserId = async (req, res) => {
   }
 };
 
-module.exports = { registerTherapist, getTherapistDetails, listAvailableTherapists, getTherapistId, getTherapistDetailsByUserId};
+module.exports = { registerTherapist, getTherapistDetails, listAvailableTherapists, getTherapistId, getTherapistDetailsByUserId,updateAvailability, toggleAvailability};
