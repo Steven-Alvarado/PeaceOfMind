@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from "react";
+
 import { FaDiscourse } from "react-icons/fa6";
+import { FaStar } from "react-icons/fa";
+
 import { useAuth } from "../../hooks/useAuth";
 import axios from "axios";
 
@@ -8,6 +11,7 @@ interface ReviewModalProps {
   therapistId: number;
   sentReview: () => void;
   onClose: () => void;
+  therapistName: string;
 }
 
 const ReviewModal: React.FC<ReviewModalProps> = ({
@@ -17,8 +21,9 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
   onClose,
 }) => {
   const { user, fetchUser } = useAuth();
-  const [reviewText, setReviewText] = useState(""); // State to hold the typed text
-  const [rating, setRating] = useState(1); // State to hold the selected rating
+  const [reviewText, setReviewText] = useState("");
+  const [rating, setRating] = useState(1);
+  
 
   useEffect(() => {
     const initializeUser = async () => {
@@ -57,61 +62,70 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
     sentReview();
   };
 
+  const handleStarClick = (value: number) => {
+    setRating(value);
+  };
+
   return (
     isOpen && (
       <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
-        <div className="flex flex-col items-center bg-white rounded-lg shadow-lg p-6 w-full max-w-lg">
-          <h2 className="text-2xl font-bold mb-4">Review Assigned Therapist</h2>
+        <div className="flex flex-col bg-white rounded-lg shadow-lg p-6 w-full max-w-lg">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl text-[#5E9ED9] font-bold">Review Your Therapist</h2>
+            <button
+              className="text-black px-2 rounded hover:text-gray-900"
+              onClick={onClose}
+            >
+              X
+            </button>
+          </div>
           {user ? (
-            <div className="flex flex-col items-center w-full">
-              <h1 className="mb-4 text-lg">
-                Use this space to submit a review
-              </h1>
-              <div className="flex items-center w-full mb-4">
+            <div className="">
+              <div className="flex items-center space-x-2">
+                <p className="text-lg mr-2">Rating:</p>
+                <div className="flex space-x-1">
+                  {[1, 2, 3, 4, 5].map((value) => (
+                    <FaStar
+                      key={value}
+                      className={`text-3xl cursor-pointer ${
+                        value <= rating ? "text-yellow-500" : "text-gray-300"
+                      }`}
+                      onClick={() => handleStarClick(value)}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <p className="mt-5 text-lg">Review:</p>
                 <textarea
                   value={reviewText}
                   onChange={(e) => setReviewText(e.target.value)}
-                  className="flex-grow p-2 border border-gray-300 rounded"
+                  className="flex-grow p-2 border w-full border-[#5E9ED9] rounded"
                   placeholder="Type your review here..."
                   rows={5}
                 />
-                <select
-                  value={rating}
-                  onChange={(e) => setRating(Number(e.target.value))}
-                  className="ml-4 p-2 border border-gray-300 rounded bg-white"
-                >
-                  {[1, 2, 3, 4, 5].map((value) => (
-                    <option key={value} value={value}>
-                      {value}
-                    </option>
-                  ))}
-                </select>
               </div>
-              <button
-                onClick={() => {
-                  submitReview(user.id, therapistId, rating, reviewText);
-                  confirmReview();
-                  onClose();
-                }}
-                className="mt-4 w-40 bg-green-500 text-white py-2 rounded hover:bg-green-600"
-              >
-                <div className="flex justify-center items-center space-x-2 p-1">
-                  <div className="font-bold">Submit Review</div>
-                  <FaDiscourse className="mt-0.5" />
-                </div>
-              </button>
+
+              <div className="justify-center flex">
+                <button
+                  onClick={() => {
+                    submitReview(user.id, therapistId, rating, reviewText);
+                    confirmReview();
+                    onClose();
+                  }}
+                  className="mt-4 w-40 bg-green-500 text-white py-2 rounded hover:bg-green-600"
+                >
+                  <div className="flex justify-center items-center space-x-2 p-1">
+                    <div className="font-bold">Submit Review</div>
+                    <FaDiscourse className="mt-0.5" />
+                  </div>
+                </button>
+              </div>
             </div>
           ) : (
             <span>Loading review space...</span>
           )}
-          <button
-            onClick={() => {
-              onClose();
-            }}
-            className="mt-20 w-40 bg-blue-600 text-white py-2 rounded hover:bg-blue-500"
-          >
-            Close
-          </button>
         </div>
       </div>
     )
