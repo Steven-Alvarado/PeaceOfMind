@@ -1,19 +1,30 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import HeaderTherapistDashboard from "../components/HeaderTherapistDashboard";
-import Footer from "../components/Footer";
-import PatientSection from "../components/TherapistDashboard/PatientSection";
-import SchedulingForTherapists from "../components/TherapistDashboard/SchedulingForTherapists";
-import { FaUserPlus, FaTasks, FaFileInvoice } from "react-icons/fa";
-import Switch from "@mui/material/Switch";
+import { MessageCircle, FileText, X } from "lucide-react";
+import MessagingInterface from "../Messaging/MessagingInterface";
+import JournalAnalyticsModal from "../StudentDashboard/JournalAnalyticsModal";
+import ProfilePicture from "../ProfilePicture"; // Import the ProfilePicture component
 
-const TherapistDashboard: React.FC = () => {
-  const [isSchedulingModalOpen, setIsSchedulingModalOpen] = useState(false);
-  const [isAvailable, setIsAvailable] = useState<boolean | undefined>(undefined);
-  const [therapistId, setTherapistId] = useState(null);
-  const [refresh, setRefresh] = useState(false);
+interface PatientListComponentProps {
+  therapistId: number;
+  refresh: boolean;
+}
 
-  const toggleAvailability = async () => {
+const PatientSection: React.FC<PatientListComponentProps> = ({
+  therapistId,
+  refresh,
+}) => {
+  const [currPatients, setCurrPatients] = useState([]);
+  const [patientDetails, setPatientDetails] = useState<Record<number, any>>({});
+  const [selectedPatient, setSelectedPatient] = useState<any | null>(null);
+  const [patientFilter, setPatientFilter] = useState<string>("");
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const patientsPerPage = 4;
+
+  useEffect(() => {
     const fetchPatients = async () => {
       if (!therapistId) return;
 
@@ -25,7 +36,7 @@ const TherapistDashboard: React.FC = () => {
         const relationships = response.data.relationships || [];
         setCurrPatients(relationships);
 
-        // Fetch user details for each student
+        // Fetch user details for each patient
         const detailRequests = relationships.map((relation: any) =>
           axios.get(`/api/users/${relation.student_id}`)
         );
@@ -59,7 +70,7 @@ const TherapistDashboard: React.FC = () => {
 
   const handleViewDetails = (patient: any) => {
     setSelectedPatient(patient);
-    setIsAnalyticsOpen(true); // Open the analytics modal
+    setIsAnalyticsOpen(true);
   };
 
   const handleChat = (patient: any) => {
@@ -82,7 +93,7 @@ const TherapistDashboard: React.FC = () => {
 
   return (
     <div className="flex w-full h-full p-6 space-x-4">
-      <div className="flex flex-col w-full bg-blue-100 shadow-md rounded-lg mt-1  p-6">
+      <div className="flex flex-col w-full bg-blue-100 shadow-md rounded-2xl mt-1 border-2 border-[#5E9ED9] p-6">
         <h2 className="text-3xl font-semibold text-center text-[#5E9ED9] mb-6">
           My Patients
         </h2>
@@ -104,12 +115,14 @@ const TherapistDashboard: React.FC = () => {
                 className="flex items-center justify-between p-4 rounded-lg shadow-sm bg-white hover:bg-gray-100 transition"
               >
                 <div className="flex items-center gap-4">
+                  {/* Profile Picture */}
                   <ProfilePicture
                     userRole="student"
                     userId={patient.student_id}
                     className="w-12 h-12 rounded-full border border-gray-300"
                   />
                   <div>
+                    {/* Name and Email */}
                     <h3 className="text-lg font-semibold text-gray-800">
                       {patient.student_first_name} {patient.student_last_name}
                     </h3>
@@ -127,13 +140,15 @@ const TherapistDashboard: React.FC = () => {
                   </div>
                 </div>
                 <div className="flex space-x-2">
+                  {/* View Details Button */}
                   <button
                     className="flex items-center gap-2 px-4 py-2 bg-[#5E9ED9] text-white rounded-lg hover:bg-[#4b8bc4] transition"
                     onClick={() => handleViewDetails(patient)}
                   >
                     <FileText className="w-5 h-5" />
-                    View Analytics
+                    View Details
                   </button>
+                  {/* Chat Button */}
                   <button
                     className="flex items-center gap-2 px-4 py-2 bg-[#5E9ED9] text-white rounded-lg hover:bg-[#4b8bc4] transition"
                     onClick={() => handleChat(patient)}
@@ -184,18 +199,34 @@ const TherapistDashboard: React.FC = () => {
         <JournalAnalyticsModal
           isOpen={isAnalyticsOpen}
           onClose={() => setIsAnalyticsOpen(false)}
-          user={patientDetails[selectedPatient.student_id]} 
+          user={{
+            id: selectedPatient.student_id,
+            name: `${selectedPatient.student_first_name} ${selectedPatient.student_last_name}`,
+          }}
         />
       )}
 
       {/* Chat Modal */}
       {selectedPatient && isChatOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <MessagingInterface
-            userId={therapistId}
-            userRole="therapist"
-            onClose={() => setIsChatOpen(false)}
-          />
+          <div className="relative bg-white rounded-lg p-8 max-w-3xl w-full shadow-lg">
+            <button
+              onClick={() => setIsChatOpen(false)}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 focus:outline-none"
+              aria-label="Close"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            <h3 className="text-2xl font-semibold text-center text-[#5E9ED9] mb-4">
+              Chat with {selectedPatient.student_first_name}{" "}
+              {selectedPatient.student_last_name}
+            </h3>
+            <MessagingInterface
+              userId={therapistId}
+              userRole="therapist"
+              onClose={() => setIsChatOpen(false)}
+            />
+          </div>
         </div>
       )}
     </div>

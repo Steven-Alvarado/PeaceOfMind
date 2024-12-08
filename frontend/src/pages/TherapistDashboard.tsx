@@ -67,7 +67,7 @@ const TherapistDashboard: React.FC = () => {
             refresh={refresh}
           />
         </div>
-        <div className="col-span-1 backdrop-blur-lg bg-blue-100 shadow-lg rounded-2xl p-8 border border-white/20 mt-7 mb-6">
+        <div className="col-span-1 backdrop-blur-lg bg-blue-100 shadow-lg rounded-2xl p-8 border-2 border-[#5E9ED9] mt-7 mb-6">
   {/* Header */}
   <header className="flex justify-between items-center mb-6">
     <h2 className="text-3xl font-semibold text-center text-[#5E9ED9]">Menu</h2>
