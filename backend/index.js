@@ -80,6 +80,17 @@ io.on("connection", (socket) => {
     io.to(`student_${studentId}`).emit("relationship-changed", { status });
   });
 
+
+   // User joins a conversation room
+   socket.on("joinConversation", (conversationId) => {
+    if (!conversationId) {
+      console.error("Invalid conversationId received.");
+      return;
+    }
+    console.log(`User joined conversation room: conversation_${conversationId}`);
+    socket.join(`conversation_${conversationId}`);
+  });
+
   // Handle sending messages
   socket.on("sendMessage", async (message) => {
     const { conversationId, senderId, receiverId, messageContent } = message;

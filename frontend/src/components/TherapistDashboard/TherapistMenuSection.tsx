@@ -1,10 +1,5 @@
 import React, { useState } from "react";
-import {
-  FaQuestionCircle,
-  FaUserPlus,
-  FaTasks,
-  FaFileInvoice,
-} from "react-icons/fa";
+import { ClipboardList, Calendar, HelpCircle } from "lucide-react";
 import Switch from "@mui/material/Switch";
 import SchedulingForTherapists from "./SchedulingForTherapists";
 
@@ -25,38 +20,54 @@ const TherapistMenuSection: React.FC<TherapistMenuSectionProps> = ({
 }) => {
   const [isSchedulingModalOpen, setIsSchedulingModalOpen] = useState(false);
 
-  console.log("TherapistMenuSection rendered with therapistId:", therapistId);
-
   return (
-    <div className="bg-blue-100 rounded-lg shadow-lg p-6 border-2 border-[#5E9ED9]">
-      <h2 className="text-4xl text-center max-h-full font-bold text-[#5E9ED9]">
-        Menu
-      </h2>
-      <div className="space-y-4 mt-4">
-        <div className="flex items-center justify-center space-x-2">
-          <span>Not Available</span>
-          <Switch checked={isAvailable} onChange={toggleAvailability} />
-          <span>Available</span>
-        </div>
+    <div className="bg-blue-100 border-2 py-24 border-[#5E9ED9] rounded-lg shadow-lg p-10">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-semibold text-center text-[#5E9ED9]">
+          Menu
+        </h1>
         <button
-          className="w-full bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center"
-          onClick={() => {
-            console.log("Manage Scheduling button clicked");
-            setIsSchedulingModalOpen(true);
-          }}
+          onClick={onHelpClick}
+          className="text-[#5E9ED9] hover:text-blue-700 transition-colors duration-200"
+          aria-label="Help"
         >
-          <FaTasks className="mr-3" /> Manage Scheduling
+          <HelpCircle className="w-6 h-6" />
         </button>
       </div>
 
+      {/* Availability Toggle */}
+      <div className="flex items-center justify-center space-x-4 mb-6">
+        <span className="text-gray-700">Not Available</span>
+        <Switch checked={isAvailable} onChange={toggleAvailability} />
+        <span className="text-gray-700">Available</span>
+      </div>
+
+      {/* Menu Buttons */}
+      <div className="space-y-6">
+        <button
+          onClick={() => setIsSchedulingModalOpen(true)}
+          className="w-full flex items-center p-4 bg-[#5E9ED9] text-white rounded-lg hover:bg-[#4a8ac9] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <Calendar className="w-6 h-6 mr-3" />
+          <span className="text-lg font-medium">Manage Scheduling</span>
+        </button>
+
+        <button
+          onClick={onRequestClick}
+          className="w-full flex items-center p-4 bg-[#5E9ED9] text-white rounded-lg hover:bg-[#4a8ac9] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <ClipboardList className="w-6 h-6 mr-3" />
+          <span className="text-lg font-medium">View Requests</span>
+        </button>
+      </div>
+
+      {/* Modals */}
       {isSchedulingModalOpen && (
         <SchedulingForTherapists
           therapistId={therapistId}
           isOpen={isSchedulingModalOpen}
-          onClose={() => {
-            console.log("Closing scheduling modal");
-            setIsSchedulingModalOpen(false);
-          }}
+          onClose={() => setIsSchedulingModalOpen(false)}
         />
       )}
     </div>

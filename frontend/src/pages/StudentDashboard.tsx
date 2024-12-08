@@ -33,7 +33,13 @@ const StudentDashboard: React.FC = () => {
 
   
   return (
-    <div className="student-dashboard flex flex-col min-h-screen">
+    <div 
+    /*  className="student-dashboard flex flex-col min-h-screen"
+      style={{
+        background: "linear-gradient(to bottom, #5E93F3, #ffffff)",
+        backgroundAttachment: "fixed",
+      }} */
+    >
       <HeaderStudentDashboard /> 
       <main className="flex flex-col-1 items-center justify-center px-6 py-10 space-y-6 mb-11">
         <div className="w-full max-w-3xl">

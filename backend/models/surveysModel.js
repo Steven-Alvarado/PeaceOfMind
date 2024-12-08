@@ -76,5 +76,19 @@ const getSurveysByUserId = async (userId) => {
     return result.rows;
 };
 
+// Get all weekly surveys by userId
+const getWeeklySurveysByUserId = async (userId) => {
+    const result = await pool.query(
+        `SELECT s.id, d.document_content, s.survey_date, s.created_at, s.updated_at
+         FROM surveys s
+         INNER JOIN documents d ON s.document_id = d.id
+         WHERE s.student_id = $1 AND d.document_type = 'weekly_survey'`,
+        [userId]
+    );
 
-module.exports = { createSurveyResponse, updateSurveyResponse, getSurveyById, getSurveysByUserId, createWeeklySurveyResponse};
+    return result.rows;
+};
+
+
+
+module.exports = { createSurveyResponse, getWeeklySurveysByUserId, updateSurveyResponse, getSurveyById, getSurveysByUserId, createWeeklySurveyResponse};

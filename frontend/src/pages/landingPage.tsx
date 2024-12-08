@@ -513,9 +513,9 @@ function ContactSection() {
         transition={{ duration: 0.8, delay: 0.2 }}
         viewport={{ once: true }}
       >
-        <FaFacebook className="hover:text-[#538cc3] cursor-pointer" />
-        <FaTwitter className="hover:text-[#538cc3] cursor-pointer" />
-        <FaLinkedin className="hover:text-[#538cc3] cursor-pointer" />
+      
+      
+      
       </motion.div>
     </section>
   );
