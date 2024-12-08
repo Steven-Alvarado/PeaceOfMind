@@ -9,11 +9,12 @@ const {
   endRelationship,
 } = require("../models/relationshipsModel");
 
+
+
 // Assign a therapist to a student
 const assignTherapist = async (req, res) => {
   const { studentId, therapistId } = req.body;
 
-  // Validation
   if (!studentId || !therapistId) {
     return res
       .status(400)
@@ -21,14 +22,20 @@ const assignTherapist = async (req, res) => {
   }
 
   try {
-    // Check if a relationship already exists
     const existingRelationship = await findRelationship(studentId);
     if (existingRelationship) {
       return res.status(409).json({ message: "Relationship already exists." });
     }
 
-    // Create a new relationship
     const relationship = await createRelationship(studentId, therapistId);
+
+    // Emit the event for real-time updates to the specific student
+    const io = req.app.get("io");
+    io.to(`student_${studentId}`).emit("relationship-changed", {
+      status: "assigned",
+      therapistId,
+    });
+
     res.status(201).json({ message: "Therapist assigned", relationship });
   } catch (error) {
     console.error("Error assigning therapist:", error);
@@ -36,10 +43,10 @@ const assignTherapist = async (req, res) => {
   }
 };
 
+// Request a therapist
 const requestTherapist = async (req, res) => {
   const { studentId, therapistId } = req.body;
 
-  // Validation
   if (!studentId || !therapistId) {
     return res
       .status(400)
@@ -47,20 +54,28 @@ const requestTherapist = async (req, res) => {
   }
 
   try {
-    // Check if a relationship already exists
     const existingRelationship = await findRelationship(studentId);
     if (existingRelationship) {
       return res.status(409).json({ message: "Relationship already exists." });
     }
 
-    // Request new relationship
     const relationship = await requestRelationship(studentId, therapistId);
+
+    // Emit the event to the therapist
+    const io = req.app.get("io");
+    io.to(`therapist_${therapistId}`).emit("relationship-requested", {
+      studentId,
+      therapistId,
+      status: "requested",
+    });
+
     res.status(201).json({ message: "Therapist requested", relationship });
   } catch (error) {
     console.error("Error requesting therapist:", error);
     res.status(500).json({ error: "Failed to request therapist" });
   }
 };
+
 
 // Get relationship by student ID
 const getRelationshipByStudentId = async (req, res) => {
@@ -102,16 +117,6 @@ const getTherapistRelationships = async (req, res) => {
     console.error("Error retrieving therapist relationships:", error);
     res.status(500).json({ error: "Failed to retrieve therapist relationships" });
   }
-}; 
-// Get relationships by therapist ID
-const getTherapistRelationshipss = async (therapistId) => {
-  try {
-    const relationships = await getRelationshipsByTherapistId(therapistId);
-    return relationships;
-  } catch (error) {
-    console.error("Error retrieving therapist relationships:", error);
-    throw new Error("Failed to retrieve therapist relationships");
-  }
 };
 
 // Request therapist switch
@@ -119,7 +124,6 @@ const requestTherapistSwitchHandler = async (req, res) => {
   const { studentId } = req.params;
   const { requestedTherapistId } = req.body;
 
-  // Validation
   if (!requestedTherapistId) {
     return res
       .status(400)
@@ -138,6 +142,10 @@ const requestTherapistSwitchHandler = async (req, res) => {
         .json({ message: "Student relationship not found" });
     }
 
+    // Emit the event for real-time updates
+    const io = req.app.get("io");
+    io.emit("therapist-switch-requested", { studentId, requestedTherapistId });
+
     res
       .status(200)
       .json({ message: "Therapist switch requested", relationship });
@@ -147,7 +155,6 @@ const requestTherapistSwitchHandler = async (req, res) => {
   }
 };
 
-// Approve therapist switch
 const approveTherapistSwitchHandler = async (req, res) => {
   const { studentId } = req.params;
 
@@ -160,21 +167,45 @@ const approveTherapistSwitchHandler = async (req, res) => {
         .json({ message: "No pending therapist switch found" });
     }
 
-    res
-      .status(200)
-      .json({ message: "Therapist switch approved", relationship });
+    const io = req.app.get("io");
+    // Notify the student of the approval
+    io.to(`student_${studentId}`).emit("relationship-changed", {
+      status: "approved",
+      therapistId: relationship.therapist_id,
+    });
+    // Notify the therapist of the new relationship
+    io.to(`therapist_${relationship.therapist_id}`).emit(
+      "relationship-switch-approved",
+      { studentId }
+    );
+
+    res.status(200).json({
+      message: "Therapist switch approved",
+      relationship,
+    });
   } catch (error) {
     console.error("Error approving therapist switch:", error);
     res.status(500).json({ error: "Failed to approve therapist switch" });
   }
 };
 
-// End relationship
+
+
 const endRelationshipHandler = async (req, res) => {
   const { studentId } = req.params;
 
   try {
     const relationship = await endRelationship(studentId);
+
+    if (!relationship) {
+      return res.status(404).json({ message: "Relationship not found." });
+    }
+
+    // Emit the event for real-time updates
+    const io = req.app.get("io");
+    io.to(`student_${studentId}`).emit("relationship-ended", {
+      status: "ended",
+    });
 
     res.status(200).json({ message: "Relationship ended", relationship });
   } catch (error) {
@@ -182,6 +213,37 @@ const endRelationshipHandler = async (req, res) => {
     res.status(500).json({ error: "Failed to end relationship" });
   }
 };
+
+
+const rejectTherapistSwitch = async (req, res) => {
+  const { studentId } = req.params;
+
+  try {
+    const deletedRelationship = await endRelationship(studentId);
+
+    if (!deletedRelationship) {
+      return res
+        .status(404)
+        .json({ message: "No relationship found for rejection" });
+    }
+
+    const io = req.app.get("io");
+    // Notify the student of the rejection
+    io.to(`student_${studentId}`).emit("relationship-changed", {
+      status: "rejected",
+    });
+
+    res.status(200).json({
+      message: "Therapist switch rejected",
+      relationship: deletedRelationship,
+    });
+  } catch (error) {
+    console.error("Error rejecting therapist switch:", error);
+    res.status(500).json({ error: "Failed to reject therapist switch" });
+  }
+};
+
+
 
 module.exports = {
   assignTherapist,
@@ -192,5 +254,5 @@ module.exports = {
   requestTherapistSwitchHandler,
   approveTherapistSwitchHandler,
   endRelationshipHandler,
-  getTherapistRelationshipss
+  rejectTherapistSwitch 
 };

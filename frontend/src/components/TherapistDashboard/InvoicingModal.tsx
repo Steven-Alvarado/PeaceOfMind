@@ -43,7 +43,7 @@ const InvoicingModal: React.FC<InvoicingModalProps> = ({ isOpen, onClose, therap
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<number | null>(null);
   const [patients, setPatients] = useState<{ id: number; name: string }[]>([]);
 
-  const invoicesPerPage = 10;
+  const invoicesPerPage = 8;
 
   useEffect(() => {
     if (isOpen && user?.id) {

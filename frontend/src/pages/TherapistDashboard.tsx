@@ -59,11 +59,11 @@ const TherapistDashboard: React.FC = () => {
   return (
     <div className="therapist-dashboard flex flex-col min-h-screen">
       <HeaderTherapistDashboard />
-      <header className="bg-blue-100 mt-5 p-3">
-        <h1 className="text-4xl font-bold text-center text-[#5E9ED9]">
-          Welcome, {user?.first_name} {user?.last_name}!
-        </h1>
-      </header>
+      
+      
+      
+      
+      
       <div className="flex-grow grid grid-cols-1 md:grid-cols-3 px-6 py-10">
         {/* Patients Section */}
         <div className="col-span-2">

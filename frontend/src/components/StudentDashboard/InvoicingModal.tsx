@@ -24,7 +24,7 @@ const InvoicingModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [payAmount, setPayAmount] = useState("");
 
-  const invoicesPerPage = 10;
+  const invoicesPerPage = 8;
 
   useEffect(() => {
     if (!isOpen || !user) return;

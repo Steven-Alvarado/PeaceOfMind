@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { FaCheck, FaX } from "react-icons/fa6";
+import io from "socket.io-client";
 import { useAuth } from "../../hooks/useAuth";
+
+const socket = io("http://localhost:5000"); // Replace with your backend URL
 
 interface RequestListModalProps {
   therapistId: number;
@@ -23,7 +26,7 @@ const RequestList: React.FC<RequestListModalProps> = ({
 
   const itemsPerPage = 5;
 
-  // Ensure user is initialized
+  // Fetch user data if not initialized
   useEffect(() => {
     const initializeUser = async () => {
       if (!user) {
@@ -38,19 +41,27 @@ const RequestList: React.FC<RequestListModalProps> = ({
     initializeUser();
   }, [user, fetchUser]);
 
-  // Automatically fetch requests when therapistId changes
+  // Join the therapist's socket room
+  useEffect(() => {
+    if (therapistId) {
+      console.log(`Joining therapist room: therapist_${therapistId}`);
+      socket.emit("joinTherapistRoom", therapistId);
+    }
+  }, [therapistId]);
+
+  // Fetch requests for the therapist
   useEffect(() => {
     const fetchRequests = async () => {
       if (!therapistId) return;
       setIsLoading(true);
       try {
         const response = await axios.get(
-          `/api/relationships/therapist/${therapistId}`
+          `http://localhost:5000/api/relationships/therapist/${therapistId}`
         );
-        console.log("Relationships Response:", response.data); // Debugging
+        console.log("Relationships Response:", response.data);
         setRelations(response.data.relationships || []);
       } catch (error) {
-        console.error("Error retrieving relationships", error);
+        console.error("Error retrieving relationships:", error);
       } finally {
         setIsLoading(false);
       }
@@ -59,29 +70,61 @@ const RequestList: React.FC<RequestListModalProps> = ({
     fetchRequests();
   }, [therapistId, refresh]);
 
-  const approveSwitch = async (studentId: number) => {
-    try {
-      const response = await axios.put(
-        `/api/relationships/${studentId}/approve-switch`
-      );
-      console.log("PUT successful:", response.data);
-    } catch (error) {
-      console.error("Error making POST request:", error);
-    }
-  };
+  // Listen for real-time updates
+  useEffect(() => {
+    const handleRelationshipRequest = (data: any) => {
+      const { studentId, therapistId: emittedTherapistId, status } = data;
 
-  const rejectSwitch = async (studentId: number) => {
+      if (therapistId === emittedTherapistId && status === "requested") {
+        console.log(
+          `New relationship request received for therapist_${therapistId}`
+        );
+        setRelations((prev) => [...prev, data]);
+      }
+    };
+
+    socket.on("relationship-requested", handleRelationshipRequest);
+
+    return () => {
+      socket.off("relationship-requested", handleRelationshipRequest);
+    };
+  }, [therapistId]);
+
+  // Handle action approval/rejection
+  const handleAction = async (studentId: number, action: "approve" | "reject") => {
     try {
-      const response = await axios.delete(`/api/relationships/${studentId}`);
-      console.log("DELETE successful:", response.data);
+      if (action === "approve") {
+        await axios.put(
+          `http://localhost:5000/api/relationships/${studentId}/approve-switch`
+        );
+        console.log(`Approved request for student ID ${studentId}`);
+        socket.emit("therapist-action", {
+          studentId,
+          status: "approved",
+        });
+      } else if (action === "reject") {
+        await axios.put(
+          `http://localhost:5000/api/relationships/${studentId}/reject-switch`
+        );
+        console.log(`Rejected request for student ID ${studentId}`);
+        socket.emit("therapist-action", {
+          studentId,
+          status: "rejected",
+        });
+      }
+
+      // Update state to remove the processed request
+      setRelations((prev) =>
+        prev.filter((relation) => relation.student_id !== studentId)
+      );
     } catch (error) {
-      console.error("Error making POST request:", error);
+      console.error(`Error performing ${action} action:`, error);
     }
   };
 
   if (!isOpen) return null;
 
-  // Filter relationships where status = "switched"
+  // Filter relationships where status = "pending"
   const pendingRelations = relations.filter(
     (relation) => relation.status === "pending"
   );
@@ -131,20 +174,18 @@ const RequestList: React.FC<RequestListModalProps> = ({
 
                       <div className="flex space-x-3">
                         <button
-                          onClick={() => {
-                            approveSwitch(relation.student_id);
-                            onClose();
-                          }}
+                          onClick={() =>
+                            handleAction(relation.student_id, "approve")
+                          }
                           className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 flex items-center space-x-2"
                         >
                           <FaCheck className="inline" />
                           <span>Accept</span>
                         </button>
                         <button
-                          onClick={() => {
-                            rejectSwitch(relation.student_id);
-                            onClose();
-                          }}
+                          onClick={() =>
+                            handleAction(relation.student_id, "reject")
+                          }
                           className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 flex items-center space-x-2"
                         >
                           <FaX className="inline" />

@@ -17,9 +17,12 @@ const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
     origin: "http://localhost:3000", // Frontend's URL
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST"]
   },
 });
+
+// Attach `io` to the app for use in other parts of the application
+app.set("io", io);
 
 // Serve static profile pic files from uploads folder
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
@@ -39,25 +42,53 @@ app.use("/api", apiRoutes);
 io.on("connection", (socket) => {
   console.log(`A user connected: ${socket.id}`);
 
-  // User joins a conversation room
-  socket.on("joinConversation", (conversationId) => {
-    if (!conversationId) {
-      console.error("Invalid conversationId received.");
+  // User joins their student-specific room
+  socket.on("joinStudentRoom", (studentId) => {
+    if (!studentId) {
+      console.error("Invalid studentId received.");
       return;
     }
-    console.log(`User joined conversation room: conversation_${conversationId}`);
-    socket.join(`conversation_${conversationId}`);
+    console.log(`Student ${studentId} joined their room.`);
+    socket.join(`student_${studentId}`);
+  });
+
+  socket.on("joinTherapistRoom", (therapistId) => {
+    if (!therapistId) {
+      console.error("Invalid therapistId received.");
+      return;
+    }
+    console.log(`Therapist joined room: therapist_${therapistId}`);
+    socket.join(`therapist_${therapistId}`);
+  });
+
+  socket.on("joinStudentRoom", (studentId) => {
+    if (!studentId) {
+      console.error("Invalid studentId received.");
+      return;
+    }
+    console.log(`Student joined room: student_${studentId}`);
+    socket.join(`student_${studentId}`);
+  });
+
+  // Emit relationship updates to students
+  socket.on("relationship-updated", ({ studentId, status }) => {
+    if (!studentId || !status) {
+      console.error("Invalid relationship update data.");
+      return;
+    }
+    console.log(`Relationship update for student ${studentId}: ${status}`);
+    io.to(`student_${studentId}`).emit("relationship-changed", { status });
   });
 
   // Handle sending messages
   socket.on("sendMessage", async (message) => {
     const { conversationId, senderId, receiverId, messageContent } = message;
-  
+
     if (!conversationId || !messageContent) {
       console.error("Invalid message data.");
       return;
     }
-  
+
     try {
       // Save the message in the database
       const insertedMessage = await db.query(
@@ -65,74 +96,18 @@ io.on("connection", (socket) => {
          VALUES ($1, $2, $3, $4) RETURNING *`,
         [conversationId, senderId, receiverId, messageContent]
       );
-  
+
       const dbMessage = insertedMessage.rows[0];
       if (dbMessage) {
         console.log(`Message sent in conversation_${conversationId}:`, dbMessage);
-  
+
         // Emit message only to the relevant room
         io.to(`conversation_${conversationId}`).emit("receiveMessage", dbMessage);
       }
     } catch (error) {
       console.error("Error processing message:", error.message);
     }
-  });
-  
-
-  // Video call signaling (offer/answer exchange)
-  socket.on("videoCallSignal", ({ conversationId, signal }) => {
-    if (!signal || !conversationId) {
-      console.error("Invalid signal data.");
-      return;
-    }
-    const room = `conversation_${conversationId}`;
-    console.log(`Broadcasting video call signal for room ${room}:`, signal);
-    socket.to(room).emit("receiveSignal", signal);
-  });
-
-  // Handle ICE candidate exchange
-  socket.on("sendIceCandidate", ({ conversationId, candidate }) => {
-    const room = `conversation_${conversationId}`;
-    if (!candidate || !conversationId) {
-      console.error("Invalid ICE candidate data.");
-      return;
-    }
-    console.log(`Broadcasting ICE candidate for room ${room}:`, candidate);
-    socket.to(room).emit("receiveIceCandidate", candidate);
-  });
-
-  // Handle SDP signaling for offer/answer
-  socket.on("sendSignal", ({ roomId, type, data }) => {
-    if (!roomId || !type || !data) {
-      console.error("Invalid signaling data.");
-      return;
-    }
-    console.log(`Broadcasting ${type} for room ${roomId}:`, data);
-    socket.to(roomId).emit("receiveSignal", { type, data });
-  });
-
-  // Join video room
-  socket.on("joinVideoRoom", ({ roomId, userId }, callback) => {
-    if (!roomId || !userId) {
-      console.error("Invalid room or user data.");
-      callback({ success: false, error: "Invalid room or user data." });
-      return;
-    }
-    console.log(`User ${userId} joined video room: ${roomId}`);
-    socket.join(roomId);
-    callback({ success: true });
-  });
-
-  // Notify other users in the room to start video call
-  socket.on("startVideoCall", (conversationId) => {
-    if (!conversationId) {
-      console.error("Invalid conversationId for video call.");
-      return;
-    }
-    const room = `conversation_${conversationId}`;
-    console.log(`Starting video call in room: ${room}.`);
-    socket.to(room).emit("startVideoCall");
-  });
+  }); 
 
   // Handle user disconnection
   socket.on("disconnect", () => {
@@ -140,9 +115,7 @@ io.on("connection", (socket) => {
   });
 });
 
-
 // Start the server
 httpServer.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-  console.log(`Swagger documentation available at http://localhost:${PORT}/api-docs`);
+  console.log(`Server listening on port ${PORT}`);
 });

@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { FaPersonWalkingArrowRight, FaDiscourse } from "react-icons/fa6";
 import { CiStar, CiBadgeDollar } from "react-icons/ci";
 import { MdOutlineWorkHistory, MdOutlineMail } from "react-icons/md";
-import { MessageCircle, Search, Star, Calendar } from "lucide-react";
+import { MessageCircle, Search, Calendar } from "lucide-react";
+import io from "socket.io-client";
 
 import Alert from "@mui/material/Alert";
 import TherapistModal from "./TherapistModal";
@@ -13,6 +14,8 @@ import { User } from "../../context/AuthContext";
 import MessagingInterface from "../Messaging/MessagingInterface";
 import ProfilePicture from "../ProfilePicture";
 import ScheduleForStudents from "./ScheduleForStudents";
+
+const socket = io("http://localhost:5000"); // Replace with your backend URL
 
 interface TherapistSectionProps {
   user: User;
@@ -27,6 +30,7 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
   const [sentAlert, setSentAlert] = useState(false);
   const [sentDrop, setSentDrop] = useState(false);
   const [sentReview, setSentReview] = useState(false);
+  const [rejectionAlert, setRejectionAlert] = useState(false);
 
   const [isTherListOpen, setIsTherListOpen] = useState(false);
   const [isReviewOpen, setIsReviewOpen] = useState(false);
@@ -38,62 +42,86 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
   const handleReview = () => setSentReview((prev) => !prev);
   const handleAlert = () => setSentAlert((prev) => !prev);
   const handleDrop = () => setSentDrop((prev) => !prev);
+  const handleRejectionAlert = () => setRejectionAlert((prev) => !prev);
+
+  // Helper to clear therapist state
+  const resetTherapistState = () => {
+    setTherapistName(null);
+    setTherapistDetails(null);
+  };
+
+  // Fetch therapist relationship
+  // Fetch therapist relationship
+  const fetchTherapistRelationship = async () => {
+    setLoading(true);
+    resetTherapistState(); // Clear therapist state immediately
+
+    try {
+      const response = await axios.get(
+        `http://localhost:5000/api/relationships/${user.id}`
+      );
+      const relationship = response.data.relationship;
+
+      if (relationship?.current_therapist_id) {
+        const fetchedDetails = await fetchTherapistDetails(
+          relationship.current_therapist_id
+        );
+        setTherapistName(
+          `${relationship.current_therapist_first_name} ${relationship.current_therapist_last_name}`
+        );
+        setTherapistDetails(fetchedDetails);
+      }
+    } catch (err: any) {
+      if (err.response?.status === 404) {
+        resetTherapistState();
+      } else {
+        console.error("Failed to load therapist relationship:", err);
+        setError("Unable to load therapist relationship.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch therapist details
+  const fetchTherapistDetails = async (therapistId: number) => {
+    try {
+      const response = await axios.get(
+        `http://localhost:5000/api/therapists/${therapistId}`
+      );
+      return response.data.therapist;
+    } catch (err) {
+      console.error("Error fetching therapist details:", err);
+      return null;
+    }
+  };
+
+
 
   useEffect(() => {
-    const fetchTherapistDetails = async (therapistId: number) => {
-      try {
-        const response = await axios.get(
-          `http://localhost:5000/api/therapists/${therapistId}`
-        );
-        setTherapistDetails(response.data.therapist);
-        console.log(response.data.therapist);
-      } catch (err) {
-        console.error("Error fetching therapist details:", err);
-      }
-    };
-
-    const fetchTherapistRelationship = async () => {
-      try {
-        const response = await axios.get(
-          `http://localhost:5000/api/relationships/${user.id}`
-        );
-        console.log("User ID:", user.id);
-        const relationship = response.data.relationship;
-
-        if (relationship?.current_therapist_id) {
-          setTherapistName(
-            `${relationship.current_therapist_first_name} ${relationship.current_therapist_last_name}`
-          );
-          await fetchTherapistDetails(relationship.current_therapist_id);
-        } else {
-          setTherapistName(null);
-          setTherapistDetails(null);
-        }
-      } catch (err: any) {
-        if (err.response?.status === 404) {
-          // Explicitly handle 404 (No therapist relationship)
-          setTherapistName(null);
-          setTherapistDetails(null);
-        } else {
-          console.error("Failed to load therapist relationship:", err);
-          setError("Unable to load therapist relationship.");
-        }
-      } finally {
-        setLoading(false); // Set loading to false after everything completes
-      }
-    };
-
     fetchTherapistRelationship();
-  }, [user, refresh]);
 
-  // DEBUGGING
-  /* useEffect(() => {
-     if (therapistDetails) {
-       console.log("Therapist details are now available:", therapistDetails);
-     } else {
-       //console.log("Therapist details are not available.");
-     }
-   }, [therapistDetails]); */
+    // Join a unique room for the current student
+    socket.emit("joinStudentRoom", user.id);
+
+    // Listen for real-time updates to the relationship
+    const handleRelationshipChange = ({ status, therapistId }: any) => {
+      if (status === "approved") {
+        fetchTherapistRelationship();
+      } else if (status === "rejected") {
+        setRejectionAlert(true);
+      } else if (status === "ended") {
+        resetTherapistState();
+      }
+    };
+
+    socket.on("relationship-changed", handleRelationshipChange);
+
+    return () => {
+      socket.off("relationship-changed", handleRelationshipChange);
+      setTherapistDetails(null);
+    };
+  }, [user, refresh]);
 
   if (loading) return <div>Loading therapist details...</div>;
   if (error) return <div className="text-red-500">Error: {error}</div>;
@@ -117,6 +145,11 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
               Your review has been submitted.
             </Alert>
           )}
+          {rejectionAlert && (
+            <Alert severity="error" onClose={handleRejectionAlert}>
+              Your therapist request was rejected.
+            </Alert>
+          )}
           <div className="flex items-center justify-center mb-6">
             <h2 className="text-2xl font-bold text-[#5E9ED9]">
               Therapist Details
@@ -124,58 +157,85 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Therapist Image Section */}
-            <div className="relative mx-auto">
-              <ProfilePicture
-                userRole="therapist"
-                therapistId={therapistDetails?.therapist_id}
-                className="w-full h-full rounded-full object-cover"
-                style={{ width: "200px", height: "200px" }}
-              />
+            {therapistDetails && (
+              <div className="relative mx-auto">
+                <ProfilePicture
+                  userRole="therapist"
+                  therapistId={therapistDetails.therapist_id}
+                  className="w-full h-full rounded-full object-cover"
+                  style={{ width: "200px", height: "200px" }}
+                />
+              </div>
+            )}
+
+
+            <div className="flex flex-col justify-center space-y-6 h-full">
+              {therapistDetails ? (
+                <div>
+                  <h2 className="text-2xl md:text-3xl font-semibold text-gray-800">
+                    {therapistName}
+                  </h2>
+                  <p className="text-gray-600 mt-2 flex items-center">
+                    <CiStar className="w-5 h-5 mr-2 text-[#5E9ED9]" />
+                    {therapistDetails.specialization}
+                  </p>
+                  <p className="text-gray-600 mt-2 flex items-center">
+                    <MdOutlineWorkHistory className="w-5 h-5 mr-2 text-[#5E9ED9]" />
+                    {therapistDetails.experience_years} years experience
+                  </p>
+                  <p className="text-gray-600 mt-2 flex items-center">
+                    <MdOutlineMail className="w-5 h-5 mr-2 text-[#5E9ED9]" />
+                    {therapistDetails.email}
+                  </p>
+                  <p className="text-gray-600 mt-2 flex items-center">
+                    <CiBadgeDollar className="w-5 h-5 mr-2 text-[#5E9ED9]" />$
+                    {therapistDetails.monthly_rate} monthly
+                  </p>
+                </div>
+              ) : (
+                <div className="flex flex-col justify-center items-center text-center px-10 py-32 bg-blue-50 p-6 rounded-lg shadow-md h-full w-[210%]">
+                  <div>
+                    <h2 className="text-2xl md:text-3xl font-semibold text-gray-800">
+                      Ready to find your new therapist?
+                    </h2>
+                    <p className="text-gray-600 mt-2">
+                      Click the{" "}
+                      <span className="font-bold text-[#5E9ED9]">Find Therapist</span> button to
+                      start your journey.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setIsTherListOpen(true)}
+                    className="mt-4 bg-[#5E9ED9] text-white py-3 px-6 rounded-lg hover:bg-[#4b8bc4] transition duration-300 shadow-md hover:shadow-lg flex items-center justify-center space-x-2"
+                  >
+                    <Search className="w-5 h-5" />
+                    <span>Find Therapist</span>
+                  </button>
+                </div>
+
+              )}
             </div>
 
-            {/* Therapist Info Section */}
-            <div className="flex flex-col justify-center space-y-6">
-              <div>
-                <h2 className="text-2xl md:text-3xl font-semibold text-gray-800">
-                  {therapistName || "No Therapist Assigned"}
-                </h2>
-                {therapistDetails && (
-                  <>
-                    <p className="text-gray-600 mt-2 flex items-center">
-                      <CiStar className="w-5 h-5 mr-2 text-[#5E9ED9]" />
-                      {therapistDetails.specialization}
-                    </p>
-                    <p className="text-gray-600 mt-2 flex items-center">
-                      <MdOutlineWorkHistory className="w-5 h-5 mr-2 text-[#5E9ED9]" />
-                      {therapistDetails.experience_years} years experience
-                    </p>
-                    <p className="text-gray-600 mt-2 flex items-center">
-                      <MdOutlineMail className="w-5 h-5 mr-2 text-[#5E9ED9]" />
-                      {therapistDetails.email}
-                    </p>
-                    <p className="text-gray-600 mt-2 flex items-center">
-                      <CiBadgeDollar className="w-5 h-5 mr-2 text-[#5E9ED9]" />$
-                      {therapistDetails.monthly_rate} monthly
-                    </p>
-                  </>
-                )}
-              </div>
-            </div>
+
           </div>
+
 
           {/* Centered Buttons */}
           <div className="mt-auto flex justify-center py-4 items-center">
             <div className="grid grid-cols-2 gap-4 w-full max-w-lg">
-              <button
-                onClick={() => setIsTherListOpen(true)}
-                className="flex items-center justify-center space-x-2 bg-[#5E9ED9] text-white py-3 px-6 rounded-lg hover:bg-[#4b8bc4] transition duration-300 shadow-md hover:shadow-lg"
-              >
-                <Search className="w-5 h-5" />
-                <span>
-                  {therapistName ? "Switch Therapist" : "Find Therapist"}
-                </span>
-              </button>
+              {/* Find/Switch Therapist Button */}
 
+              {therapistDetails && (
+                <button
+                  onClick={() => setIsTherListOpen(true)}
+                  className="flex items-center justify-center space-x-2 bg-[#5E9ED9] text-white py-3 px-6 rounded-lg hover:bg-[#4b8bc4] transition duration-300 shadow-md hover:shadow-lg"
+                >
+                  <Search className="w-5 h-5" />
+                  <span>{therapistName ? "Switch Therapist" : "Find Therapist"}</span>
+                </button>
+              )}
+
+              {/* Drop Therapist Button (if therapist is assigned) */}
               {therapistDetails && (
                 <button
                   onClick={() => setIsDropOpen(true)}
@@ -186,22 +246,29 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
                 </button>
               )}
 
-              <button
-                onClick={() => setIsChatOpen(true)}
-                className="flex items-center justify-center space-x-2 bg-white text-[#5E9ED9] border-2 border-[#5E9ED9] py-3 px-6 rounded-lg hover:bg-[#5E9ED9] hover:text-white transition duration-300 shadow-md hover:shadow-lg"
-              >
-                <MessageCircle className="w-5 h-5" />
-                <span>Chat</span>
-              </button>
+              {/* Chat Button (only visible if therapist is assigned) */}
+              {therapistDetails && (
+                <button
+                  onClick={() => setIsChatOpen(true)}
+                  className="flex items-center justify-center space-x-2 bg-white text-[#5E9ED9] border-2 border-[#5E9ED9] py-3 px-6 rounded-lg hover:bg-[#5E9ED9] hover:text-white transition duration-300 shadow-md hover:shadow-lg"
+                >
+                  <MessageCircle className="w-5 h-5" />
+                  <span>Chat</span>
+                </button>
+              )}
 
-              <button
-                onClick={() => setIsScheduleOpen(true)}
-                className="flex items-center justify-center space-x-2 bg-white text-[#5E9ED9] border-2 border-[#5E9ED9] py-3 px-6 rounded-lg hover:bg-[#5E9ED9] hover:text-white transition duration-300 shadow-md hover:shadow-lg"
-              >
-                <Calendar className="w-5 h-5" />
-                <span>Schedule Appointment</span>
-              </button>
+              {/* Schedule Appointment Button (only visible if therapist is assigned) */}
+              {therapistDetails && (
+                <button
+                  onClick={() => setIsScheduleOpen(true)}
+                  className="flex items-center justify-center space-x-2 bg-white text-[#5E9ED9] border-2 border-[#5E9ED9] py-3 px-6 rounded-lg hover:bg-[#5E9ED9] hover:text-white transition duration-300 shadow-md hover:shadow-lg"
+                >
+                  <Calendar className="w-5 h-5" />
+                  <span>Schedule Appointment</span>
+                </button>
+              )}
 
+              {/* Review Therapist Button (if therapist is assigned) */}
               {therapistDetails && (
                 <button
                   onClick={() => setIsReviewOpen(true)}
@@ -216,10 +283,7 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
         </div>
       </div>
 
-
-
-
-      {/* Chat Modal */}
+      {/* Modals */}
       {isChatOpen && (
         <MessagingInterface
           userId={user.id}
@@ -230,9 +294,14 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
 
       <DropModal
         isOpen={isDropOpen}
-        sentDrop={handleDrop}
+        sentDrop={() => {
+          setTherapistName(null); // Clear therapist name
+          setTherapistDetails(null); // Clear therapist details
+          handleDrop();
+        }}
         onClose={() => {
           setIsDropOpen(false);
+          fetchTherapistRelationship();
           handleRefresh();
         }}
       />
@@ -261,7 +330,7 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
         <ScheduleForStudents
           isOpen={isScheduleOpen}
           studentId={user.id}
-          therapistId={therapistDetails.therapist_id} 
+          therapistId={therapistDetails.therapist_id}
           onClose={() => setIsScheduleOpen(false)} // Close the modal
         />
       )}

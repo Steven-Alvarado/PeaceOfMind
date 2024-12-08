@@ -34,12 +34,7 @@ const StudentDashboard: React.FC = () => {
   
   return (
     <div className="student-dashboard flex flex-col min-h-screen">
-      <HeaderStudentDashboard />
-      <header className="bg-blue-100 mt-5 p-4">
-        <h1 className="text-4xl font-bold text-center text-[#5E9ED9]">
-          Welcome, {user.first_name} {user.last_name}!
-        </h1>
-      </header>
+      <HeaderStudentDashboard /> 
       <main className="flex flex-col-1 items-center justify-center px-6 py-10 space-y-6 mb-11">
         <div className="w-full max-w-3xl">
           <TherapistSection user={user} /> {/* Pass user as a prop */}

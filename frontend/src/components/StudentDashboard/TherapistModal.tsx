@@ -21,7 +21,7 @@ const TherapistModal: React.FC<TherapistModalProps> = ({
   const [therapists, setTherapists] = useState<any[]>([]);
   const [relations, setRelations] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 4; // Adjust the number of therapists per page
+  const itemsPerPage = 4;
 
   useEffect(() => {
     const initializeUser = async () => {
@@ -38,30 +38,44 @@ const TherapistModal: React.FC<TherapistModalProps> = ({
   }, [user, fetchUser]);
 
   useEffect(() => {
-    if (isOpen && user) fetchTherapists();
+    if (isOpen) {
+      setCurrentPage(1); // Reset to the first page when modal opens
+      if (user) fetchTherapists();
+    }
   }, [isOpen, user, refresh]);
 
   const fetchTherapists = async () => {
     try {
-      const response1 = await fetch("/api/therapists/available");
+      const response1 = await fetch("http://localhost:5000/api/therapists/available");
       if (!response1.ok) throw new Error("Failed to fetch therapists");
       const data1 = await response1.json();
-      setTherapists(data1.therapists || []);
 
-      const response2 = await fetch(`/api/relationships/${user.id}`);
-      if (!response2.ok) setRelations([]);
-      const data2 = await response2.json();
-      setRelations(data2.relationship || []);
+      let relationshipData = null;
+      try {
+        const response2 = await fetch(`http://localhost:5000/api/relationships/${user.id}`);
+        if (response2.ok) {
+          const data2 = await response2.json();
+          relationshipData = data2.relationship || null;
+        } else if (response2.status === 404) {
+          console.log("No existing relationship found for user.");
+        } else {
+          throw new Error("Failed to fetch relationships");
+        }
+      } catch (error) {
+        console.error("Error fetching relationships:", error);
+      }
+
+      const activeTherapistId = relationshipData?.current_therapist_id || null;
+      const filteredTherapists = data1.therapists.filter(
+        (therapist: any) => therapist.id !== activeTherapistId
+      );
+
+      setTherapists(filteredTherapists || []);
+      setRelations(relationshipData || {});
     } catch (error) {
       console.error("Error fetching therapists:", error);
     }
   };
-
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentTherapists = therapists.slice(
-    startIndex,
-    startIndex + itemsPerPage
-  );
 
   const requestStatus = (therapistId: number) => {
     if (
@@ -80,7 +94,7 @@ const TherapistModal: React.FC<TherapistModalProps> = ({
 
   const requestTherapist = async (studentId: number, therapistId: number) => {
     try {
-      const response = await axios.post("/api/relationships/request", {
+      const response = await axios.post("http://localhost:5000/api/relationships/request", {
         studentId: studentId,
         therapistId: therapistId,
       });
@@ -93,7 +107,7 @@ const TherapistModal: React.FC<TherapistModalProps> = ({
   const switchTherapist = async (studentId: number, therapistId: number) => {
     try {
       const response = await axios.put(
-        `/api/relationships/${studentId}/request-switch`,
+        `http://localhost:5000/api/relationships/${studentId}/request-switch`,
         {
           requestedTherapistId: therapistId,
         }
@@ -109,6 +123,13 @@ const TherapistModal: React.FC<TherapistModalProps> = ({
   const sentConfirm = () => {
     sentAlert();
   };
+
+  // Define currentTherapists based on pagination
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const currentTherapists = therapists.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
 
   return (
     isOpen && (
