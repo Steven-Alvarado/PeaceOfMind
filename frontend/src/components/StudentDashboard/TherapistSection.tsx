@@ -94,9 +94,9 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
       console.error("Error fetching therapist details:", err);
       return null;
     }
-  };
+};
 
-
+    
 
   useEffect(() => {
     fetchTherapistRelationship();
@@ -137,7 +137,7 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
           )}
           {sentDrop && (
             <Alert severity="error" onClose={handleDrop}>
-              Your therapist has been dropped.
+              Your therapist has been dropped. 
             </Alert>
           )}
           {sentReview && (
@@ -148,7 +148,7 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
           {rejectionAlert && (
             <Alert severity="error" onClose={handleRejectionAlert}>
               Your therapist request was rejected.
-            </Alert>
+           </Alert>
           )}
           <div className="flex items-center justify-center mb-6">
             <h2 className="text-2xl font-bold text-[#5E9ED9]">

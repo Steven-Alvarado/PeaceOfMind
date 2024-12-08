@@ -387,7 +387,7 @@ const ReviewsModal: React.FC<{ therapistId: number; onClose: () => void }> = ({
       <h3 className="text-lg font-semibold text-gray-700 mb-2">
         No Reviews Found
       </h3>
-      <p className="text-gray-500">Try selecting a different filter!</p>
+      <p className="text-gray-500">Try selecting a different rating filter.</p>
     </div>
   );
 
