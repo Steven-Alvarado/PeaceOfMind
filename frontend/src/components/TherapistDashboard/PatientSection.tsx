@@ -146,7 +146,7 @@ const PatientSection: React.FC<PatientListComponentProps> = ({
                     onClick={() => handleViewDetails(patient)}
                   >
                     <FileText className="w-5 h-5" />
-                    View Details
+                    View Analytics
                   </button>
                   {/* Chat Button */}
                   <button

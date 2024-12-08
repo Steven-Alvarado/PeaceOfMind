@@ -329,8 +329,8 @@ const HeaderStudentDashboard = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
-  const { user, logout } = useAuth(); 
-  const navigate = useNavigate(); 
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
@@ -344,6 +344,24 @@ const HeaderStudentDashboard = () => {
     }
 
     navigate("/login");
+  };
+
+  const handleProfilePictureChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files || event.target.files.length === 0) return;
+
+    const file = event.target.files[0];
+    const formData = new FormData();
+    formData.append("profile_picture", file);
+
+    try {
+      await axios.post(`http://localhost:5000/api/profilePicture/upload/${user.id}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      // Optionally, you can trigger a refresh to update the profile picture
+      window.location.reload(); // Refresh the page to fetch the updated profile picture
+    } catch (error) {
+      console.error("Failed to upload profile picture:", error);
+    }
   };
 
   return (
@@ -360,24 +378,34 @@ const HeaderStudentDashboard = () => {
             <h1 className="text-lg font-bold">Peace of Mind</h1>
           </a>
         </div>
-  
+
         {/* Profile and Navigation Section */}
         <div className="flex items-center gap-4">
           {/* Student Info */}
           {user && (
             <div className="flex items-center gap-2">
-              <ProfilePicture
-                userRole="student"
-                userId={user.id} // Assuming the user's ID is accessible
-                className="w-14 h-14"
-                style={{ border: "2px solid white" }}
+              {/* Profile Picture as a button */}
+              <label htmlFor="profile-picture-upload" className="cursor-pointer">
+                <ProfilePicture
+                  userRole="student"
+                  userId={user.id} // Assuming the user's ID is accessible
+                  className="w-14 h-14"
+                  style={{ border: "2px solid white" }}
+                />
+              </label>
+              <input
+                type="file"
+                id="profile-picture-upload"
+                accept="image/*"
+                style={{ display: "none" }}
+                onChange={handleProfilePictureChange}
               />
               <span className="text-white text-xl font-bold">
                 {user.first_name} {user.last_name}
               </span>
             </div>
           )}
-  
+
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-4 font-bold">
             <button
@@ -399,14 +427,14 @@ const HeaderStudentDashboard = () => {
               <span>Logout</span>
             </button>
           </nav>
-  
+
           {/* Mobile Hamburger Icon */}
           <button onClick={toggleMenu} className="md:hidden">
             {isOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
           </button>
         </div>
       </div>
-  
+
       {/* Mobile Menu */}
       {isOpen && (
         <nav className="md:hidden text-center font-bold bg-[#5E9ED9] text-white p-4 space-y-2">
@@ -426,7 +454,7 @@ const HeaderStudentDashboard = () => {
           </button>
         </nav>
       )}
-  
+
       {/* Modals */}
       <LogoutConfirmationModal
         isOpen={isLogoutModalOpen}
@@ -435,7 +463,6 @@ const HeaderStudentDashboard = () => {
       />
     </header>
   );
-  
 };
 
 export default HeaderStudentDashboard;
