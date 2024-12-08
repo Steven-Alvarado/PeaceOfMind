@@ -8,7 +8,7 @@ chartjs.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointE
 interface JournalAnalyticsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  user: { id: number; name: string }; 
+  user: { id: number; name: string };
 }
 
 interface JournalEntry {
@@ -169,6 +169,12 @@ const JournalAnalyticsModal: React.FC<JournalAnalyticsModalProps> = ({ isOpen, o
           {activeTab === "journalAnalytics" ? (
             loading ? (
               <p className="text-center">Loading...</p>
+            ) : totalEntries === 0 ? (
+              <div className="flex items-center justify-center h-[400px]">
+                <p className="text-2xl font-bold text-center text-gray-700">
+                  There aren't any recorded journal entries. Mood analytics from jounal entries will be displayed here.
+                </p>
+              </div>
             ) : (
               <div>
                 <h2 className="text-3xl font-semibold text-center text-[#5E9ED9] mb-6">Mood Analysis</h2>
@@ -184,6 +190,12 @@ const JournalAnalyticsModal: React.FC<JournalAnalyticsModalProps> = ({ isOpen, o
             )
           ) : loading ? (
             <p className="text-center">Loading...</p>
+          ) : surveyData.length === 0 ? (
+            <div className="flex items-center justify-center h-[400px]">
+              <p className="text-2xl font-bold text-center text-gray-700">
+                There aren't any recored surveys. Analytics from surveys will be recorded and presented here.
+              </p>
+            </div>
           ) : (
             <div>
               <h2 className="text-3xl font-semibold text-center text-[#5E9ED9] mb-6">Survey Analysis</h2>

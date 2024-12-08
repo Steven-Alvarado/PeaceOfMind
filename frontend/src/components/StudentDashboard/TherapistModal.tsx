@@ -20,6 +20,7 @@ const TherapistModal: React.FC<TherapistModalProps> = ({
   const { user, fetchUser } = useAuth();
   const [therapists, setTherapists] = useState<any[]>([]);
   const [relations, setRelations] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState<string>(""); // For search functionality
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 4;
 
@@ -124,9 +125,16 @@ const TherapistModal: React.FC<TherapistModalProps> = ({
     sentAlert();
   };
 
-  // Define currentTherapists based on pagination
+  // Define filtered therapists based on the search query
+  const filteredTherapists = therapists.filter(
+    (therapist) =>
+      therapist.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      therapist.last_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      therapist.specialization.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentTherapists = therapists.slice(
+  const currentTherapists = filteredTherapists.slice(
     startIndex,
     startIndex + itemsPerPage
   );
@@ -144,10 +152,20 @@ const TherapistModal: React.FC<TherapistModalProps> = ({
               X
             </button>
           </div>
-          <div className="h-[520px] overflow-y-auto">
-            {therapists.length === 0 ? (
+          {/* Search Field */}
+          <div className="mb-4">
+            <input
+              type="text"
+              placeholder="Search by name or specialization..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full border border-[#5E9ED9] rounded-lg p-2 text-black focus:outline-none focus:ring-2 focus:ring-[#5E9ED9]"
+            />
+          </div>
+          <div className="h-[480px] overflow-y-auto">
+            {filteredTherapists.length === 0 ? (
               <p className="text-center text-gray-500">
-                No therapists available at the moment.
+                No therapists match your search.
               </p>
             ) : (
               <ul className="space-y-4">
@@ -211,18 +229,18 @@ const TherapistModal: React.FC<TherapistModalProps> = ({
               Previous
             </button>
             <span className="text-sm text-black">
-              Page {currentPage} of {Math.ceil(therapists.length / itemsPerPage)}
+              Page {currentPage} of {Math.ceil(filteredTherapists.length / itemsPerPage)}
             </span>
             <button
               onClick={() =>
                 setCurrentPage((prev) =>
                   Math.min(
                     prev + 1,
-                    Math.ceil(therapists.length / itemsPerPage)
+                    Math.ceil(filteredTherapists.length / itemsPerPage)
                   )
                 )
               }
-              disabled={currentPage === Math.ceil(therapists.length / itemsPerPage)}
+              disabled={currentPage === Math.ceil(filteredTherapists.length / itemsPerPage)}
               className="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg w-32 hover:bg-gray-400 disabled:bg-gray-100"
             >
               Next
