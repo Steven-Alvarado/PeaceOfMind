@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-
+import ProfilePicture from "../components/ProfilePicture";
 import "../assets/styles/index.css";
 import { Typewriter } from "react-simple-typewriter";
 import HeaderLandingPage from "../components/HeaderLandingPage";
@@ -437,7 +437,11 @@ function ReviewsSection() {
                 >
                   <div className="flex justify-center">
                     <div className="w-20 h-20 bg-gray-300 rounded-full flex items-center justify-center mb-4">
-                      <span className="text-gray-600">Picture</span>
+                      <ProfilePicture
+                        userRole="therapist"
+                        userId={review.student_id}
+                        className="w-full h-full rounded-full object-cover"                        
+                      />
                     </div>
                   </div>
                   <strong>
