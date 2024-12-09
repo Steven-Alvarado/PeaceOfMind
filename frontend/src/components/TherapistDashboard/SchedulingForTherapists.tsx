@@ -36,39 +36,43 @@ const SchedulingForTherapists: React.FC<SchedulingForTherapistsProps> = ({
   const appointmentsPerPage = 3;
   const [studentDetails, setStudentDetails] = useState<Record<number, any>>({});
 
+
   useEffect(() => {
     if (!isOpen) return;
 
     const fetchAppointmentsAndStudents = async () => {
       setLoading(true);
       try {
+        // Fetch Appointments
         const appointmentsResponse = await axios.get(
           `http://localhost:5000/api/appointments/therapist/${therapistId}`
         );
         const fetchedAppointments = appointmentsResponse.data.data || [];
         setAppointments(fetchedAppointments);
-
-        const studentIds = [
-          ...new Set(fetchedAppointments.map((appt: any) => appt.student_id)),
-        ];
-        const studentDetailsMap: Record<number, any> = {};
-        await Promise.all(
-          studentIds.map(async (studentId) => {
-            const studentResponse = await axios.get(
-              `http://localhost:5000/api/users/${studentId}`
-            );
-            studentDetailsMap[studentId] = studentResponse.data;
-          })
+  
+        // Fetch Assigned Students
+        const studentsResponse = await axios.get(
+          `http://localhost:5000/api/relationships/therapist/${therapistId}`
         );
-        setStudentDetails(studentDetailsMap);
+        const fetchedRelationships = studentsResponse.data.relationships || [];
+        const activeStudents = fetchedRelationships.filter(
+          (relationship) =>
+            relationship.status === "active" || relationship.status === "switched"
+        );
+        const formattedStudents = activeStudents.map((student) => ({
+          id: student.student_id,
+          first_name: student.student_first_name,
+          last_name: student.student_last_name,
+        }));
+        setAssignedStudents(formattedStudents);
       } catch (err) {
-        setError("Failed to load appointments or student details.");
+        setError("Failed to load appointments or assigned students.");
         console.error(err);
       } finally {
         setLoading(false);
       }
     };
-
+  
     fetchAppointmentsAndStudents();
   }, [isOpen, therapistId]);
 
@@ -297,6 +301,7 @@ const SchedulingForTherapists: React.FC<SchedulingForTherapistsProps> = ({
                       Cancel
                     </button>
                   </div>
+
                 </li>
               ))}
             </ul>
@@ -357,15 +362,12 @@ const SchedulingForTherapists: React.FC<SchedulingForTherapistsProps> = ({
                   >
                     <option value="">Choose a student</option>
                     {assignedStudents.map((student) => (
-                      <option
-                        key={student.student_id}
-                        value={student.student_id}
-                      >
-                        {student.student_first_name} {student.student_last_name}
+                      <option key={student.id} value={student.id}>
+                        {student.first_name} {student.last_name}
                       </option>
                     ))}
                   </select>
-                </div>
+                </div>;
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Select Date
