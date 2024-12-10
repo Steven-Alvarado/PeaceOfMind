@@ -3,6 +3,7 @@ import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Calendar, ChevronDown, ChevronUp, CheckCircle } from "lucide-react";
 import { AuthContext, User } from "../../context/AuthContext";
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 type QuestionType = {
   id: number;
@@ -51,7 +52,7 @@ const DailySurvey: React.FC<DailySurveyProps> = ({ isOpen, onClose, user }) => {
 
       try {
         const response = await axios.get(
-          `http://localhost:5000/api/surveys/weekly/user/${effectiveUser.id}`
+          `${API_BASE_URL}/api/surveys/weekly/user/${effectiveUser.id}`
         );
 
         const today = new Date().toISOString().slice(0, 10);
@@ -76,7 +77,7 @@ const DailySurvey: React.FC<DailySurveyProps> = ({ isOpen, onClose, user }) => {
 
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/surveys/weekly/user/${effectiveUser.id}`
+        `${API_BASE_URL}/api/surveys/weekly/user/${effectiveUser.id}`
       );
 
       const selectedDateStr = date.toISOString().slice(0, 10);
@@ -112,7 +113,7 @@ const DailySurvey: React.FC<DailySurveyProps> = ({ isOpen, onClose, user }) => {
       }, {} as Record<string, string>);
 
       await axios.post(
-        "http://localhost:5000/api/surveys/weekly",
+        "${API_BASE_URL}/api/surveys/weekly",
         {
           userId: effectiveUser.id,
           content: JSON.stringify(surveyContent),

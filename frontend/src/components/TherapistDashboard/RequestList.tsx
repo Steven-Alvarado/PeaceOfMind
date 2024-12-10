@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { FaCheck, FaX } from "react-icons/fa6";
-import io from "socket.io-client";
 import { useAuth } from "../../hooks/useAuth";
-
-const socket = io("http://localhost:5000"); // Replace with your backend URL
+import socket from "../../socket";
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || "${API_BASE_URL}";
 
 interface RequestListModalProps {
   therapistId: number;
@@ -56,7 +55,7 @@ const RequestList: React.FC<RequestListModalProps> = ({
       setIsLoading(true);
       try {
         const response = await axios.get(
-          `http://localhost:5000/api/relationships/therapist/${therapistId}`
+          `${API_BASE_URL}/api/relationships/therapist/${therapistId}`
         );
         console.log("Relationships Response:", response.data);
         setRelations(response.data.relationships || []);
@@ -95,7 +94,7 @@ const RequestList: React.FC<RequestListModalProps> = ({
     try {
       if (action === "approve") {
         await axios.put(
-          `http://localhost:5000/api/relationships/${studentId}/approve-switch`
+          `${API_BASE_URL}/api/relationships/${studentId}/approve-switch`
         );
         console.log(`Approved request for student ID ${studentId}`);
         socket.emit("therapist-action", {
@@ -104,7 +103,7 @@ const RequestList: React.FC<RequestListModalProps> = ({
         });
       } else if (action === "reject") {
         await axios.put(
-          `http://localhost:5000/api/relationships/${studentId}/reject-switch`
+          `${API_BASE_URL}/api/relationships/${studentId}/reject-switch`
         );
         console.log(`Rejected request for student ID ${studentId}`);
         socket.emit("therapist-action", {

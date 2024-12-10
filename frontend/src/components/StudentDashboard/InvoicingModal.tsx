@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "../../hooks/useAuth";
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const InvoicingModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
   const { user } = useAuth();
@@ -33,7 +34,7 @@ const InvoicingModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
       try {
         setLoading(true);
         setError("");
-        const response = await axios.get(`/api/invoices/student/${user?.id}`);
+        const response = await axios.get(`${API_BASE_URL}/api/invoices/student/${user?.id}`);
         setInvoices(response.data.invoices);
       } catch (err) {
         console.error("Error fetching invoices:", err);
@@ -58,12 +59,12 @@ const InvoicingModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
     }
 
     try {
-      await axios.put(`/api/invoices/${selectedInvoice.id}/pay`, { amountPaid: Number(payAmount) });
+      await axios.put(`${API_BASE_URL}/api/invoices/${selectedInvoice.id}/pay`, { amountPaid: Number(payAmount) });
       setPayModalOpen(false);
       setSelectedInvoice(null);
       setPayAmount("");
 
-      const response = await axios.get(`/api/invoices/student/${user?.id}`);
+      const response = await axios.get(`${API_BASE_URL}/api/invoices/student/${user?.id}`);
       setInvoices(response.data.invoices);
     } catch (err) {
       console.error("Error processing payment:", err);

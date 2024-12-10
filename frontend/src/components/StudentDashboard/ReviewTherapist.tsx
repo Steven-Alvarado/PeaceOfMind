@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from "react";
-
 import { FaDiscourse } from "react-icons/fa6";
 import { FaStar } from "react-icons/fa";
-
 import { useAuth } from "../../hooks/useAuth";
 import axios from "axios";
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 interface ReviewModalProps {
   isOpen: boolean;
@@ -46,7 +45,7 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
     review: string
   ) => {
     try {
-      const response = await axios.post("/api/reviews/submitReview", {
+      const response = await axios.post(`${API_BASE_URL}/api/reviews/submitReview`, {
         student_id: studentId,
         therapist_id: therapistId,
         rating: rating,

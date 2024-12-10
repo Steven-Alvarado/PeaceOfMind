@@ -3,7 +3,8 @@ import axios from "axios";
 import { MessageCircle, FileText, X } from "lucide-react";
 import MessagingInterface from "../Messaging/MessagingInterface";
 import JournalAnalyticsModal from "../StudentDashboard/JournalAnalyticsModal";
-import ProfilePicture from "../ProfilePicture"; // Import the ProfilePicture component
+import ProfilePicture from "../ProfilePicture"; 
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
 interface PatientListComponentProps {
   therapistId: number;
@@ -31,14 +32,14 @@ const PatientSection: React.FC<PatientListComponentProps> = ({
       try {
         // Fetch relationships for the therapist
         const response = await axios.get(
-          `/api/relationships/therapist/${therapistId}`
+          `${API_BASE_URL}/api/relationships/therapist/${therapistId}`
         );
         const relationships = response.data.relationships || [];
         setCurrPatients(relationships);
 
         // Fetch user details for each patient
         const detailRequests = relationships.map((relation: any) =>
-          axios.get(`/api/users/${relation.student_id}`)
+          axios.get(`${API_BASE_URL}/api/users/${relation.student_id}`)
         );
 
         const detailResponses = await Promise.all(detailRequests);

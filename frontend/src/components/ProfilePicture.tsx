@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+
 interface ProfilePictureProps {
-  userRole: "student" | "therapist"; // Indicates the role of the user
-  userId?: number; // Unified user ID (for students or users in general)
-  therapistId?: number; // Therapist ID (used if userRole is "therapist")
-  className?: string; // Optional class names for custom styling
-  style?: React.CSSProperties; // Optional inline styles for custom dimensions
+  userRole: "student" | "therapist";
+  userId?: number;
+  therapistId?: number;
+  className?: string;
+  style?: React.CSSProperties;
 }
 
 const ProfilePicture: React.FC<ProfilePictureProps> = ({
@@ -18,59 +20,44 @@ const ProfilePicture: React.FC<ProfilePictureProps> = ({
 }) => {
   const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(null);
 
+  // Memoize the endpoint to avoid unnecessary recomputation
+  const endpoint = useMemo(() => {
+    if (userRole === "student" && userId) {
+      return `${API_BASE_URL}/api/profilePicture/${userId}`;
+    } else if (userRole === "therapist" && therapistId) {
+      return `${API_BASE_URL}/api/profilePicture/therapist/${therapistId}`;
+    }
+    return null;
+  }, [userRole, userId, therapistId]);
+
   useEffect(() => {
-    console.log(
-      `Fetching profile picture for Role: ${userRole}, User ID: ${userId}, Therapist ID: ${therapistId}`
-    );
+    if (!endpoint || profilePictureUrl) return;
 
     const fetchProfilePicture = async () => {
       try {
-        let endpoint = "";
-
-        // Determine the endpoint based on the user's role and available IDs
-        if (userRole === "student" && userId) {
-          endpoint = `http://localhost:5000/api/profilePicture/${userId}`;
-        } else if (userRole === "therapist" && therapistId) {
-          endpoint = `http://localhost:5000/api/profilePicture/therapist/${therapistId}`;
-        } else {
-          console.error("Invalid inputs for fetching profile picture.");
-          setProfilePictureUrl("http://localhost:5000/uploads/default-profile.png");
-          return;
-        }
-
-        console.log(`Using endpoint: ${endpoint}`); // Debug
-
         const response = await axios.get(endpoint);
         const relativeUrl = response.data.profile_picture_url;
-
-        // Construct the full profile picture URL
-        setProfilePictureUrl(`http://localhost:5000${relativeUrl}`);
+        setProfilePictureUrl(`${API_BASE_URL}${relativeUrl}`);
       } catch (error) {
         console.error("Error fetching profile picture:", error);
-
-        // Fallback to the default profile picture
-        setProfilePictureUrl("http://localhost:5000/uploads/default-profile.png");
+        setProfilePictureUrl(`${API_BASE_URL}/uploads/default-profile.png`);
       }
     };
 
-    // Trigger the fetch if the required IDs are available
-    if ((userRole === "student" && userId) || (userRole === "therapist" && therapistId)) {
-      fetchProfilePicture();
-    }
-  }, [userRole, userId, therapistId]);
+    fetchProfilePicture();
+  }, [endpoint, profilePictureUrl]);
 
   return (
     <img
-      src={profilePictureUrl || "http://localhost:5000/uploads/default-profile.png"}
+      src={profilePictureUrl || `${API_BASE_URL}/uploads/default-profile.png`}
       alt="Profile"
-      className={`rounded-full object-cover ${className || ""}`} // Apply custom class names
-      style={style || {}} // Apply custom inline styles
+      className={`rounded-full object-cover ${className || ""}`}
+      style={style || {}}
       onError={(e) => {
         const imgElement = e.target as HTMLImageElement;
         imgElement.onerror = null;
-        imgElement.src = "http://localhost:5000/uploads/default-profile.png";
+        imgElement.src = `${API_BASE_URL}/uploads/default-profile.png`;
       }}
-      
     />
   );
 };

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "../../hooks/useAuth";
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 interface JournalEntry {
   id: number;
@@ -74,7 +75,7 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
     }
   
     try {
-      const response = await axios.get(`/api/journals/user/${user.id}`, {
+      const response = await axios.get(`${API_BASE_URL}/api/journals/user/${user.id}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("jwt")}`,
         },
@@ -127,7 +128,7 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
   const createJournalEntry = async () => {
     try {
       const response = await axios.post(
-        `/api/journals`,
+        `${API_BASE_URL}/api/journals`,
         {
           userId: user?.id,
           mood: activeEntry?.mood || "Neutral",
@@ -171,7 +172,7 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
     if (!activeEntry) return;
   
     try {
-      await axios.delete(`/api/journals/delete/${activeEntry.id}`, {
+      await axios.delete(`${API_BASE_URL}/api/journals/delete/${activeEntry.id}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("jwt")}`,
         },
@@ -213,7 +214,7 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
   const updateJournalEntry = async () => {
     try {
       const response = await axios.put(
-        `/api/journals/${activeEntry?.id}`,
+        `${API_BASE_URL}/api/journals/${activeEntry?.id}`,
         {
           mood: activeEntry?.mood,
           content: { entry: activeEntry?.content },

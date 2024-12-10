@@ -15,6 +15,7 @@ interface ScheduleForStudentsProps {
   isOpen: boolean;
   onClose: () => void;
 }
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const ScheduleForStudents: React.FC<ScheduleForStudentsProps> = ({
   studentId,
@@ -43,7 +44,7 @@ const ScheduleForStudents: React.FC<ScheduleForStudentsProps> = ({
   const fetchTherapistDetails = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/therapists/${therapistId}`
+        `${API_BASE_URL}/api/therapists/${therapistId}`
       );
       setTherapistDetails(response.data.therapist);
     } catch (err) {
@@ -58,7 +59,7 @@ const ScheduleForStudents: React.FC<ScheduleForStudentsProps> = ({
       setLoading(true);
       try {
         const response = await axios.get(
-          `http://localhost:5000/api/appointments/student/${studentId}`
+          `${API_BASE_URL}/api/appointments/student/${studentId}`
         );
         setAppointments(response.data.data || []);
         await fetchTherapistDetails(); // Fetch therapist details when modal opens
@@ -85,7 +86,7 @@ const ScheduleForStudents: React.FC<ScheduleForStudentsProps> = ({
       };
 
       const response = await axios.post(
-        `http://localhost:5000/api/appointments/schedule`,
+        `${API_BASE_URL}/api/appointments/schedule`,
         appointmentPayload
       );
 
@@ -122,7 +123,7 @@ const ScheduleForStudents: React.FC<ScheduleForStudentsProps> = ({
     setLoading(true);
     try {
       await axios.put(
-        `http://localhost:5000/api/appointments/${appointmentId}`,
+        `${API_BASE_URL}/api/appointments/${appointmentId}`,
         { status: newStatus }
       );
       setAppointments((prev) =>
@@ -142,7 +143,7 @@ const ScheduleForStudents: React.FC<ScheduleForStudentsProps> = ({
     setLoading(true);
     try {
       await axios.delete(
-        `http://localhost:5000/api/appointments/${appointmentId}`
+        `${API_BASE_URL}/api/appointments/${appointmentId}`
       );
       setAppointments((prev) => prev.filter((app) => app.id !== appointmentId));
     } catch (err) {

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
 import socket from "../socket";
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
 interface Conversation {
   id: number;
@@ -97,7 +98,7 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const fetchConversations = async (userId: number, role: "student" | "therapist") => {
     try {
       const { data } = await axios.get(
-        `http://localhost:5000/api/conversations/${userId}?role=${role}`
+        `${API_BASE_URL}/api/conversations/${userId}?role=${role}`
       );
       setConversations(data);
     } catch (error) {
@@ -111,7 +112,7 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       if (!conversationId) {
         throw new Error("Invalid conversation ID");
       }
-      const { data } = await axios.get<Message[]>(`http://localhost:5000/api/messages/${conversationId}`);
+      const { data } = await axios.get<Message[]>(`${API_BASE_URL}/api/messages/${conversationId}`);
       setMessages(data); // Use `sent_at` as provided by the API
     } catch (error) {
       console.error("Failed to fetch messages:", error);
@@ -123,7 +124,7 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const createConversation = async (studentId: number, therapistId: number) => {
     try {
-      const { data } = await axios.post("http://localhost:5000/api/conversations/create", {
+      const { data } = await axios.post("${API_BASE_URL}/api/conversations/create", {
         student_id: studentId,
         therapist_id: therapistId,
       });

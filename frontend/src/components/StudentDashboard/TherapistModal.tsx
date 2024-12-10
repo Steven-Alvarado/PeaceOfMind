@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { FaArrowRightArrowLeft, FaArrowRightToBracket } from "react-icons/fa6";
 import { useAuth } from "../../hooks/useAuth";
 import axios from "axios";
 import ProfilePicture from "../ProfilePicture";
@@ -11,6 +10,7 @@ interface TherapistModalProps {
   sentAlert: () => void;
   onClose: () => void;
 }
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const TherapistModal: React.FC<TherapistModalProps> = ({
   isOpen,
@@ -52,7 +52,7 @@ const TherapistModal: React.FC<TherapistModalProps> = ({
   const fetchTherapists = async () => {
     try {
       const response1 = await fetch(
-        "http://localhost:5000/api/therapists/available"
+        `${API_BASE_URL}/api/therapists/available`
       );
       if (!response1.ok) throw new Error("Failed to fetch therapists");
       const data1 = await response1.json();
@@ -60,7 +60,7 @@ const TherapistModal: React.FC<TherapistModalProps> = ({
       let relationshipData = null;
       try {
         const response2 = await fetch(
-          `http://localhost:5000/api/relationships/${user.id}`
+          `${API_BASE_URL}/api/relationships/${user.id}`
         );
         if (response2.ok) {
           const data2 = await response2.json();
@@ -104,7 +104,7 @@ const TherapistModal: React.FC<TherapistModalProps> = ({
   const requestTherapist = async (studentId: number, therapistId: number) => {
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/relationships/request",
+        `${API_BASE_URL}/api/relationships/request`,
         {
           studentId: studentId,
           therapistId: therapistId,
@@ -125,7 +125,7 @@ const TherapistModal: React.FC<TherapistModalProps> = ({
   const switchTherapist = async (studentId: number, therapistId: number) => {
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/relationships/${studentId}/request-switch`,
+        `${API_BASE_URL}/api/relationships/${studentId}/request-switch`,
         {
           requestedTherapistId: therapistId,
         }
@@ -305,7 +305,7 @@ const ReviewsModal: React.FC<{ therapistId: number; onClose: () => void }> = ({
     const fetchTherapistName = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:5000/api/therapists/${therapistId}`
+          `${API_BASE_URL}/api/therapists/${therapistId}`
         );
         const therapist = response.data.therapist;
         setTherapistName(`${therapist.first_name} ${therapist.last_name}`);
@@ -318,7 +318,7 @@ const ReviewsModal: React.FC<{ therapistId: number; onClose: () => void }> = ({
     const fetchReviewsWithUserNames = async () => {
       try {
         const reviewsResponse = await axios.get(
-          `http://localhost:5000/api/reviews/therapist/${therapistId}`
+          `${API_BASE_URL}/api/reviews/therapist/${therapistId}`
         );
         const reviewsData = reviewsResponse.data.data;
 
@@ -326,7 +326,7 @@ const ReviewsModal: React.FC<{ therapistId: number; onClose: () => void }> = ({
           reviewsData.map(async (review: any) => {
             try {
               const userResponse = await axios.get(
-                `http://localhost:5000/api/users/${review.student_id}`
+                `${API_BASE_URL}/api/users/${review.student_id}`
               );
               const user = userResponse.data;
               return {

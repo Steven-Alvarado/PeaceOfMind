@@ -2,6 +2,7 @@ import React, { createContext, useState, useEffect, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import {sendPasswordResetEmail as apiSendPasswordResetEmail} from "../api/authApi";
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
 // Define User interface
 export interface User {
@@ -67,7 +68,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const fetchProfile = async () => {
     try {
-      const { data } = await axios.get("/api/auth/me");
+      const { data } = await axios.get(`${API_BASE_URL}/api/auth/me`);
       setUser(data.user);
     } catch (error) {
       console.error("Failed to fetch user profile", error);
@@ -84,7 +85,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     role: string
   ) => {
     try {
-      const { data } = await axios.post("/api/auth/register", {
+      const { data } = await axios.post(`${API_BASE_URL}/api/auth/register`, {
         firstName,
         lastName,
         gender,
@@ -117,7 +118,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     monthlyRate: number
   ) => {
     try {
-      const { data } = await axios.post("/api/therapists/register", {
+      const { data } = await axios.post(`${API_BASE_URL}/api/therapists/register`, {
         firstName,
         lastName,
         email,
@@ -142,7 +143,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const login = async (email: string, password: string) => {
     try {
-      const { data } = await axios.post("/api/auth/login", { email, password });
+      const { data } = await axios.post(`${API_BASE_URL}/api/auth/login`, { email, password });
       const { token, user } = data;
   
       if (!token || !user) {
@@ -153,8 +154,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       localStorage.setItem("jwt", token);
       setAxiosAuthHeader(token);
   
-      // Fetch full user details from /api/auth/me
-      const profileResponse = await axios.get("/api/auth/me");
+  
+      const profileResponse = await axios.get(`${API_BASE_URL}/api/auth/me`);
       const fullUser = {
         ...profileResponse.data.user, // Merge additional user details
         token,
@@ -195,7 +196,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setAxiosAuthHeader(token);
   
     try {
-      const { data } = await axios.get("/api/auth/me");
+      const { data } = await axios.get(`${API_BASE_URL}/api/auth/me`);
       if (!data.user) {
         throw new Error("Invalid user data from the server.");
       }
