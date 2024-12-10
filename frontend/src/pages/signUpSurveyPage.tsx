@@ -6,6 +6,7 @@ import { useAuth } from "../hooks/useAuth";
 import HeaderSignUpLoginPage from "../components/HeaderSignUpLoginPage";
 import FooterLandingPage from "../components/Footer";
 import axios from "axios";
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 type QuestionType = {
   id: number;
@@ -75,7 +76,7 @@ const SignUpSurveyPage = () => {
         return content;
       }, {} as Record<string, string>);
 
-      await axios.post("/api/surveys", {
+      await axios.post(`${API_BASE_URL}/api/surveys`, {
         userId: user?.id,
         content: surveyContent,
       });
