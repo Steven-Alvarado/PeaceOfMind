@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { User, MessageCircle, FileText, X } from "lucide-react";
+import { MessageCircle, FileText, X } from "lucide-react";
 import MessagingInterface from "../Messaging/MessagingInterface";
+import JournalAnalyticsModal from "../StudentDashboard/JournalAnalyticsModal";
+import ProfilePicture from "../ProfilePicture"; // Import the ProfilePicture component
 
 interface PatientListComponentProps {
   therapistId: number;
@@ -13,29 +15,45 @@ const PatientSection: React.FC<PatientListComponentProps> = ({
   refresh,
 }) => {
   const [currPatients, setCurrPatients] = useState([]);
+  const [patientDetails, setPatientDetails] = useState<Record<number, any>>({});
   const [selectedPatient, setSelectedPatient] = useState<any | null>(null);
-  const [patEmail, setPatEmail] = useState<string | null>(null);
   const [patientFilter, setPatientFilter] = useState<string>("");
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
   const patientsPerPage = 4;
 
   useEffect(() => {
-    const fetchRequests = async () => {
+    const fetchPatients = async () => {
       if (!therapistId) return;
+
       try {
+        // Fetch relationships for the therapist
         const response = await axios.get(
           `/api/relationships/therapist/${therapistId}`
         );
-        setCurrPatients(response.data.relationships || []);
+        const relationships = response.data.relationships || [];
+        setCurrPatients(relationships);
+
+        // Fetch user details for each patient
+        const detailRequests = relationships.map((relation: any) =>
+          axios.get(`/api/users/${relation.student_id}`)
+        );
+
+        const detailResponses = await Promise.all(detailRequests);
+        const detailsMap = detailResponses.reduce((acc, res) => {
+          acc[res.data.id] = res.data;
+          return acc;
+        }, {} as Record<number, any>);
+
+        setPatientDetails(detailsMap);
       } catch (error) {
-        console.error("Error retrieving relationships", error);
+        console.error("Error fetching patients or details:", error);
       }
     };
 
-    fetchRequests();
+    fetchPatients();
   }, [therapistId, refresh]);
 
   const activeRelations = currPatients.filter(
@@ -50,19 +68,9 @@ const PatientSection: React.FC<PatientListComponentProps> = ({
     return fullName.includes(patientFilter.toLowerCase());
   });
 
-  const getEmail = async (studentId: number) => {
-    try {
-      const response = await axios.get(`/api/users/email/${studentId}`);
-      setPatEmail(response.data.email || null);
-    } catch (error) {
-      console.error("Error retrieving email:", error);
-    }
-  };
-
   const handleViewDetails = (patient: any) => {
     setSelectedPatient(patient);
-    getEmail(patient.student_id);
-    setIsDetailsOpen(true);
+    setIsAnalyticsOpen(true);
   };
 
   const handleChat = (patient: any) => {
@@ -85,7 +93,7 @@ const PatientSection: React.FC<PatientListComponentProps> = ({
 
   return (
     <div className="flex w-full h-full p-6 space-x-4">
-      <div className="flex flex-col w-full bg-blue-100 shadow-md rounded-lg mt-1 border-2 border-[#5E9ED9] p-6">
+      <div className="flex flex-col w-full bg-blue-100 shadow-md rounded-2xl mt-1 border-2 border-[#5E9ED9] p-6">
         <h2 className="text-3xl font-semibold text-center text-[#5E9ED9] mb-6">
           My Patients
         </h2>
@@ -106,27 +114,41 @@ const PatientSection: React.FC<PatientListComponentProps> = ({
                 key={patient.id}
                 className="flex items-center justify-between p-4 rounded-lg shadow-sm bg-white hover:bg-gray-100 transition"
               >
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800">
-                    {patient.student_first_name} {patient.student_last_name}
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    Assigned since{" "}
-                    {new Date(patient.updated_at).toLocaleDateString("en-US", {
-                      month: "long",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
-                  </p>
+                <div className="flex items-center gap-4">
+                  {/* Profile Picture */}
+                  <ProfilePicture
+                    userRole="student"
+                    userId={patient.student_id}
+                    className="w-12 h-12 rounded-full border border-gray-300"
+                  />
+                  <div>
+                    {/* Name and Email */}
+                    <h3 className="text-lg font-semibold text-gray-800">
+                      {patient.student_first_name} {patient.student_last_name}
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      {patientDetails[patient.student_id]?.email || "Loading..."}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Assigned since{" "}
+                      {new Date(patient.updated_at).toLocaleDateString("en-US", {
+                        month: "long",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                    </p>
+                  </div>
                 </div>
                 <div className="flex space-x-2">
+                  {/* View Details Button */}
                   <button
                     className="flex items-center gap-2 px-4 py-2 bg-[#5E9ED9] text-white rounded-lg hover:bg-[#4b8bc4] transition"
                     onClick={() => handleViewDetails(patient)}
                   >
-                    <User className="w-5 h-5" />
-                    View Details
+                    <FileText className="w-5 h-5" />
+                    View Analytics
                   </button>
+                  {/* Chat Button */}
                   <button
                     className="flex items-center gap-2 px-4 py-2 bg-[#5E9ED9] text-white rounded-lg hover:bg-[#4b8bc4] transition"
                     onClick={() => handleChat(patient)}
@@ -172,92 +194,16 @@ const PatientSection: React.FC<PatientListComponentProps> = ({
         </div>
       </div>
 
-      {/* Details Modal */}
-      {selectedPatient && isDetailsOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="relative bg-white rounded-lg p-8 max-w-xl w-full shadow-lg">
-            <button
-              onClick={() => {
-                setIsDetailsOpen(false);
-                setSelectedPatient(null);
-                setPatEmail(null);
-              }}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 focus:outline-none"
-              aria-label="Close"
-            >
-              <X className="w-6 h-6" />
-            </button>
-            <h3 className="text-2xl font-semibold text-center text-[#5E9ED9] mb-4">
-              {selectedPatient.student_first_name}{" "}
-              {selectedPatient.student_last_name}
-            </h3>
-            <div className="space-y-2">
-              <p className="text-gray-700">
-                <strong>Email: </strong> {patEmail || <span>Loading...</span>}
-              </p>
-              <p className="text-gray-700">
-                <strong>Notes:</strong> Add notes here
-              </p>
-            </div>
-            <div className="flex justify-around mt-6">
-              <button
-                className="flex items-center gap-2 px-4 py-2 bg-[#5E9ED9] text-white rounded-full hover:bg-[#4b8bc4] transition"
-                onClick={() => handleChat(selectedPatient)}
-              >
-                <MessageCircle className="w-5 h-5" />
-                Chat
-              </button>
-              <button className="flex items-center gap-2 px-4 py-2 bg-[#5E9ED9] text-white rounded-full hover:bg-[#4b8bc4] transition">
-                <FileText className="w-5 h-5" />
-                Notes
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Details Modal */}
-      {selectedPatient && isDetailsOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="relative bg-white rounded-lg p-8 max-w-xl w-full shadow-lg">
-            <button
-              onClick={() => {
-                setIsDetailsOpen(false);
-                setSelectedPatient(null);
-                setPatEmail(null);
-              }}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 focus:outline-none"
-              aria-label="Close"
-            >
-              <X className="w-6 h-6" />
-            </button>
-            <h3 className="text-2xl font-semibold text-center text-[#5E9ED9] mb-4">
-              {selectedPatient.student_first_name}{" "}
-              {selectedPatient.student_last_name}
-            </h3>
-            <div className="space-y-2">
-              <p className="text-gray-700">
-                <strong>Email: </strong> {patEmail || <span>Loading...</span>}
-              </p>
-              <p className="text-gray-700">
-                <strong>Notes:</strong> Add notes here
-              </p>
-            </div>
-            <div className="flex justify-around mt-6">
-              <button
-                className="flex items-center gap-2 px-4 py-2 bg-[#5E9ED9] text-white rounded-full hover:bg-[#4b8bc4] transition"
-                onClick={() => handleChat(selectedPatient)}
-              >
-                <MessageCircle className="w-5 h-5" />
-                Chat
-              </button>
-              <button className="flex items-center gap-2 px-4 py-2 bg-[#5E9ED9] text-white rounded-full hover:bg-[#4b8bc4] transition">
-                <FileText className="w-5 h-5" />
-                Notes
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* Analytics Modal */}
+      {selectedPatient && isAnalyticsOpen && (
+        <JournalAnalyticsModal
+          isOpen={isAnalyticsOpen}
+          onClose={() => setIsAnalyticsOpen(false)}
+          user={{
+            id: selectedPatient.student_id,
+            name: `${selectedPatient.student_first_name} ${selectedPatient.student_last_name}`,
+          }}
+        />
       )}
 
       {/* Chat Modal */}

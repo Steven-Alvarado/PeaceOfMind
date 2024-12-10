@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
-
+import ProfilePicture from "../ProfilePicture";
 import { FaBars, FaTimes } from "react-icons/fa";
 import { IoMdSettings } from "react-icons/io";
 import { MdOutlineLogout } from "react-icons/md";
@@ -68,17 +68,20 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
+
+
   const handleSave = async () => {
     if (!userSettings) {
       setSaveErrorMessage("User settings are not loaded.");
       return;
     }
-
+  
+    // Check if passwords match before proceeding
     if (userSettings.newPassword !== userSettings.confirmPassword) {
-      setSaveErrorMessage("Passwords do not match.");
+      window.alert("Passwords do not match. Please try again."); // Show a pop-up alert
       return;
     }
-
+  
     try {
       const response = await fetch(`/api/accountSettings/student/${user.id}`, {
         method: "PATCH",
@@ -90,24 +93,26 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
           first_name: userSettings.fname,
           last_name: userSettings.last_name,
           email: userSettings.email,
-          ...(userSettings.newPassword && { newPassword: userSettings.newPassword }), // Include new password if provided
+          ...(userSettings.newPassword && { password: userSettings.newPassword }), // Send the correct field name
         }),
       });
-
+  
       const data = await response.json();
       console.log("Response Data:", data);
-
+  
       if (response.ok) {
-        setSuccessMessage("Settings saved successfully.");
-        setSaveErrorMessage(""); // Clear the save error message if successful
+        alert("Details updated successfully.");
+        setSaveErrorMessage(""); // Clear error message on success
+        onClose(); // Close the modal after successful update
       } else {
-        setSaveErrorMessage(data.error || "Failed to save settings.");
+        setSaveErrorMessage(data.message || "Failed to update details.");
       }
     } catch (error) {
-      console.error("Error saving user settings:", error);
-      setSaveErrorMessage(error.message || "Failed to save settings.");
+      console.error("Error updating therapist details:", error);
+      setSaveErrorMessage(error.message || "Error updating therapist details.");
     }
   };
+  
 
   // Handle student deletion
   const handleDelete = async () => {
@@ -115,7 +120,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
       setDeleteErrorMessage("User ID is not available.");
       return;
     }
-  
+    const confirmDelete = window.confirm("Are you sure you want to delete this account? This action is irreversible.");
+    if (!confirmDelete) return;
+
     try {
       const response = await fetch(`/api/accountSettings/students/${user.id}`, {
         method: "DELETE",
@@ -124,23 +131,24 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
           "Content-Type": "application/json",
         },
       });
-  
+      const data = await response.json();
       if (response.ok) {
-        setSuccessMessage("Your account has been deleted successfully.");
-        setDeleteErrorMessage(""); // Clear the delete error message if successful
-  
-        // Redirect to the home page after account deletion
-        window.location.href = "/"; // Change "/" to your desired redirection path if needed
+        alert("Account deleted successfully.");
+        window.location.href = "/"; // Or wherever you want to redirect
       } else {
-        const data = await response.json();
         setDeleteErrorMessage(data.error || "Failed to delete account.");
       }
     } catch (error) {
-      console.error("Error deleting user account:", error);
-      setDeleteErrorMessage(error.message || "Failed to delete account.");
+      console.error("Error fetching therapist data or deleting account:", error);
+      setDeleteErrorMessage("An error occurred while deleting the account.");
     }
   };
   
+
+
+
+
+
   const handleClose = () => {
     onClose(); // Close the modal
     // Reset error messages and success state when modal is closed
@@ -149,27 +157,29 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     setSuccessMessage("");
     setUserSettings(null); // Optional: Reset settings when modal is closed
   };
+  
+  if (!isOpen) return null;
 
   return (
-    isOpen && (
-      <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
-        <div className="bg-white rounded-lg shadow-lg w-3/4 max-w-4xl">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="bg-white rounded-lg w-full max-w-lg">
           <div className="flex">
             <div className="w-full p-8">
-              <div className="flex justify-between mb-4">
-                <h2 className="text-2xl font-bold text-blue-600">User Settings</h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl text-[#5E9ED9] font-bold">Settings</h2>
                 <button
-                  className="bg-red-400 text-white px-4 py-2 rounded-full hover:bg-red-500"
-                  onClick={handleClose} // Close the modal and reset
+                  className="text-black px-2 rounded hover:text-gray-900"
+                  onClick={onClose}
                 >
-                  <FaTimes size={20} />
+                  X
                 </button>
               </div>
 
               {userSettings ? (
                 <div>
-                  <div className="mb-6">
-                    <label className="block text-sm font-bold text-gray-700">First Name</label>
+                    <div className="w-full">
+
+                    <label htmlFor="firstName" className="block text-gray-700 font-bold mb-2">First Name</label>
                     <input
                       type="text"
                       className="w-full p-3 border rounded-lg text-black"
@@ -183,9 +193,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                     />
                   </div>
 
-                  <div className="mb-6">
-                    <label className="block text-sm font-bold text-gray-700">Last Name</label>
-                    <input
+                  <div className="w-full">
+                  <label htmlFor="lastName" className="block text-gray-700 font-bold mb-2">Last Name</label>
+                  <input
                       type="text"
                       className="w-full p-3 border rounded-lg text-black"
                       value={userSettings.last_name}
@@ -198,9 +208,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                     />
                   </div>
 
-                  <div className="mb-6">
-                    <label className="block text-sm font-bold text-gray-700">Email</label>
-                    <input
+                  <div className="w-full">
+                  <label htmlFor="email" className="block text-gray-700 font-bold mb-2">Email Address</label>
+                  <input
                       type="email"
                       className="w-full p-3 border rounded-lg text-black"
                       value={userSettings.email}
@@ -213,9 +223,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                     />
                   </div>
 
-                  <div className="mb-6">
-                    <label className="block text-sm font-bold text-gray-700">New Password</label>
-                    <input
+                  <div className="w-full">
+                  <label htmlFor="newPassword" className="block text-gray-700 font-bold mb-2">New Password</label>
+                  <input
                       type="password"
                       className="w-full p-3 border rounded-lg text-black"
                       value={userSettings.newPassword}
@@ -228,9 +238,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                     />
                   </div>
 
-                  <div className="mb-6">
-                    <label className="block text-sm font-bold text-gray-700">Confirm Password</label>
-                    <input
+                  <div className="w-full">
+                  <label htmlFor="confirmPassword" className="block text-gray-700 font-bold mb-2">Confirm Password</label>
+                  <input
                       type="password"
                       className="w-full p-3 border rounded-lg text-black"
                       value={userSettings.confirmPassword}
@@ -244,35 +254,37 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                   </div>
 
                   {/* Save Button and Error Message */}
-                  <div className="flex justify-center gap-4 mt-4">
-                    <button
-                      className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-500"
-                      onClick={handleSave}
-                    >
-                      Save
-                    </button>
-                    {saveErrorMessage && (
-                      <p className="text-red-500 mt-2 text-sm">{saveErrorMessage}</p>
-                    )}
-                    {successMessage && (
-                      <p className="text-green-500 mt-2 text-sm">{successMessage}</p>
-                    )}
-                  </div>
+                  <div className="justify-between flex">
+                    <div className="flex justify-center gap-4 mt-4">
+                      <button
+                        className="bg-[#5E9ED9] text-white px-4 py-2 w-44 rounded hover:bg-[#4a8ac9]"
+                        onClick={handleSave}
+                      >
+                        Save
+                      </button>
+                      {saveErrorMessage && (
+                        <p className="text-red-500 mt-2 text-sm">{saveErrorMessage}</p>
+                      )}
+                      {successMessage && (
+                        <p className="text-green-500 mt-2 text-sm">{successMessage}</p>
+                      )}
+                    </div>
 
-                  {/* Delete Button and Error Message */}
-                  <div className="flex justify-center gap-4 mt-4">
-                    <button
-                      className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-500"
-                      onClick={handleDelete}
-                    >
-                      Delete Account
-                    </button>
-                    {deleteErrorMessage && (
-                      <p className="text-red-500 mt-2 text-sm">{deleteErrorMessage}</p>
-                    )}
-                    {successMessage && (
-                      <p className="text-green-500 mt-2 text-sm">{successMessage}</p>
-                    )}
+                    {/* Delete Button and Error Message */}
+                    <div className="flex justify-center gap-4 mt-4">
+                      <button
+                        className="bg-red-500 text-white px-4 py-2 w-44 rounded hover:bg-red-600"
+                        onClick={handleDelete}
+                      >
+                        Delete Account
+                      </button>
+                      {deleteErrorMessage && (
+                        <p className="text-red-500 mt-2 text-sm">{deleteErrorMessage}</p>
+                      )}
+                      {successMessage && (
+                        <p className="text-green-500 mt-2 text-sm">{successMessage}</p>
+                      )}
+                    </div>
                   </div>
                 </div>
               ) : (
@@ -283,7 +295,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
         </div>
       </div>
     )
-  );
+  
 };
 
 const LogoutConfirmationModal = ({ isOpen, onConfirm, onCancel }: { isOpen: boolean; onConfirm: () => void; onCancel: () => void }) => {
@@ -317,9 +329,8 @@ const HeaderStudentDashboard = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
-
-  const { logout } = useAuth(); 
-  const navigate = useNavigate(); 
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
@@ -335,9 +346,28 @@ const HeaderStudentDashboard = () => {
     navigate("/login");
   };
 
+  const handleProfilePictureChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files || event.target.files.length === 0) return;
+
+    const file = event.target.files[0];
+    const formData = new FormData();
+    formData.append("profile_picture", file);
+
+    try {
+      await axios.post(`http://localhost:5000/api/profilePicture/upload/${user.id}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      // Optionally, you can trigger a refresh to update the profile picture
+      window.location.reload(); // Refresh the page to fetch the updated profile picture
+    } catch (error) {
+      console.error("Failed to upload profile picture:", error);
+    }
+  };
+
   return (
     <header className="bg-[#5E9ED9] text-white sticky top-0 z-50">
       <div className="container mx-auto flex justify-between items-center p-4">
+        {/* Logo Section */}
         <div className="flex items-center cursor-pointer">
           <a href="/" className="flex items-center">
             <img
@@ -349,54 +379,83 @@ const HeaderStudentDashboard = () => {
           </a>
         </div>
 
-        {/* Desktop Navigation */}
-        <nav className="hidden font-bold md:flex space-x-1">
-          <div className="justify-center flex cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4] space-x-1">
-            <button 
-              className="cursor-pointer rounded hover:bg-[#4b8cc4]"
+        {/* Profile and Navigation Section */}
+        <div className="flex items-center gap-4">
+          {/* Student Info */}
+          {user && (
+            <div className="flex items-center gap-2">
+              {/* Profile Picture as a button */}
+              <label htmlFor="profile-picture-upload" className="cursor-pointer">
+                <ProfilePicture
+                  userRole="student"
+                  userId={user.id} // Assuming the user's ID is accessible
+                  className="w-14 h-14"
+                  style={{ border: "2px solid white" }}
+                />
+              </label>
+              <input
+                type="file"
+                id="profile-picture-upload"
+                accept="image/*"
+                style={{ display: "none" }}
+                onChange={handleProfilePictureChange}
+              />
+              <span className="text-white text-xl font-bold">
+                {user.first_name} {user.last_name}
+              </span>
+            </div>
+          )}
+
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex space-x-4 font-bold">
+            <button
+              className="flex items-center space-x-1 px-3 py-2 rounded hover:bg-[#4b8cc4] transition"
               onClick={() => setIsSettingsOpen(true)}
             >
-              <IoMdSettings className="inline mr-1 mb-0.5" />
-              Settings
+              <IoMdSettings className="inline" />
+              <span>Settings</span>
             </button>
-            <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
-          </div>
-          <div className="justify-center flex space-x-1 px-3 py-2 rounded hover:bg-[#4b8cc4]">
+            <SettingsModal
+              isOpen={isSettingsOpen}
+              onClose={() => setIsSettingsOpen(false)}
+            />
             <button
+              className="flex items-center space-x-1 px-3 py-2 rounded hover:bg-[#4b8cc4] transition"
               onClick={() => setIsLogoutModalOpen(true)}
             >
-              <MdOutlineLogout className="inline mr-1 mb-0.5"/>
-              Logout
+              <MdOutlineLogout className="inline" />
+              <span>Logout</span>
             </button>
-          </div>
-        </nav>
+          </nav>
 
-        {/* Mobile Hamburger Icon */}
-        <button onClick={toggleMenu} className="md:hidden">
-          {isOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
-        </button>
+          {/* Mobile Hamburger Icon */}
+          <button onClick={toggleMenu} className="md:hidden">
+            {isOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile Menu */}
       {isOpen && (
         <nav className="md:hidden text-center font-bold bg-[#5E9ED9] text-white p-4 space-y-2">
-          <div className="space-y-2">
-            <div className="justify-center flex space-x-1 px-3 py-2 rounded hover:bg-[#4b8cc4]">
-              
-              <a href="Link for Dashboard"><IoMdSettings className="inline mr-1 mb-0.5"/> Settings </a>
-            </div>
-            <div className="justify-center flex space-x-1 px-3 py-2 rounded hover:bg-[#4b8cc4]">
-              
-              <button
-                onClick={() => setIsLogoutModalOpen(true)}
-              >
-                <MdOutlineLogout className="inline mr-1 mb-0.5"/>
-                Logout
-              </button>
-            </div>
-          </div>
+          <button
+            className="block px-3 py-2 rounded hover:bg-[#4b8cc4] transition w-full text-left"
+            onClick={() => setIsSettingsOpen(true)}
+          >
+            <IoMdSettings className="inline mr-2" />
+            Settings
+          </button>
+          <button
+            className="block px-3 py-2 rounded hover:bg-[#4b8cc4] transition w-full text-left"
+            onClick={() => setIsLogoutModalOpen(true)}
+          >
+            <MdOutlineLogout className="inline mr-2" />
+            Logout
+          </button>
         </nav>
       )}
+
+      {/* Modals */}
       <LogoutConfirmationModal
         isOpen={isLogoutModalOpen}
         onConfirm={handleLogout}

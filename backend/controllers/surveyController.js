@@ -1,5 +1,5 @@
-const { createSurveyResponse, updateSurveyResponse, getSurveyById, getSurveysByUserId } = require('../models/surveysModel');
-
+const { createSurveyResponse, getWeeklySurveysByUserId, createWeeklySurveyResponse, updateSurveyResponse, getSurveyById, getSurveysByUserId } = require('../models/surveysModel');
+const { hasWeeklySurveyForCurrentWekk } = require('../models/documentsModel');
 // Create a new survey response
 const createSurvey = async (req, res) => {
     const { userId, content } = req.body;
@@ -14,6 +14,62 @@ const createSurvey = async (req, res) => {
     } catch (error) {
         console.error("Error submitting survey response:", error);
         res.status(500).json({ error: 'Failed to submit survey response' });
+    }
+};
+
+// Controller to get weekly surveys by user ID
+const getWeeklySurveys = async (req, res) => {
+    const { id: userId } = req.params;
+
+    try {
+        const surveys = await getWeeklySurveysByUserId(userId);
+
+        if (surveys.length === 0) {
+            return res.status(404).json({ message: "No weekly surveys found for this user." });
+        }
+
+        res.status(200).json({ surveys });
+    } catch (error) {
+        console.error("Error fetching weekly surveys:", error);
+        res.status(500).json({ message: "Error fetching weekly surveys", error });
+    }
+};
+
+// Create a new weekly survey response
+const createWeeklySurvey = async (req, res) => {
+    const { userId, content } = req.body;
+  
+    if (!userId || !content) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+  
+    try {
+      const survey = await createWeeklySurveyResponse(userId, content);
+      res.status(201).json({ message: "Weekly survey submitted successfully", survey });
+    } catch (error) {
+      console.error("Error submitting weekly survey:", error);
+      res.status(500).json({ error: "Failed to submit weekly survey" });
+    }
+};
+
+const checkWeeklySurveyStatus = async (req, res) => {
+    const { userId } = req.params;
+
+    if (!userId) {
+        return res.status(400).json({ error: "User ID is required" });
+    }
+
+    try {
+        const hasSubmitted = await hasWeeklySurveyForCurrentWekk(userId);
+
+        if (hasSubmitted) {
+            return res.status(200).json({ message: "Weekly survey already submitted", canSubmit: false });
+        }
+
+        return res.status(200).json({ message: "No weekly survey submitted", canSubmit: true });
+    } catch (error) {
+        console.error("Error checking weekly survey status:", error);
+        res.status(500).json({ error: "Failed to check weekly survey status" });
     }
 };
 
@@ -71,4 +127,4 @@ const getSurveys = async (req, res) => {
     }
 };
 
-module.exports = { createSurvey, updateSurvey, getSurvey, getSurveys };
+module.exports = { getWeeklySurveys, createSurvey, createWeeklySurvey, checkWeeklySurveyStatus, updateSurvey, getSurvey, getSurveys };

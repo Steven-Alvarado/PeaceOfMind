@@ -8,14 +8,17 @@ import LoginPageAnimation from "../assets/lotties/LogInPageAnimation.json"
 
 const Login: React.FC = () => {
   return (
-    <div style={{ position: "relative", minHeight: "100vh" }}>
+    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
       <HeaderSignUpLoginPage />
-      <LoginSection />
-      <div className="absolute bottom-0 w-full">
+      <div style={{ flex: "1" }}>
+        <LoginSection />
+      </div>
+      <div style={{ marginTop: "auto" }}>
         <FooterLandingPage />
       </div>
     </div>
   );
+  
 };
 
 const LoginSection: React.FC = () => {

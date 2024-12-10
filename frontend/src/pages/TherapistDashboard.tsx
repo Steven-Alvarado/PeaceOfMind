@@ -9,7 +9,7 @@ import TherapistHelpModal from "../components/TherapistDashboard/TherapistHelpMo
 import RequestList from "../components/TherapistDashboard/RequestList";
 import InvoicingModal from "../components/TherapistDashboard/InvoicingModal";
 import SchedulingForTherapists from "../components/TherapistDashboard/SchedulingForTherapists"; // Import SchedulingForTherapists
-import { FaUserPlus, FaTasks, FaFileInvoice } from "react-icons/fa";
+import { FaUserPlus, FaTasks, FaFileInvoice , FaQuestionCircle} from "react-icons/fa";
 
 const TherapistDashboard: React.FC = () => {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
@@ -58,12 +58,7 @@ const TherapistDashboard: React.FC = () => {
 
   return (
     <div className="therapist-dashboard flex flex-col min-h-screen">
-      <HeaderTherapistDashboard />
-      <header className="bg-blue-100 mt-5 p-3">
-        <h1 className="text-4xl font-bold text-center text-[#5E9ED9]">
-          Welcome, {user?.first_name} {user?.last_name}!
-        </h1>
-      </header>
+      <HeaderTherapistDashboard /> 
       <div className="flex-grow grid grid-cols-1 md:grid-cols-3 px-6 py-10">
         {/* Patients Section */}
         <div className="col-span-2">
@@ -72,58 +67,57 @@ const TherapistDashboard: React.FC = () => {
             refresh={refresh}
           />
         </div>
-        <div className="col-span-1 bg-blue-100 rounded-lg shadow-lg p-6 border-2 mt-7 mb-6 border-[#5E9ED9]">
-          <h2 className="text-4xl text-center mt-10 font-bold text-[#5E9ED9]">
-            Menu
-          </h2>
-          <div className="">
-            <div className="flex justify-center md:mt-7 md:mb-10">
-              <button
-                className="bg-[#5E9ED9] text-white px-4 py-1 rounded-2xl hover:bg-[#4a8ac9] text-sm"
-                onClick={() => setIsHelpOpen(true)}
-              >
-                Help
-              </button>
-            </div>
-            <div className="flex justify-center">
-              <div className="text-center p-2 text-[#5E9ED9] text-xl font-bold rounded-2xl">
-                Set your availability for Patient Requests.
-              </div>
-            </div>
-            <div className="flex items-center justify-center space-x-2 border-[#5E9ED9] border-2 rounded-2xl">
-              <span className="p-2 rounded-3xl text-[#5E9ED9] font-bold">
-                Not Available
-              </span>
-              <Switch
-                checked={isAvailable || false}
-                onChange={toggleAvailability}
-              />
-              <span className="p-2 rounded-3xl text-[#5E9ED9] font-bold">
-                Available
-              </span>
-            </div>
-            <div className="space-y-7 mt-16">
-              <button
-                className="w-full bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center"
-                onClick={() => setIsRequestOpen(true)}
-              >
-                <FaUserPlus className="mr-3" /> View New Patient Requests
-              </button>
-              <button
-                className="w-full bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center"
-                onClick={() => setIsSchedulingModalOpen(true)} // Open scheduling modal
-              >
-                <FaTasks className="mr-3" /> Manage Scheduling
-              </button>
-              <button
-                className="w-full bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center"
-                onClick={() => setIsInvoicingOpen(true)}
-              >
-                <FaFileInvoice className="mr-3" /> Invoices
-              </button>
-            </div>
-          </div>
-        </div>
+        <div className="col-span-1 backdrop-blur-lg bg-blue-100 shadow-lg rounded-2xl p-8 border-2 border-[#5E9ED9] mt-7 mb-6">
+  {/* Header */}
+  <header className="flex justify-between items-center mb-6">
+    <h2 className="text-3xl font-semibold text-center text-[#5E9ED9]">Menu</h2>
+    <button
+      onClick={() => setIsHelpOpen(true)}
+      className="text-[#5E9ED9] hover:text-blue-700 transition-colors duration-200"
+      aria-label="Help"
+    >
+      <FaQuestionCircle className="w-5 h-5" />
+    </button>
+  </header>
+
+  {/* Availability Toggle */}
+  <div className="flex flex-col items-center bg-blue-100 p-4 rounded-lg border border-[#5E9ED9] mb-6">
+    <span className="text-gray-700 font-medium text-lg mb-2">
+      Set your availability for Patient Requests
+    </span>
+    <div className="flex items-center space-x-4">
+      <span className="text-sm text-gray-700">Not Available</span>
+      <Switch checked={isAvailable || false} onChange={toggleAvailability} />
+      <span className="text-sm text-gray-700">Available</span>
+    </div>
+  </div>
+
+  {/* Menu Buttons */}
+  <div className="space-y-4">
+    <button
+      onClick={() => setIsRequestOpen(true)}
+      className="w-full flex items-center justify-between px-4 py-3 bg-[#5E9ED9] text-white rounded-lg hover:bg-[#4a8ac9] transition-all duration-200"
+    >
+      <span>View New Patient Requests</span>
+      <FaUserPlus className="w-5 h-5" />
+    </button>
+    <button
+      onClick={() => setIsSchedulingModalOpen(true)}
+      className="w-full flex items-center justify-between px-4 py-3 bg-[#5E9ED9] text-white rounded-lg hover:bg-[#4a8ac9] transition-all duration-200"
+    >
+      <span>Manage Scheduling</span>
+      <FaTasks className="w-5 h-5" />
+    </button>
+    <button
+      onClick={() => setIsInvoicingOpen(true)}
+      className="w-full flex items-center justify-between px-4 py-3 bg-[#5E9ED9] text-white rounded-lg hover:bg-[#4a8ac9] transition-all duration-200"
+    >
+      <span>Invoices</span>
+      <FaFileInvoice className="w-5 h-5" />
+    </button>
+  </div>
+</div>
+
       </div>
       <Footer />
       <TherapistHelpModal

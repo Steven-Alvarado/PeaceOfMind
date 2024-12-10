@@ -85,9 +85,9 @@ const TherapistSignUp = () => {
   };
 
   return (
-    <div style={{ position: 'relative', minHeight: '100vh' }}>
+    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
       <HeaderSignUpLoginPage />
-      <div className="pb-36">
+      <div style={{ flex: "1" }}>
         <TherapistSignUpSection 
           form={form}
           handleChange={handleChange}
@@ -96,11 +96,10 @@ const TherapistSignUp = () => {
           error={error}
         />
       </div>
-      <div className="absolute bottom-0 w-full">
-          <FooterLandingPage />
-        </div>
+      <FooterLandingPage />
     </div>
   );
+  
 };
 
 function TherapistSignUpSection({ form, handleChange, handleGenderSelect, handleSubmit, error }) {

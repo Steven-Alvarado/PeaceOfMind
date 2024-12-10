@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
-
+import ProfilePicture from "../ProfilePicture";
 import { FaBars, FaTimes } from "react-icons/fa";
 import { IoMdSettings } from "react-icons/io";
 import { MdOutlineLogout } from "react-icons/md";
@@ -58,6 +58,10 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
       setErrorMessage(error.message || "Error fetching therapist details.");
     }
   };
+
+
+
+
   const handleDeleteAccount = async () => {
     console.log("Delete account button clicked");
   
@@ -108,13 +112,15 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
       setErrorMessage("An error occurred while deleting the account.");
     }
   };
-  
+
   const handleUpdate = async () => {
+    // Check if passwords match before proceeding
     if (newPassword !== confirmPassword) {
+      window.alert("Passwords do not match. Please try again."); // Show a pop-up alert
       setErrorMessage("Passwords do not match.");
       return;
     }
-
+  
     try {
       const response = await fetch(`/api/accountSettings/therapist/${user.id}`, {
         method: "PATCH", // Use PATCH to update the therapist details
@@ -127,14 +133,16 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
           last_name: lastName,
           email,
           experience_years: experienceYears,
-          new_password: newPassword,
+          ...(newPassword && { password: newPassword }), // Send as "password" if provided
           monthly_rate: monthlyRate,
         }),
       });
-
+  
       const data = await response.json();
+  
       if (response.ok) {
         alert("Details updated successfully.");
+        setErrorMessage(""); // Clear error message on success
         onClose(); // Close the modal after successful update
       } else {
         setErrorMessage(data.message || "Failed to update details.");
@@ -144,13 +152,25 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
       setErrorMessage(error.message || "Error updating therapist details.");
     }
   };
+  
+  
+  const handleClose = () => {
+    onClose();  
+  };
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-lg outline outline-white outline-2 outline-offset-2">
-        <h2 className="text-3xl font-extrabold text-center text-[#5E9ED9] mb-4">Settings</h2>
-
+      <div className="bg-white rounded-lg p-6 w-full max-w-lg">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl text-[#5E9ED9] font-bold">Settings</h2>
+          <button
+            className="text-black px-2 rounded hover:text-gray-900"
+            onClick={onClose}
+          >
+            X
+          </button>
+        </div>
         {/* First Name and Last Name on the same line */}
         <div className="flex space-x-4">
           <div className="w-full">
@@ -247,24 +267,16 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
         {/* Update, Delete Account, and Close buttons in the same row */}
         <div className="mt-6 flex justify-between">
           <button
-            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-400"
-            onClick={handleDeleteAccount}
-          >
-            Delete Account
-          </button>
-
-          <button
-            className="bg-[#5E9ED9] text-white px-4 py-2 rounded hover:bg-[#4a8ac9]"
+            className="bg-[#5E9ED9] text-white px-4 py-2 w-44 rounded hover:bg-[#4a8ac9]"
             onClick={handleUpdate}
           >
             Update
           </button>
-
           <button
-            className="bg-[#5E9ED9] text-white px-4 py-2 rounded hover:bg-[#4a8ac9]"
-            onClick={onClose}
+            className="bg-red-500 text-white px-4 py-2  w-44 rounded hover:bg-red-400"
+            onClick={handleDeleteAccount}
           >
-            Close
+            Delete Account
           </button>
         </div>
       </div>
@@ -303,14 +315,38 @@ const HeaderTherapistDashboard = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [therapistId, setTherapistId] = useState<number | null>(null);
 
 
-  const { logout } = useAuth(); 
+  const { user, logout } = useAuth(); 
   const navigate = useNavigate(); 
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
   };
+
+ // Fetch therapist_id using user_id
+ useEffect(() => {
+  const fetchTherapistId = async () => {
+    if (user?.id) {
+      try {
+        const response = await axios.get(
+          `http://localhost:5000/api/therapists/find/${user.id}`
+        );
+        const therapistData = response.data.therapist;
+        if (therapistData && therapistData.id) {
+          setTherapistId(therapistData.id); // Set the therapist ID
+        } else {
+          console.error("Therapist data is missing or invalid:", therapistData);
+        }
+      } catch (error) {
+        console.error("Failed to fetch therapist_id:", error);
+      }
+    }
+  };
+
+  fetchTherapistId();
+}, [user]);
 
   const handleLogout = () => {
     localStorage.removeItem("jwt");
@@ -321,10 +357,11 @@ const HeaderTherapistDashboard = () => {
 
     navigate("/login");
   };
-  
+
   return (
     <header className="bg-[#5E9ED9] text-white sticky top-0 z-50">
       <div className="container mx-auto flex justify-between items-center p-4">
+        {/* Logo Section */}
         <div className="flex items-center cursor-pointer">
           <a href="/" className="flex items-center">
             <img
@@ -336,52 +373,73 @@ const HeaderTherapistDashboard = () => {
           </a>
         </div>
 
-        {/* Desktop Navigation */}
-        <nav className="hidden font-bold md:flex space-x-1">
-          <div className="justify-center flex cursor-pointer px-3 py-2 rounded hover:bg-[#4b8cc4] space-x-1">
-            <button 
-              className="cursor-pointer rounded hover:bg-[#4b8cc4]"
+        {/* Profile and Navigation Section */}
+        <div className="flex items-center gap-4">
+          {/* Therapist Info */}
+          {user && (
+            <div className="flex items-center gap-2">
+              <ProfilePicture
+                userRole="therapist"
+                therapistId={therapistId} // Assuming the user's ID is accessible
+                className="w-14 h-14"
+                style={{ border: "2px solid white" }}
+              />
+              <span className="text-white text-xl font-bold">
+                {user.first_name} {user.last_name}
+              </span>
+            </div>
+          )}
+
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex space-x-4 font-bold">
+            <button
+              className="flex items-center space-x-1 px-3 py-2 rounded hover:bg-[#4b8cc4] transition"
               onClick={() => setIsSettingsOpen(true)}
             >
-              <IoMdSettings className="inline mr-1 mb-0.5" />
-              Settings
+              <IoMdSettings className="inline" />
+              <span>Settings</span>
             </button>
-            <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
-          </div>
-          <div className="justify-center flex space-x-1 px-3 py-2 rounded hover:bg-[#4b8cc4]">
+            <SettingsModal
+              isOpen={isSettingsOpen}
+              onClose={() => setIsSettingsOpen(false)}
+            />
             <button
+              className="flex items-center space-x-1 px-3 py-2 rounded hover:bg-[#4b8cc4] transition"
               onClick={() => setIsLogoutModalOpen(true)}
-              >
-              <MdOutlineLogout className="inline mr-1 mb-0.5"/>
-              Logout
+            >
+              <MdOutlineLogout className="inline" />
+              <span>Logout</span>
             </button>
-          </div>
-        </nav>
+          </nav>
 
-        {/* Mobile Hamburger Icon */}
-        <button onClick={toggleMenu} className="md:hidden">
-          {isOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
-        </button>
+          {/* Mobile Hamburger Icon */}
+          <button onClick={toggleMenu} className="md:hidden">
+            {isOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile Menu */}
       {isOpen && (
         <nav className="md:hidden text-center font-bold bg-[#5E9ED9] text-white p-4 space-y-2">
-          <div className="space-y-2">
-            <div className="justify-center flex space-x-1 px-3 py-2 rounded hover:bg-[#4b8cc4]">
-              <a href="Link for Dashboard"> <IoMdSettings className="inline mr-1 mb-0.5"/> Settings </a>
-            </div>
-            <div className="justify-center flex space-x-1 px-3 py-2 rounded hover:bg-[#4b8cc4]">
-              <button
-              onClick={() => setIsLogoutModalOpen(true)}
-              >
-                <MdOutlineLogout className="inline mr-1 mb-0.5"/>
-                Logout
-              </button>
-            </div>
-          </div>
+          <button
+            className="block px-3 py-2 rounded hover:bg-[#4b8cc4] transition w-full text-left"
+            onClick={() => setIsSettingsOpen(true)}
+          >
+            <IoMdSettings className="inline mr-2" />
+            Settings
+          </button>
+          <button
+            className="block px-3 py-2 rounded hover:bg-[#4b8cc4] transition w-full text-left"
+            onClick={() => setIsLogoutModalOpen(true)}
+          >
+            <MdOutlineLogout className="inline mr-2" />
+            Logout
+          </button>
         </nav>
       )}
+
+      {/* Modals */}
       <LogoutConfirmationModal
         isOpen={isLogoutModalOpen}
         onConfirm={handleLogout}

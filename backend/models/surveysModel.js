@@ -16,6 +16,23 @@ const createSurveyResponse = async (userId, content) => {
 
     return { ...surveyResult.rows[0], document_id: documentResult.rows[0].id };
 };
+//Create weekly survey
+const createWeeklySurveyResponse = async (userId, content) => {
+    const documentResult = await pool.query(
+        `INSERT INTO documents (user_id, document_type, document_content, created_at, updated_at)
+         VALUES ($1, 'weekly_survey', $2, NOW(), NOW()) RETURNING id`,
+        [userId, content]
+    );
+
+    const surveyResult = await pool.query(
+        `INSERT INTO surveys (student_id, document_id, survey_date, created_at, updated_at)
+         VALUES ($1, $2, NOW(), NOW(), NOW()) RETURNING id, survey_date, created_at`,
+        [userId, documentResult.rows[0].id]
+    );
+
+    return { ...surveyResult.rows[0], document_id: documentResult.rows[0].id };
+};
+
 
 // Update a survey response
 const updateSurveyResponse = async (surveyId, content) => {
@@ -59,4 +76,19 @@ const getSurveysByUserId = async (userId) => {
     return result.rows;
 };
 
-module.exports = { createSurveyResponse, updateSurveyResponse, getSurveyById, getSurveysByUserId };
+// Get all weekly surveys by userId
+const getWeeklySurveysByUserId = async (userId) => {
+    const result = await pool.query(
+        `SELECT s.id, d.document_content, s.survey_date, s.created_at, s.updated_at
+         FROM surveys s
+         INNER JOIN documents d ON s.document_id = d.id
+         WHERE s.student_id = $1 AND d.document_type = 'weekly_survey'`,
+        [userId]
+    );
+
+    return result.rows;
+};
+
+
+
+module.exports = { createSurveyResponse, getWeeklySurveysByUserId, updateSurveyResponse, getSurveyById, getSurveysByUserId, createWeeklySurveyResponse};

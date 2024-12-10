@@ -8,118 +8,133 @@ const { createServer } = require("http");
 const { Server } = require("socket.io");
 const db = require("./config/db");
 const apiRoutes = require("./routes/api");
-
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000"
 const app = express();
 const PORT = process.env.PORT || 5000;
+const winston = require('winston');
+const rateLimit = require('express-rate-limit');
 
-// CORS Configuration
-const allowedOrigins = process.env.FRONTEND_URL || "http://localhost:3000";
-app.use(cors({ origin: allowedOrigins, credentials: true }));
-
-// Create HTTP server and attach Socket.IO
+// Create an HTTP server and attach socket.io to it
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: allowedOrigins,
-    credentials: true,
-    methods: ["GET", "POST"],
+    origin: FRONTEND_URL , 
+    methods: ["GET", "POST"]
   },
 });
 
-// Serve static files
+if (!process.env.FRONTEND_URL || !process.env.DATABASE_URL) {
+  throw new Error('Missing required environment variables');
+}
+
+// rate limiter
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, 
+  max: 100, 
+});
+app.use(limiter);
+
+// logger for railway parsing
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.json(),
+  transports: [new winston.transports.Console()],
+});
+
+// Attach `io` to the app for use in other parts of the application
+app.set("io", io);
+
+// Serve static profile pic files from uploads folder
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Middleware
+app.use(cors({ origin: FRONTEND_URL }));
 app.use(express.json());
 
 // Swagger setup
 const swaggerDocument = YAML.load("./swagger.yaml");
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-// Mount API routes
+// Mount the API routes
 app.use("/api", apiRoutes);
 
 // Socket.IO setup
 io.on("connection", (socket) => {
   console.log(`A user connected: ${socket.id}`);
 
-  socket.on("joinConversation", (conversationId) => {
-    if (!conversationId) return;
-    console.log(`User joined conversation_${conversationId}`);
+  // User joins their student-specific room
+  socket.on("joinStudentRoom", (studentId) => {
+    if (!studentId) {
+      console.error("Invalid studentId received.");
+      return;
+    }
+    console.log(`Student ${studentId} joined their room.`);
+    socket.join(`student_${studentId}`);
+  });
+
+  socket.on("joinTherapistRoom", (therapistId) => {
+    if (!therapistId) {
+      console.error("Invalid therapistId received.");
+      return;
+    }
+    console.log(`Therapist joined room: therapist_${therapistId}`);
+    socket.join(`therapist_${therapistId}`);
+  });
+
+<<<<<<< HEAD
+
+=======
+>>>>>>> 690917da7012c820e45805e42838337644c9f6b6
+
+  // Emit relationship updates to students
+  socket.on("relationship-updated", ({ studentId, status }) => {
+    if (!studentId || !status) {
+      console.error("Invalid relationship update data.");
+      return;
+    }
+    console.log(`Relationship update for student ${studentId}: ${status}`);
+    io.to(`student_${studentId}`).emit("relationship-changed", { status });
+  });
+
+
+   // User joins a conversation room
+   socket.on("joinConversation", (conversationId) => {
+    if (!conversationId) {
+      console.error("Invalid conversationId received.");
+      return;
+    }
+    console.log(`User joined conversation room: conversation_${conversationId}`);
     socket.join(`conversation_${conversationId}`);
   });
 
+  // Handle sending messages
   socket.on("sendMessage", async (message) => {
     const { conversationId, senderId, receiverId, messageContent } = message;
-    if (!conversationId || !messageContent) return;
+
+    if (!conversationId || !messageContent) {
+      console.error("Invalid message data.");
+      return;
+    }
 
     try {
-      const result = await db.query(
-        `INSERT INTO messages (conversation_id, sender_id, receiver_id, message_content)
+      // Save the message in the database
+      const insertedMessage = await db.query(
+        `INSERT INTO messages (conversation_id, sender_id, receiver_id, message_content) 
          VALUES ($1, $2, $3, $4) RETURNING *`,
         [conversationId, senderId, receiverId, messageContent]
       );
-      const dbMessage = result.rows[0];
-      io.to(`conversation_${conversationId}`).emit("receiveMessage", dbMessage);
+
+      const dbMessage = insertedMessage.rows[0];
+      if (dbMessage) {
+        console.log(`Message sent in conversation_${conversationId}:`, dbMessage);
+
+        // Emit message only to the relevant room
+        io.to(`conversation_${conversationId}`).emit("receiveMessage", dbMessage);
+      }
     } catch (error) {
-      console.error("Error processing message:", error);
+      console.error("Error processing message:", error.message);
     }
-  });
-
-  // Video call signaling (offer/answer exchange)
-  socket.on("videoCallSignal", ({ conversationId, signal }) => {
-    if (!signal || !conversationId) {
-      console.error("Invalid signal data.");
-      return;
-    }
-    const room = `conversation_${conversationId}`;
-    console.log(`Broadcasting video call signal for room ${room}:`, signal);
-    socket.to(room).emit("receiveSignal", signal);
-  });
-
-  // Handle ICE candidate exchange
-  socket.on("sendIceCandidate", ({ conversationId, candidate }) => {
-    const room = `conversation_${conversationId}`;
-    if (!candidate || !conversationId) {
-      console.error("Invalid ICE candidate data.");
-      return;
-    }
-    console.log(`Broadcasting ICE candidate for room ${room}:`, candidate);
-    socket.to(room).emit("receiveIceCandidate", candidate);
-  });
-
-  // Handle SDP signaling for offer/answer
-  socket.on("sendSignal", ({ roomId, type, data }) => {
-    if (!roomId || !type || !data) {
-      console.error("Invalid signaling data.");
-      return;
-    }
-    console.log(`Broadcasting ${type} for room ${roomId}:`, data);
-    socket.to(roomId).emit("receiveSignal", { type, data });
-  });
-
-  // Join video room
-  socket.on("joinVideoRoom", ({ roomId, userId }, callback) => {
-    if (!roomId || !userId) {
-      console.error("Invalid room or user data.");
-      callback({ success: false, error: "Invalid room or user data." });
-      return;
-    }
-    console.log(`User ${userId} joined video room: ${roomId}`);
-    socket.join(roomId);
-    callback({ success: true });
-  });
-
-  // Notify other users in the room to start video call
-  socket.on("startVideoCall", (conversationId) => {
-    if (!conversationId) {
-      console.error("Invalid conversationId for video call.");
-      return;
-    }
-    const room = `conversation_${conversationId}`;
-    console.log(`Starting video call in room: ${room}.`);
-    socket.to(room).emit("startVideoCall");
-  });
+  }); 
 
   // Handle user disconnection
   socket.on("disconnect", () => {
@@ -127,15 +142,15 @@ io.on("connection", (socket) => {
   });
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: "Internal Server Error" });
+process.on('SIGINT', () => {
+  console.log('Shutting down gracefully...');
+  db.end(() => {
+    console.log('Database connection closed.');
+    process.exit(0);
+  });
 });
 
-// Start server
-httpServer.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server is running on port ${PORT}`);
-  console.log(`Swagger documentation available at http://0.0.0.0:${PORT}/api-docs`);
+// Start the server
+httpServer.listen(PORT, () => {
+  console.log(`Server listening on port ${PORT}`);
 });
-

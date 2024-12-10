@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { Pie } from "react-chartjs-2";
-import { Chart as chartjs, ArcElement, Tooltip, Legend } from "chart.js";
-import { useAuth } from "../../hooks/useAuth";
+import { Pie, Line } from "react-chartjs-2";
+import { Chart as chartjs, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement } from "chart.js";
 import axios from "axios";
 
-chartjs.register(ArcElement, Tooltip, Legend);
+chartjs.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement);
 
 interface JournalAnalyticsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  user: { id: number; name: string };
 }
 
 interface JournalEntry {
@@ -16,30 +16,43 @@ interface JournalEntry {
   created_at: string;
 }
 
-const JournalAnalyticsModal: React.FC<JournalAnalyticsModalProps> = ({
-  isOpen,
-  onClose,
-}) => {
-  const { user } = useAuth();
-  const [moodData, setMoodData] = useState<
-    Record<string, { count: number; dates: string[] }>
-  >({});
+interface SurveyEntry {
+  survey_date: string;
+  document_content: Record<string, string>;
+}
+
+const answerMapping = {
+  "Strongly Disagree": 1,
+  "Disagree": 2,
+  "Neutral": 3,
+  "Agree": 4,
+  "Strongly Agree": 5,
+};
+
+const reverseMapping = ["", "Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"];
+
+const JournalAnalyticsModal: React.FC<JournalAnalyticsModalProps> = ({ isOpen, onClose, user }) => {
+  const [activeTab, setActiveTab] = useState<"journalAnalytics" | "surveyAnalytics">("journalAnalytics");
+  const [moodData, setMoodData] = useState<Record<string, { count: number; dates: string[] }>>({});
+  const [surveyData, setSurveyData] = useState<SurveyEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [totalEntries, setTotalEntries] = useState(0);
 
   useEffect(() => {
     if (isOpen && user?.id) {
-      fetchMoodData();
+      if (activeTab === "journalAnalytics") {
+        fetchMoodData();
+      } else if (activeTab === "surveyAnalytics") {
+        fetchSurveyData();
+      }
     }
-  }, [isOpen, user?.id]);
+  }, [isOpen, activeTab, user?.id]);
 
   const fetchMoodData = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`/api/journals/user/${user?.id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("jwt")}`,
-        },
+      const response = await axios.get(`/api/journals/user/${user.id}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("jwt")}` },
       });
 
       const journals: JournalEntry[] = response.data.journals;
@@ -50,9 +63,7 @@ const JournalAnalyticsModal: React.FC<JournalAnalyticsModalProps> = ({
             acc[journal.mood] = { count: 0, dates: [] };
           }
           acc[journal.mood].count += 1;
-          acc[journal.mood].dates.push(
-            new Date(journal.created_at).toLocaleDateString()
-          );
+          acc[journal.mood].dates.push(new Date(journal.created_at).toLocaleDateString());
           return acc;
         },
         {}
@@ -67,7 +78,23 @@ const JournalAnalyticsModal: React.FC<JournalAnalyticsModalProps> = ({
     }
   };
 
-  const data = {
+  const fetchSurveyData = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`/api/surveys/weekly/user/${user.id}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("jwt")}` },
+      });
+
+      const surveys: SurveyEntry[] = response.data.surveys;
+      setSurveyData(surveys);
+    } catch (error) {
+      console.error("Failed to fetch survey data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const moodChartData = {
     labels: Object.keys(moodData),
     datasets: [
       {
@@ -78,38 +105,41 @@ const JournalAnalyticsModal: React.FC<JournalAnalyticsModalProps> = ({
     ],
   };
 
-  const options = {
+  const surveyChartData = {
+    labels: surveyData.map((survey) => new Date(survey.survey_date).toLocaleDateString()),
+    datasets: Object.keys(surveyData[0]?.document_content || {}).map((question, index) => ({
+      label: question,
+      data: surveyData.map((survey) => answerMapping[survey.document_content[question]] || 0),
+      borderColor: `hsl(${(index * 50) % 360}, 70%, 50%)`,
+      fill: false,
+      tension: 0.2,
+    })),
+  };
+
+  const surveyChartOptions = {
     responsive: true,
     maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: "bottom",
-      },
-      tooltip: {
-        callbacks: {
-          label: function (tooltipItem: any) {
-            const mood = tooltipItem.label;
-            const value = tooltipItem.raw;
-            const percentage = ((value / totalEntries) * 100).toFixed(2);
-            const dates = moodData[mood]?.dates.join(", ") || "No dates available";
-            return `${mood}: ${value} entries (${percentage}%)\nDates: ${dates}`;
+    scales: {
+      y: {
+        min: 1,
+        max: 5,
+        ticks: {
+          callback: function (value: number) {
+            return reverseMapping[value];
           },
         },
       },
+    },
+    plugins: {
+      legend: { position: "bottom" },
     },
   };
 
   if (!isOpen) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-      style={{ marginTop: "80px" }}
-    >
-      <div
-        className="relative bg-white rounded-lg w-full max-w-3xl shadow-lg"
-        style={{ height: "auto", maxHeight: "90vh" }}
-      >
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <div className="relative bg-white rounded-lg w-full max-w-3xl shadow-lg" style={{ height: "70vh" }}>
         <button
           onClick={onClose}
           className="absolute top-0 right-0 text-black text-lg p-2 m-2 hover:text-gray-900"
@@ -117,26 +147,65 @@ const JournalAnalyticsModal: React.FC<JournalAnalyticsModalProps> = ({
           &#x2715;
         </button>
         <div className="p-6">
-          <h2 className="text-3xl font-semibold text-center text-[#5E9ED9] mb-6">
-            Mood Analysis
-          </h2>
-          <div className="border-t border-gray-300 mt-2 mb-6"></div>
-          {loading ? (
-            <p className="text-center">Loading...</p>
-          ) : (
-            <div className="flex justify-center">
-              <div style={{ width: "400px", height: "400px", margin: "0 auto" }}>
-                <Pie data={data} options={options} />
+          <div className="flex justify-center mb-6">
+            <button
+              onClick={() => setActiveTab("journalAnalytics")}
+              className={`px-4 py-2 text-lg font-semibold ${
+                activeTab === "journalAnalytics" ? "text-[#5E9ED9] border-b-2 border-[#5E9ED9]" : "text-gray-600"
+              }`}
+            >
+              Journal Analytics
+            </button>
+            <button
+              onClick={() => setActiveTab("surveyAnalytics")}
+              className={`px-4 py-2 text-lg font-semibold ${
+                activeTab === "surveyAnalytics" ? "text-[#5E9ED9] border-b-2 border-[#5E9ED9]" : "text-gray-600"
+              }`}
+            >
+              Survey Analytics
+            </button>
+          </div>
+
+          {activeTab === "journalAnalytics" ? (
+            loading ? (
+              <p className="text-center">Loading...</p>
+            ) : totalEntries === 0 ? (
+              <div className="flex items-center justify-center h-[400px]">
+                <p className="text-2xl font-bold text-center text-gray-700">
+                  There aren't any recorded journal entries. Mood analytics from jounal entries will be displayed here.
+                </p>
               </div>
+            ) : (
+              <div>
+                <h2 className="text-3xl font-semibold text-center text-[#5E9ED9] mb-6">Mood Analysis</h2>
+                <div className="flex justify-center">
+                  <div style={{ width: "400px", height: "400px", margin: "0 auto" }}>
+                    <Pie data={moodChartData} />
+                  </div>
+                </div>
+                <p className="mt-6 text-center text-gray-700">
+                  The chart above provides insights into your mood trends based on journal entries.
+                </p>
+              </div>
+            )
+          ) : loading ? (
+            <p className="text-center">Loading...</p>
+          ) : surveyData.length === 0 ? (
+            <div className="flex items-center justify-center h-[400px]">
+              <p className="text-2xl font-bold text-center text-gray-700">
+                There aren't any recored surveys. Analytics from surveys will be recorded and presented here.
+              </p>
             </div>
-          )}
-          {!loading && (
-            <p className="mt-6 text-center text-gray-700">
-              The chart above provides insights into your mood
-              trends based on journal entries. 
-              Hover over a section to see the number of entries, their percentage, and the dates they were made.
-              You may also click on any mood in the legend to toggle visibility.
-            </p>
+          ) : (
+            <div>
+              <h2 className="text-3xl font-semibold text-center text-[#5E9ED9] mb-6">Survey Analysis</h2>
+              <div className="relative" style={{ height: "400px" }}>
+                <Line data={surveyChartData} options={surveyChartOptions} />
+              </div>
+              <p className="mt-6 text-center text-gray-700">
+                The graph above shows your survey responses over time. Each line represents a question.
+              </p>
+            </div>
           )}
         </div>
       </div>

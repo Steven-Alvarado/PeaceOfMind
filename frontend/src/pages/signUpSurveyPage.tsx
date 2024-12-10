@@ -92,124 +92,124 @@ const SignUpSurveyPage = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <HeaderSignUpLoginPage />
-      <div className="flex-grow flex items-center justify-center bg-blue-50 py-10">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.95 }}
-          className="relative bg-white rounded-lg w-full max-w-2xl shadow-lg overflow-y-auto p-6"
-        >
-          {submitStatus === "idle" ? (
-            <>
-              <h2 className="text-3xl font-semibold text-center text-[#5E9ED9] mb-6">
-                New User Survey
-              </h2>
+    <div className="flex flex-col min-h-screen bg-blue-50">
+    
+    <div className="flex-grow flex items-center justify-center py-48">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="relative bg-white rounded-lg w-full max-w-2xl shadow-lg overflow-y-auto p-8 mb-20"
+      >
+        {submitStatus === "idle" ? (
+          <>
+            <h2 className="text-3xl font-semibold text-center text-[#5E9ED9] mb-6">
+              New User Survey
+            </h2>
 
-              {/* Progress Bar */}
-              <div className="mb-6">
-                <div className="h-2 bg-gray-100 rounded-full">
-                  <div
-                    className="h-2 bg-[#5E9ED9] rounded-full transition-all duration-300"
-                    style={{
-                      width: `${
-                        ((currentQuestionIndex + 1) / questions.length) * 100
-                      }%`,
-                    }}
-                  />
-                </div>
+            {/* Progress Bar */}
+            <div className="mb-6">
+              <div className="h-2 bg-gray-100 rounded-full">
+                <div
+                  className="h-2 bg-[#5E9ED9] rounded-full transition-all duration-300"
+                  style={{
+                    width: `${
+                      ((currentQuestionIndex + 1) / questions.length) * 100
+                    }%`,
+                  }}
+                />
               </div>
-
-              {error && (
-                <p className="text-red-500 mb-4 text-center">{error}</p>
-              )}
-
-              <motion.div
-                key={currentQuestionIndex}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="mb-8"
-              >
-                <h3 className="text-lg font-semibold mb-4">
-                  {questions[currentQuestionIndex].question}
-                </h3>
-                <div className="space-y-3">
-                  {answerOptions.map((option) => (
-                    <button
-                      key={option}
-                      type="button"
-                      onClick={() =>
-                        handleAnswer(questions[currentQuestionIndex].id, option)
-                      }
-                      className={`w-full px-4 py-2 rounded-md text-left ${
-                        questions[currentQuestionIndex].answer === option
-                          ? "bg-blue-100 border border-blue-500"
-                          : "bg-gray-100 border border-gray-400"
-                      }`}
-                    >
-                      {option}
-                    </button>
-                  ))}
-                </div>
-              </motion.div>
-
-              <div className="flex justify-between">
-                <button
-                  onClick={handleBack}
-                  disabled={currentQuestionIndex === 0}
-                  className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 disabled:opacity-50"
-                >
-                  Back
-                </button>
-                <button
-                  onClick={
-                    currentQuestionIndex === questions.length - 1
-                      ? handleSubmit
-                      : handleNext
-                  }
-                  disabled={
-                    questions[currentQuestionIndex].answer === null ||
-                    isSubmitting
-                  }
-                  className="px-6 py-2 bg-[#5E9ED9] text-white rounded-lg hover:bg-[#4a8ac9] disabled:opacity-50"
-                >
-                  {currentQuestionIndex === questions.length - 1
-                    ? isSubmitting
-                      ? "Submitting..."
-                      : "Submit"
-                    : "Next"}
-                </button>
-              </div>
-            </>
-          ) : (
-            <div className="text-center py-8">
-              {submitStatus === "success" ? (
-                <>
-                  <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold">
-                    Thank you for completing the survey!
-                  </h3>
-                  <p className="text-gray-600 mt-2">
-                    Redirecting to your dashboard...
-                  </p>
-                </>
-              ) : (
-                <>
-                  <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold">Submission failed</h3>
-                  <p className="text-gray-600 mt-2">
-                    Please try again later.
-                  </p>
-                </>
-              )}
             </div>
-          )}
-        </motion.div>
-      </div>
-      <FooterLandingPage />
+
+            {error && (
+              <p className="text-red-500 mb-4 text-center">{error}</p>
+            )}
+
+            <motion.div
+              key={currentQuestionIndex}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="mb-8"
+            >
+              <h3 className="text-lg font-semibold mb-4">
+                {questions[currentQuestionIndex].question}
+              </h3>
+              <div className="space-y-3">
+                {answerOptions.map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() =>
+                      handleAnswer(questions[currentQuestionIndex].id, option)
+                    }
+                    className={`w-full px-4 py-2 rounded-md text-left ${
+                      questions[currentQuestionIndex].answer === option
+                        ? "bg-blue-100 border border-blue-500"
+                        : "bg-gray-100 border border-gray-400"
+                    }`}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+
+            <div className="flex justify-between">
+              <button
+                onClick={handleBack}
+                disabled={currentQuestionIndex === 0}
+                className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 disabled:opacity-50"
+              >
+                Back
+              </button>
+              <button
+                onClick={
+                  currentQuestionIndex === questions.length - 1
+                    ? handleSubmit
+                    : handleNext
+                }
+                disabled={
+                  questions[currentQuestionIndex].answer === null ||
+                  isSubmitting
+                }
+                className="px-6 py-2 bg-[#5E9ED9] text-white rounded-lg hover:bg-[#4a8ac9] disabled:opacity-50"
+              >
+                {currentQuestionIndex === questions.length - 1
+                  ? isSubmitting
+                    ? "Submitting..."
+                    : "Submit"
+                  : "Next"}
+              </button>
+            </div>
+          </>
+        ) : (
+          <div className="text-center max-w-2xl py-48">
+            {submitStatus === "success" ? (
+              <>
+                <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold">
+                  Thank you for completing the survey!
+                </h3>
+                <p className="text-gray-600 mt-2">
+                  Redirecting to your dashboard...
+                </p>
+              </>
+            ) : (
+              <>
+                <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold">Submission failed</h3>
+                <p className="text-gray-600 mt-2">
+                  Please try again later.
+                </p>
+              </>
+            )}
+          </div>
+        )}
+      </motion.div>
     </div>
-  );
+    <FooterLandingPage />
+  </div>
+);
 };
 
 export default SignUpSurveyPage;

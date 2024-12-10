@@ -40,9 +40,6 @@ const MessagingInterface: React.FC<MessagingInterfaceProps> = ({
   } = useMessaging();
 
   const [newMessage, setNewMessage] = useState("");
-  const [isVideoCallActive, setIsVideoCallActive] = useState(false);
-  const [incomingCall, setIncomingCall] = useState(false);
-  const [callRoomId, setCallRoomId] = useState<string | null>(null);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
   const [potentialConversationPartners, setPotentialConversationPartners] = useState<any[]>([]);
   const [showPotentialPartners, setShowPotentialPartners] = useState(false);
@@ -226,31 +223,7 @@ const MessagingInterface: React.FC<MessagingInterfaceProps> = ({
       alert("Failed to create a conversation.");
     }
   };
-  
-  
-  
 
-
-  const handleStartVideoCall = () => {
-    if (currentConversation?.id) {
-      const roomId = `conversation_${currentConversation.id}`;
-      socket.emit("startVideoCall", roomId);
-      setCallRoomId(roomId);
-      setIsVideoCallActive(true);
-    } else {
-      alert("Please select a conversation to start a video call.");
-    }
-  };
-
-  const handleAcceptCall = () => {
-    setIsVideoCallActive(true);
-    setIncomingCall(false);
-  };
-
-  const handleEndVideoCall = () => {
-    setIsVideoCallActive(false);
-    setCallRoomId(null);
-  };
   
   return (
     <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
@@ -369,12 +342,7 @@ const MessagingInterface: React.FC<MessagingInterfaceProps> = ({
                         : `${currentConversation.student_first_name} ${currentConversation.student_last_name}`}
                     </h2>
                   </div>
-                  <button
-                    onClick={handleStartVideoCall}
-                    className="p-2 rounded-full hover:bg-gray-100"
-                  >
-                    <Video className="w-6 h-6 text-gray-600" />
-                  </button>
+                  
                 </header>
   
                 <div className="flex-1 overflow-y-auto mb-4">

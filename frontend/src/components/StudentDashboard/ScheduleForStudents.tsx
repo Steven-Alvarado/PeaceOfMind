@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-
+import ProfilePicture from "../ProfilePicture";
 interface ScheduleForStudentsProps {
   studentId: number;
   therapistId: number;
@@ -231,34 +231,41 @@ const ScheduleForStudents: React.FC<ScheduleForStudentsProps> = ({
               {currentAppointments.map((appointment) => (
                 <li
                   key={appointment.id}
-                  className="border p-4 rounded-lg shadow-sm hover:bg-gray-50 transition"
+                  className="border p-4 rounded-lg shadow-sm hover:bg-gray-50 transition flex items-center gap-4"
                 >
-                  <h2 className="text-lg font-medium text-gray-900">
-                    {`${appointment.therapist_first_name} ${appointment.therapist_last_name}`}
-                  </h2>
-                  <p className="text-sm text-gray-600">{appointment.notes}</p>
-                  <div className="flex items-center gap-2 text-sm text-gray-600 mt-2">
-                    <Calendar className="h-4 w-4" />
-                    {appointment.appointment_date.split("T")[0]}
-                    <Clock className="h-4 w-4 ml-2" />
-                    {formatAppointmentTime(appointment.appointment_date)}
-                    <span
-                      className={`ml-4 px-2 py-1 rounded ${
-                        appointment.status === "pending"
-                          ? "bg-yellow-200 text-yellow-800"
-                          : appointment.status === "confirmed"
-                          ? "bg-green-200 text-green-800"
-                          : "bg-red-200 text-red-800"
-                      }`}
-                    >
-                      {appointment.status}
-                    </span>
+                  <ProfilePicture
+                    userRole="therapist"
+                    therapistId={therapistId}
+                    className="w-16 h-16 rounded-full shadow-md"
+                  />
+                  <div className="flex-1">
+                    <h2 className="text-lg font-medium text-gray-900">
+                      {`${therapistDetails?.first_name} ${therapistDetails?.last_name}`}
+                    </h2>
+                    <p className="text-sm text-gray-600">{therapistDetails?.email}</p>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {appointment.notes || "No additional notes provided."}
+                    </p>
+                    <div className="flex items-center gap-2 text-sm text-gray-600 mt-2">
+                      <Calendar className="h-4 w-4" />
+                      {appointment.appointment_date.split("T")[0]}
+                      <Clock className="h-4 w-4 ml-2" />
+                      {formatAppointmentTime(appointment.appointment_date)}
+                      <span
+                        className={`ml-4 px-2 py-1 rounded ${appointment.status === "pending"
+                            ? "bg-yellow-200 text-yellow-800"
+                            : appointment.status === "confirmed"
+                              ? "bg-green-200 text-green-800"
+                              : "bg-red-200 text-red-800"
+                          }`}
+                      >
+                        {appointment.status}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex justify-end gap-2 mt-4">
+                  <div className="flex flex-col justify-end gap-2">
                     <button
-                      onClick={() =>
-                        handleUpdateStatus(appointment.id, "confirmed")
-                      }
+                      onClick={() => handleUpdateStatus(appointment.id, "confirmed")}
                       className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
                     >
                       Confirm
@@ -273,6 +280,7 @@ const ScheduleForStudents: React.FC<ScheduleForStudentsProps> = ({
                 </li>
               ))}
             </ul>
+
           )}
         </div>
 

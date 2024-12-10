@@ -81,4 +81,31 @@ const getAuditHistoryByUserId = async (userId) => {
         throw error;
     }
 };
-module.exports = {createDocument, getDocumentById, getAllDocumentsForUser, updateDocumentById, getAuditHistoryByUserId};
+
+const hasWeeklySurveyForCurrentWeek = async (userId) => {
+    try {
+        const today = new Date();
+        const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay())); // Sunday
+        startOfWeek.setHours(0, 0, 0, 0);
+
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(endOfWeek.getDate() + 6); // Saturday
+        endOfWeek.setHours(23, 59, 59, 999);
+
+        const result = await pool.query(
+            `SELECT 1 FROM documents
+             WHERE user_id = $1
+             AND document_type = 'weekly_survey'
+             AND created_at BETWEEN $2 AND $3`,
+            [userId, startOfWeek, endOfWeek]
+        );
+
+        return result.rows.length > 0; // Return true if a survey exists
+    } catch (error) {
+        console.error("Error checking weekly survey:", error);
+        throw error;
+    }
+};
+
+
+module.exports = {createDocument, getDocumentById, getAllDocumentsForUser, updateDocumentById, getAuditHistoryByUserId, hasWeeklySurveyForCurrentWeek};

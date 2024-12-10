@@ -1,83 +1,106 @@
 import React, { useState } from "react";
-import { FaBook, FaChartPie, FaFileInvoiceDollar, FaQuestionCircle} from "react-icons/fa";
-import { FaClipboardQuestion } from "react-icons/fa6"
+import {
+  Book,
+  PieChart,
+  ClipboardList,
+  FileText,
+  HelpCircle,
+} from "lucide-react";
 import HelpModal from "./StudentHelpModal";
 import JournalingModal from "./JournalingModal";
 import JournalAnalyticsModal from "./JournalAnalyticsModal";
-import WeeklySurvey from "./WeeklySurvey";
+import DailySurvey from "./DailySurvey";
 import InvoicingModal from "./InvoicingModal";
-import {User} from "../../context/AuthContext";
+import { User } from "../../context/AuthContext";
 
 interface StudentMenuSectionProps {
-    user: User;
-    onSurveyClick: () => void; // Ensure other props are also typed
-};
-  
-const StudentMenuSection: React.FC<StudentMenuSectionProps> = ({ user, onSurveyClick }) => {
-    const [isHelpOpen, setIsHelpOpen] = useState(false);
-    const [isJournalOpen, setIsJournalOpen] = useState(false);
-    const [isSurveyOpen, setIsSurveyOpen] = useState(false);
-    const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
-    const [isInvoicingOpen, setIsInvoicingOpen] = useState(false);
+  user: User;
+  onSurveyClick: () => void;
+}
 
+const StudentMenuSection: React.FC<StudentMenuSectionProps> = ({
+  user,
+  onSurveyClick,
+}) => {
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [isJournalOpen, setIsJournalOpen] = useState(false);
+  const [isSurveyOpen, setIsSurveyOpen] = useState(false);
+  const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
+  const [isInvoicingOpen, setIsInvoicingOpen] = useState(false);
 
-    return (
-      <div className="">
-        <div className="bg-blue-100 border-2 border-[#5E9ED9] rounded-lg shadow-lg p-10">
-          <h2 className="text-2xl text-center font-bold text-[#5E9ED9] ">Menu</h2>
-          <div className="flex justify-center md:mt-5 md:mb-8">
-            <button
-                className="bg-[#5E9ED9] text-white px-4 py-1 rounded-2xl hover:bg-[#4a8ac9] text-sm"
-                onClick={() => setIsHelpOpen(true)}
-            >
-                <div className="flex justify-center space-x-2 p-1">
-                    <div className="font-bold">Help</div>
-                    <FaQuestionCircle className="mt-0.5" />
-                </div>
-            </button>
-          </div>
-          <div className="space-y-7 mb-4">
-              <div className="justify-center flex">
-                  <button
-                      className=" w-full bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center"
-                      onClick={() => setIsJournalOpen(true)}
-                  >
-                      <FaBook className="mr-3" /> Journal
-                  </button>
-              </div>
-              <div className="justify-center flex">
-                  <button
-                      className=" w-full bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center"
-                      onClick={() => setIsAnalyticsOpen(true)}
-                  >
-                      <FaChartPie className="mr-3" /> Analytics
-                  </button>
-              </div>
-              <div className="justify-center flex">
-                  <button
-                      className="w-full bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center"
-                      onClick={()=> setIsSurveyOpen(true)}
-                  >
-                      <FaClipboardQuestion className="mr-3" /> Surveys
-                  </button>
-              </div>
-              <div className="justify-center flex">
-                  <button
-                      className=" w-full bg-[#5E9ED9] text-white px-6 py-4 text-lg font-semibold rounded hover:bg-[#4a8ac9] flex items-center justify-center"
-                      onClick={() => setIsInvoicingOpen(true)}
-                  >
-                      <FaFileInvoiceDollar className="mr-3" /> Invoices
-                  </button>
-              </div>
-          </div>
-          <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
-          <JournalingModal isOpen={isJournalOpen} onClose={() => setIsJournalOpen(false)} />
-          <JournalAnalyticsModal isOpen={isAnalyticsOpen} onClose={() =>setIsAnalyticsOpen(false)} />
-          <WeeklySurvey isOpen={isSurveyOpen} onClose={() => setIsSurveyOpen(false)} user={user} />
-          <InvoicingModal isOpen={isInvoicingOpen} onClose={() => setIsInvoicingOpen(false)} />
-        </div>
+  return (
+    <div className="bg-blue-100 border-2 py-24 border-[#5E9ED9] rounded-lg shadow-lg p-10">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-semibold text-center text-[#5E9ED9]">
+          Menu
+        </h1>
+        <button
+          onClick={() => setIsHelpOpen(true)}
+          className="text-[#5E9ED9] hover:text-blue-700 transition-colors duration-200"
+          aria-label="Help"
+        >
+          <HelpCircle className="w-6 h-6" />
+        </button>
       </div>
-    );
+
+      {/* Menu Buttons */}
+      <div className="space-y-6">
+        <button
+          onClick={() => setIsJournalOpen(true)}
+          className="w-full flex items-center p-4 bg-[#5E9ED9] text-white rounded-lg hover:bg-[#4a8ac9] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <Book className="w-6 h-6 mr-3" />
+          <span className="text-lg font-medium">Journal</span>
+        </button>
+
+        <button
+          onClick={() => setIsAnalyticsOpen(true)}
+          className="w-full flex items-center p-4 bg-[#5E9ED9] text-white rounded-lg hover:bg-[#4a8ac9] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <PieChart className="w-6 h-6 mr-3" />
+          <span className="text-lg font-medium">Analytics</span>
+        </button>
+
+        <button
+          onClick={() => setIsSurveyOpen(true)}
+          className="w-full flex items-center p-4 bg-[#5E9ED9] text-white rounded-lg hover:bg-[#4a8ac9] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <ClipboardList className="w-6 h-6 mr-3" />
+          <span className="text-lg font-medium">Surveys</span>
+        </button>
+
+        <button
+          onClick={() => setIsInvoicingOpen(true)}
+          className="w-full flex items-center p-4 bg-[#5E9ED9] text-white rounded-lg hover:bg-[#4a8ac9] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <FileText className="w-6 h-6 mr-3" />
+          <span className="text-lg font-medium">Invoices</span>
+        </button>
+      </div>
+
+      {/* Modals */}
+      <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
+      <JournalingModal
+        isOpen={isJournalOpen}
+        onClose={() => setIsJournalOpen(false)}
+      />
+      <JournalAnalyticsModal
+        isOpen={isAnalyticsOpen}
+        onClose={() => setIsAnalyticsOpen(false)}
+        user={{ id: user.id, name: `${user.firstName} ${user.lastName}` }}
+      />
+      <DailySurvey
+        isOpen={isSurveyOpen}
+        onClose={() => setIsSurveyOpen(false)}
+        user={user}
+      />
+      <InvoicingModal
+        isOpen={isInvoicingOpen}
+        onClose={() => setIsInvoicingOpen(false)}
+      />
+    </div>
+  );
 };
 
 export default StudentMenuSection;
