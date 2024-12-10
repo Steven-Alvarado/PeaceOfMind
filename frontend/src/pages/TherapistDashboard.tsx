@@ -10,6 +10,7 @@ import RequestList from "../components/TherapistDashboard/RequestList";
 import InvoicingModal from "../components/TherapistDashboard/InvoicingModal";
 import SchedulingForTherapists from "../components/TherapistDashboard/SchedulingForTherapists"; // Import SchedulingForTherapists
 import { FaUserPlus, FaTasks, FaFileInvoice , FaQuestionCircle} from "react-icons/fa";
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
 const TherapistDashboard: React.FC = () => {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
@@ -27,7 +28,7 @@ const TherapistDashboard: React.FC = () => {
       if (!therapistId) return;
 
       const response = await axios.put(
-        `/api/therapists/toggleAvailability/${therapistId.id}`
+        `${API_BASE_URL}/therapists/toggleAvailability/${therapistId.id}`
       );
 
       setIsAvailable(response.data.therapist.availability);
