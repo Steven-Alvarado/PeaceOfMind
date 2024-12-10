@@ -28,7 +28,7 @@ const TherapistDashboard: React.FC = () => {
       if (!therapistId) return;
 
       const response = await axios.put(
-        `${API_BASE_URL}/therapists/toggleAvailability/${therapistId.id}`
+        `${API_BASE_URL}/api/therapists/toggleAvailability/${therapistId.id}`
       );
 
       setIsAvailable(response.data.therapist.availability);
@@ -46,7 +46,7 @@ const TherapistDashboard: React.FC = () => {
     const fetchTherapistId = async () => {
       if (!user) return;
       try {
-        const response = await axios.get(`/api/therapists/find/${user.id}`);
+        const response = await axios.get(`${API_BASE_URL}/api/therapists/find/${user.id}`);
         setTherapistId(response.data.therapist);
         setIsAvailable(response.data.therapist.availability);
       } catch (error) {
