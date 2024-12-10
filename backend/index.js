@@ -23,7 +23,7 @@ const io = new Server(httpServer, {
   },
 });
 
-if (!process.env.FRONTEND_URL || !process.env.DATABASE_URL) {
+if (!process.env.DATABASE_URL) {
   throw new Error('Missing required environment variables');
 }
 
