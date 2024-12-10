@@ -26,7 +26,7 @@ import AboutAnimation from "../assets/lotties/AboutLandingPage.json";
 import Advice1 from "../assets/lotties/AdviceSection1.json";
 import Advice2 from "../assets/lotties/AdviceSection2.json";
 import Advice3 from "../assets/lotties/AdviceSection3.json";
-
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 function LandingPage() {
   return (
     <div>
@@ -377,7 +377,7 @@ function ReviewsSection() {
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        const response = await axios.get("/api/reviews");
+        const response = await axios.get(`${API_BASE_URL}/api/reviews`);
         const reviewData = Array.isArray(response.data.data)
           ? response.data.data
           : [];
