@@ -11,6 +11,8 @@ const apiRoutes = require("./routes/api");
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000"
 const app = express();
 const PORT = process.env.PORT || 5000;
+const winston = require('winston');
+const rateLimit = require('express-rate-limit');
 
 // Create an HTTP server and attach socket.io to it
 const httpServer = createServer(app);
@@ -19,6 +21,24 @@ const io = new Server(httpServer, {
     origin: FRONTEND_URL , 
     methods: ["GET", "POST"]
   },
+});
+
+if (!process.env.FRONTEND_URL || !process.env.DATABASE_URL) {
+  throw new Error('Missing required environment variables');
+}
+
+// rate limiter
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, 
+  max: 100, 
+});
+app.use(limiter);
+
+// logger for railway parsing
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.json(),
+  transports: [new winston.transports.Console()],
 });
 
 // Attach `io` to the app for use in other parts of the application
@@ -61,7 +81,10 @@ io.on("connection", (socket) => {
     socket.join(`therapist_${therapistId}`);
   });
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 690917da7012c820e45805e42838337644c9f6b6
 
   // Emit relationship updates to students
   socket.on("relationship-updated", ({ studentId, status }) => {
@@ -116,6 +139,14 @@ io.on("connection", (socket) => {
   // Handle user disconnection
   socket.on("disconnect", () => {
     console.log(`User disconnected: ${socket.id}`);
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('Shutting down gracefully...');
+  db.end(() => {
+    console.log('Database connection closed.');
+    process.exit(0);
   });
 });
 
