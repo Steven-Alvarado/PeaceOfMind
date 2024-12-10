@@ -8,7 +8,7 @@ const { createServer } = require("http");
 const { Server } = require("socket.io");
 const db = require("./config/db");
 const apiRoutes = require("./routes/api");
-
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000"
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -16,7 +16,7 @@ const PORT = process.env.PORT || 5000;
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:3000", // Frontend's URL
+    origin: FRONTEND_URL , 
     methods: ["GET", "POST"]
   },
 });
@@ -28,7 +28,7 @@ app.set("io", io);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Middleware
-app.use(cors({ origin: "http://localhost:3000" }));
+app.use(cors({ origin: FRONTEND_URL }));
 app.use(express.json());
 
 // Swagger setup
