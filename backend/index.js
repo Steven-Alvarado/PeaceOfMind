@@ -61,14 +61,7 @@ io.on("connection", (socket) => {
     socket.join(`therapist_${therapistId}`);
   });
 
-  socket.on("joinStudentRoom", (studentId) => {
-    if (!studentId) {
-      console.error("Invalid studentId received.");
-      return;
-    }
-    console.log(`Student joined room: student_${studentId}`);
-    socket.join(`student_${studentId}`);
-  });
+
 
   // Emit relationship updates to students
   socket.on("relationship-updated", ({ studentId, status }) => {
