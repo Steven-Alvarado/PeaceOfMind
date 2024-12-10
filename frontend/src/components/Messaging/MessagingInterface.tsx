@@ -1,26 +1,16 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useMessaging } from "../../context/MessagingContext";
-import VideoCall from "./VideoCall";
-import { Video, Send, X } from "lucide-react";
 import socket from "../../socket";
 import ProfilePicture from "../ProfilePicture";
 import axios from "axios";
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
+import { X , Send} from "lucide-react"; 
 interface MessagingInterfaceProps {
   userId: number;
   userRole: "student" | "therapist";
   onClose: () => void;
 }
 
-interface ConversationResponse {
-  message: string;
-  conversation: {
-    id: number;
-    student_id: number;
-    therapist_id: number;
-    created_at: string;
-    updated_at: string;
-  }
-}
 
 const MessagingInterface: React.FC<MessagingInterfaceProps> = ({
   userId,
@@ -49,10 +39,10 @@ const MessagingInterface: React.FC<MessagingInterfaceProps> = ({
       let endpoint = "";
       if (userRole === "student") {
         // Endpoint to get the therapist for a student
-        endpoint = `http://localhost:5000/api/relationships/${userId}`;
+        endpoint = `${API_BASE_URL}/api/relationships/${userId}`;
       } else {
         // Endpoint to get the students for a therapist
-        endpoint = `http://localhost:5000/api/relationships/therapist/${userId}`;
+        endpoint = `${API_BASE_URL}/api/relationships/therapist/${userId}`;
       }
   
       const response = await fetch(endpoint);
@@ -176,7 +166,7 @@ const MessagingInterface: React.FC<MessagingInterfaceProps> = ({
             if (userRole === "student") {
               // Fetch therapist details
               const therapistResponse = await axios.get(
-                `http://localhost:5000/api/therapists/${therapistId}`
+                `${API_BASE_URL}/api/therapists/${therapistId}`
               );
               const therapist = therapistResponse.data.therapist;
   
@@ -188,7 +178,7 @@ const MessagingInterface: React.FC<MessagingInterfaceProps> = ({
             } else if (userRole === "therapist") {
               // Fetch student details
               const studentResponse = await axios.get(
-                `http://localhost:5000/api/users/${studentId}`
+                `${API_BASE_URL}/api/users/${studentId}`
               );
               const student = studentResponse.data;
   

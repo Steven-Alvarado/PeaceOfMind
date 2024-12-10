@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-
 import { useAuth } from "../../hooks/useAuth";
-
 import { FaTrash } from "react-icons/fa";
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
 interface Invoice {
   id: number;
@@ -61,7 +60,7 @@ const InvoicingModal: React.FC<InvoicingModalProps> = ({ isOpen, onClose, therap
   
   const fetchPatients = async () => {
     try {
-      const { data } = await axios.get(`/api/relationships/therapist/${therapistId}`);
+      const { data } = await axios.get(`${API_BASE_URL}/api/relationships/therapist/${therapistId}`);
       const relationships = data.relationships || [];
       setPatients(
         relationships.map((rel: { student_id: number; student_first_name: string; student_last_name: string }) => ({
@@ -80,7 +79,7 @@ const InvoicingModal: React.FC<InvoicingModalProps> = ({ isOpen, onClose, therap
     setErrorMessage("");
 
     try {
-      const response = await axios.get(`/api/invoices`, {
+      const response = await axios.get(`${API_BASE_URL}/api/invoices`, {
         params: { userId: user.id },
       });
       if (response.data?.invoices?.length) {
@@ -108,7 +107,7 @@ const InvoicingModal: React.FC<InvoicingModalProps> = ({ isOpen, onClose, therap
     }
   
     try {
-      await axios.post(`/api/invoices`, {
+      await axios.post(`${API_BASE_URL}/api/invoices`, {
         studentId,
         therapistId,
         amountDue,
@@ -126,7 +125,7 @@ const InvoicingModal: React.FC<InvoicingModalProps> = ({ isOpen, onClose, therap
 
   const deleteInvoice = async (invoiceId: number) => {
     try {
-      await axios.delete(`/api/invoices/${invoiceId}`);
+      await axios.delete(`${API_BASE_URL}/api/invoices/${invoiceId}`);
       setInvoices((prev) => prev.filter((invoice) => invoice.id !== invoiceId));
       setIsDeleteModalOpen(false);
     } catch (error) {

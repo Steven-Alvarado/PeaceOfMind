@@ -3,8 +3,6 @@ import { FaPersonWalkingArrowRight, FaDiscourse } from "react-icons/fa6";
 import { CiStar, CiBadgeDollar } from "react-icons/ci";
 import { MdOutlineWorkHistory, MdOutlineMail } from "react-icons/md";
 import { MessageCircle, Search, Calendar } from "lucide-react";
-import io from "socket.io-client";
-
 import Alert from "@mui/material/Alert";
 import TherapistModal from "./TherapistModal";
 import DropModal from "./DropTherapist";
@@ -14,8 +12,8 @@ import { User } from "../../context/AuthContext";
 import MessagingInterface from "../Messaging/MessagingInterface";
 import ProfilePicture from "../ProfilePicture";
 import ScheduleForStudents from "./ScheduleForStudents";
-
-const socket = io("http://localhost:5000"); // Replace with your backend URL
+import socket from "../../socket.js"
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
 interface TherapistSectionProps {
   user: User;
@@ -58,7 +56,7 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
 
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/relationships/${user.id}`
+        `${API_BASE_URL}/api/relationships/${user.id}`
       );
       const relationship = response.data.relationship;
 
@@ -87,7 +85,7 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
   const fetchTherapistDetails = async (therapistId: number) => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/therapists/${therapistId}`
+        `${API_BASE_URL}/api/therapists/${therapistId}`
       );
       return response.data.therapist;
     } catch (err) {

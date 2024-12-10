@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Pie, Line } from "react-chartjs-2";
 import { Chart as chartjs, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement } from "chart.js";
 import axios from "axios";
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 chartjs.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement);
 
@@ -51,7 +52,7 @@ const JournalAnalyticsModal: React.FC<JournalAnalyticsModalProps> = ({ isOpen, o
   const fetchMoodData = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`/api/journals/user/${user.id}`, {
+      const response = await axios.get(`${API_BASE_URL}/api/journals/user/${user.id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("jwt")}` },
       });
 
@@ -81,7 +82,7 @@ const JournalAnalyticsModal: React.FC<JournalAnalyticsModalProps> = ({ isOpen, o
   const fetchSurveyData = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`/api/surveys/weekly/user/${user.id}`, {
+      const response = await axios.get(`${API_BASE_URL}/api/surveys/weekly/user/${user.id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("jwt")}` },
       });
 

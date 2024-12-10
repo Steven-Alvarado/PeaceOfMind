@@ -6,9 +6,8 @@ import ProfilePicture from "../ProfilePicture";
 import { FaBars, FaTimes } from "react-icons/fa";
 import { IoMdSettings } from "react-icons/io";
 import { MdOutlineLogout } from "react-icons/md";
-
 import Logo from "../../assets/images/logobetter.png";
-
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
 const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
   const [firstName, setFirstName] = useState('');
@@ -91,7 +90,7 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
       if (!confirmDelete) return;
   
       // Proceed with deleting the account using both therapistId and userId
-      const response = await fetch(`/api/accountSettings/therapists/${therapistId}/user/${userId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/accountSettings/therapists/${therapistId}/user/${userId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer ${localStorage.getItem("jwt")}`,
@@ -122,7 +121,7 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
     }
   
     try {
-      const response = await fetch(`/api/accountSettings/therapist/${user.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/accountSettings/therapist/${user.id}`, {
         method: "PATCH", // Use PATCH to update the therapist details
         headers: {
           Authorization: `Bearer ${localStorage.getItem("jwt")}`,
@@ -331,7 +330,7 @@ const HeaderTherapistDashboard = () => {
     if (user?.id) {
       try {
         const response = await axios.get(
-          `http://localhost:5000/api/therapists/find/${user.id}`
+          `${API_BASE_URL}/api/therapists/find/${user.id}`
         );
         const therapistData = response.data.therapist;
         if (therapistData && therapistData.id) {

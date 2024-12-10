@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { FaX } from "react-icons/fa6";
 import { useAuth } from "../../hooks/useAuth";
 import axios from "axios";
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 interface DropModalProps {
   isOpen: boolean;
@@ -28,7 +28,7 @@ const DropModal: React.FC<DropModalProps> = ({ isOpen, sentDrop, onClose }) => {
 
   const rejectSwitch = async (studentId: number) => {
     try {
-      const response = await axios.delete(`/api/relationships/${studentId}`);
+      const response = await axios.delete(`${API_BASE_URL}/api/relationships/${studentId}`);
       console.log("DELETE successful:", response.data);
     } catch (error) {
       console.error("Error making POST request:", error);

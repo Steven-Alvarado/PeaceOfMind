@@ -35,7 +35,7 @@ const SchedulingForTherapists: React.FC<SchedulingForTherapistsProps> = ({
   const [currentPage, setCurrentPage] = useState(1);
   const appointmentsPerPage = 3;
   const [studentDetails, setStudentDetails] = useState<Record<number, any>>({});
-
+  const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || "${API_BASE_URL}";
 
   useEffect(() => {
     if (!isOpen) return;
@@ -45,14 +45,14 @@ const SchedulingForTherapists: React.FC<SchedulingForTherapistsProps> = ({
       try {
         // Fetch Appointments
         const appointmentsResponse = await axios.get(
-          `http://localhost:5000/api/appointments/therapist/${therapistId}`
+          `${API_BASE_URL}/api/appointments/therapist/${therapistId}`
         );
         const fetchedAppointments = appointmentsResponse.data.data || [];
         setAppointments(fetchedAppointments);
   
         // Fetch Assigned Students
         const studentsResponse = await axios.get(
-          `http://localhost:5000/api/relationships/therapist/${therapistId}`
+          `${API_BASE_URL}/api/relationships/therapist/${therapistId}`
         );
         const fetchedRelationships = studentsResponse.data.relationships || [];
         const activeStudents = fetchedRelationships.filter(
@@ -93,7 +93,7 @@ const SchedulingForTherapists: React.FC<SchedulingForTherapistsProps> = ({
       };
 
       const response = await axios.post(
-        `http://localhost:5000/api/appointments/schedule`,
+        `${API_BASE_URL}/api/appointments/schedule`,
         appointmentPayload
       );
 
@@ -101,7 +101,7 @@ const SchedulingForTherapists: React.FC<SchedulingForTherapistsProps> = ({
 
       // Fetch student details
       const studentResponse = await axios.get(
-        `http://localhost:5000/api/users/${createdAppointment.student_id}`
+        `${API_BASE_URL}/api/users/${createdAppointment.student_id}`
       );
       const student = studentResponse.data;
 
@@ -139,7 +139,7 @@ const SchedulingForTherapists: React.FC<SchedulingForTherapistsProps> = ({
     setLoading(true);
     try {
       await axios.put(
-        `http://localhost:5000/api/appointments/${appointmentId}`,
+        `${API_BASE_URL}/api/appointments/${appointmentId}`,
         { status: newStatus }
       );
       setAppointments((prev) =>
@@ -159,7 +159,7 @@ const SchedulingForTherapists: React.FC<SchedulingForTherapistsProps> = ({
     setLoading(true);
     try {
       await axios.delete(
-        `http://localhost:5000/api/appointments/${appointmentId}`
+        `${API_BASE_URL}/api/appointments/${appointmentId}`
       );
       setAppointments((prev) => prev.filter((app) => app.id !== appointmentId));
     } catch (err) {

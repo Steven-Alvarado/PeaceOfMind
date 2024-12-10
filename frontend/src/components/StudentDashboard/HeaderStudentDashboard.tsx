@@ -5,8 +5,9 @@ import ProfilePicture from "../ProfilePicture";
 import { FaBars, FaTimes } from "react-icons/fa";
 import { IoMdSettings } from "react-icons/io";
 import { MdOutlineLogout } from "react-icons/md";
-
 import Logo from "../../assets/images/logobetter.png";
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
+import axios from "axios";
 
 interface UserSettings {
   fname: string;
@@ -40,7 +41,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     }
 
     try {
-      const response = await fetch(`/api/users/${user.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/users/${user.id}`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("jwt")}`,
@@ -83,7 +84,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     }
   
     try {
-      const response = await fetch(`/api/accountSettings/student/${user.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/accountSettings/student/${user.id}`, {
         method: "PATCH",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("jwt")}`,
@@ -124,7 +125,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     if (!confirmDelete) return;
 
     try {
-      const response = await fetch(`/api/accountSettings/students/${user.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/accountSettings/students/${user.id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("jwt")}`,
@@ -346,7 +347,7 @@ const HeaderStudentDashboard = () => {
     navigate("/login");
   };
 
-  const handleProfilePictureChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  /*const handleProfilePictureChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files || event.target.files.length === 0) return;
 
     const file = event.target.files[0];
@@ -354,7 +355,7 @@ const HeaderStudentDashboard = () => {
     formData.append("profile_picture", file);
 
     try {
-      await axios.post(`http://localhost:5000/api/profilePicture/upload/${user.id}`, formData, {
+      await axios.post(`${API_BASE_URL}/api/profilePicture/upload/${user.id}`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       // Optionally, you can trigger a refresh to update the profile picture
@@ -362,7 +363,7 @@ const HeaderStudentDashboard = () => {
     } catch (error) {
       console.error("Failed to upload profile picture:", error);
     }
-  };
+  };*/
 
   return (
     <header className="bg-[#5E9ED9] text-white sticky top-0 z-50">
@@ -388,18 +389,11 @@ const HeaderStudentDashboard = () => {
               <label htmlFor="profile-picture-upload" className="cursor-pointer">
                 <ProfilePicture
                   userRole="student"
-                  userId={user.id} // Assuming the user's ID is accessible
+                  userId={user.id}
                   className="w-14 h-14"
                   style={{ border: "2px solid white" }}
                 />
-              </label>
-              <input
-                type="file"
-                id="profile-picture-upload"
-                accept="image/*"
-                style={{ display: "none" }}
-                onChange={handleProfilePictureChange}
-              />
+              </label> 
               <span className="text-white text-xl font-bold">
                 {user.first_name} {user.last_name}
               </span>
