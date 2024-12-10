@@ -81,10 +81,6 @@ io.on("connection", (socket) => {
     socket.join(`therapist_${therapistId}`);
   });
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 690917da7012c820e45805e42838337644c9f6b6
 
   // Emit relationship updates to students
   socket.on("relationship-updated", ({ studentId, status }) => {
