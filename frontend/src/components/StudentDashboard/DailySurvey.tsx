@@ -113,7 +113,7 @@ const DailySurvey: React.FC<DailySurveyProps> = ({ isOpen, onClose, user }) => {
       }, {} as Record<string, string>);
 
       await axios.post(
-        "${API_BASE_URL}/api/surveys/weekly",
+        `${API_BASE_URL}/api/surveys/weekly`,
         {
           userId: effectiveUser.id,
           content: JSON.stringify(surveyContent),
