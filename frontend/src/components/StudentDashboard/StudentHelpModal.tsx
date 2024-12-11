@@ -5,30 +5,30 @@ const StudentHelpModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
   
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-        <div className="bg-white rounded-lg p-6 w-full max-w-lg outline outline-white outline-2 outline-offset-2">
-          <h2 className="text-3xl font-extrabold text-center text-[#5E9ED9] mb-4">Help</h2>
-          <ul className="text-gray-700 space-y-3">
-            <li>
-              <FaBook className="inline mr-2" /> <strong>Journal:</strong> Reflect on your thoughts and emotions.
-            </li>
-            <li>
-              <FaChartPie className="inline mr-2" /> <strong>Analytics:</strong> View journal moods.
-            </li>
-            <li>
-              <FaClipboardQuestion className="inline mr-2" /> <strong>Surveys:</strong> Answer weekly survey.
-            </li>
-            <li>
-              <FaFileInvoiceDollar className="inline mr-2" /> <strong>Invoices:</strong> View and manage your payment details.
-            </li>
-          </ul>
-          <div className="flex justify-center">
+        <div className="bg-white rounded-lg p-6 w-full max-w-lg">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl text-[#5E9ED9] font-bold">Help</h2>
             <button
-              className="mt-6 bg-[#5E9ED9] text-white px-4 py-2 rounded hover:bg-[#4a8ac9]"
+              className="text-black px-2 rounded hover:text-gray-900"
               onClick={onClose}
             >
-              Close
+              X
             </button>
           </div>
+          <ul className="text-black space-y-4">
+            <li>
+              <FaBook className="inline mr-2" /> <strong>Journal:</strong> <br></br> Option to take the time and write journal entries on how you are feeling, with a way to select a mood, which is used to view overtime progress in analytics.
+            </li>
+            <li>
+              <FaChartPie className="inline mr-2" /> <strong>Analytics:</strong> <br></br> Acces to see journal moods and surevy results overtime.
+            </li>
+            <li>
+              <FaClipboardQuestion className="inline mr-2" /> <strong>Surveys:</strong> <br></br> Answer weekly surveys, and view previous survey results.
+            </li>
+            <li>
+              <FaFileInvoiceDollar className="inline mr-2" /> <strong>Invoices:</strong> <br></br>View sent invoices from your therapist, the payment status, and pay invoices through here.
+            </li>
+          </ul>
         </div>
       </div>
     );

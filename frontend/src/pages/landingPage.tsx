@@ -45,7 +45,7 @@ function IntroSection() {
   return (
     <section
       className="relative flex flex-col items-center overflow-hidden"
-      style={{ minHeight: "90vh" }}
+      style={{ minHeight: "110vh" }}
     >
       <div className="wave-background absolute inset-0 w-full h-full bg-cover bg-bottom z-[-1]"></div>
 

@@ -74,25 +74,24 @@ const InvoicingModal: React.FC<InvoicingModalProps> = ({ isOpen, onClose, therap
   };
 
   const fetchInvoices = async () => {
-    if (!user) return;
+    if (!therapistId) return;
+
     setLoading(true);
     setErrorMessage("");
 
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/invoices`, {
-        params: { userId: user.id },
-      });
-      if (response.data?.invoices?.length) {
-        setInvoices(response.data.invoices);
-      } else {
-        setInvoices([]);
-        setErrorMessage("No invoices found for this user.");
-      }
+        const response = await axios.get(`${API_BASE_URL}/api/invoices/therapist/${therapistId}`);
+        if (response.data?.invoices?.length) {
+            setInvoices(response.data.invoices);
+        } else {
+            setInvoices([]);
+            setErrorMessage("No invoices found for this therapist.");
+        }
     } catch (error) {
-      console.error("Error retrieving invoices:", error);
-      setErrorMessage("An error occurred while fetching invoices.");
+        console.error("Error retrieving invoices:", error);
+        setErrorMessage("An error occurred while fetching invoices.");
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
   };
 
@@ -245,6 +244,18 @@ const InvoicingModal: React.FC<InvoicingModalProps> = ({ isOpen, onClose, therap
               X
             </button>
           </div>
+          <div className="flex justify-between items-center mb-4">
+            <select
+              className="p-2 border border-[#5E9ED9] rounded"
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+            >
+              <option value="all">All</option>
+              <option value="unpaid">Unpaid</option>
+              <option value="partially paid">Partially Paid</option>
+              <option value="paid">Paid</option>
+            </select>
+          </div>
   
           {loading ? (
             <div className="text-center">Loading invoices...</div>
@@ -252,19 +263,6 @@ const InvoicingModal: React.FC<InvoicingModalProps> = ({ isOpen, onClose, therap
             <div className="text-center text-red-500">{errorMessage}</div>
           ) : (
           <>
-            <div className="flex justify-between items-center mb-4">
-              <select
-                className="p-2 border border-[#5E9ED9] rounded"
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-              >
-                <option value="all">All</option>
-                <option value="unpaid">Unpaid</option>
-                <option value="partially paid">Partially Paid</option>
-                <option value="paid">Paid</option>
-              </select>
-            </div>
-  
             <div className="overflow-y-auto flex-grow">
               <table className="w-full border-collapse border border-[#5E9ED9] bg-white">
                 <thead className="bg-[#5E9ED9] text-white">

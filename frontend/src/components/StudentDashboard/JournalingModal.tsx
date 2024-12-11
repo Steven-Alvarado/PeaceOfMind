@@ -37,6 +37,8 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);  
 
+  const [disableSaveDelete, setDisableSaveDelete] = useState(true);
+
   useEffect(() => {
     if (isOpen && user?.id) {
       fetchJournals();
@@ -73,7 +75,7 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
       setErrorMessage("User ID is not available.");
       return;
     }
-  
+
     try {
       const response = await axios.get(`${API_BASE_URL}/api/journals/user/${user.id}`, {
         headers: {
@@ -90,13 +92,13 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
           date: journal.created_at,
           entryNumber: arr.length - index,
         }));
-  
+
       if (fetchedJournals.length === 0) {
-        setErrorMessage("No journal entries found. Create your first entry!");
+        setErrorMessage("");
       } else {
         setErrorMessage("");
       }
-  
+
       setEntries(fetchedJournals);
       setActiveEntry(fetchedJournals[0] || null);
     } catch (error: any) {
@@ -118,6 +120,10 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
       } else {
         console.log("Updating an existing entry:", activeEntry);
         await updateJournalEntry();
+      }
+  
+      if (entries.length === 0) {
+        setDisableSaveDelete(true);
       }
     } catch (error: any) {
       console.error("Error saving journal entry:", error.message);
@@ -191,6 +197,7 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
         setActiveEntry(updatedEntries[0]);
       } else {
         setActiveEntry(null);
+        setDisableSaveDelete(true);
       }
   
       setSuccessMessage("Journal entry deleted successfully.");
@@ -256,6 +263,7 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
     };
     setActiveEntry(newEntryData);
     setNewEntry(true);
+    setDisableSaveDelete(false);
     setErrorMessage("");
     setSuccessMessage("");
   
@@ -291,7 +299,7 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
                 </select>
                 <input
                   type="text"
-                  placeholder={`${filterBy === "date" ? "Date (MM/DD/YYYY)" : filterBy === "entry" ? "Entry number": "Mood (e.g. Happy)" }`}
+                  placeholder={`${filterBy === "date" ? "(MM/DD/YYYY)" : filterBy === "entry" ? "Entry number": "Mood (e.g. Happy)" }`}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className=" w-44 p-2 border border-[#5E9ED9] rounded"
@@ -398,9 +406,10 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
               <textarea
                 className="flex-grow shadow-lg border-[#5E9ED9] border-2 rounded p-2"
                 value={activeEntry?.content || ""}
+                disabled={disableSaveDelete}
                 onChange={(e) =>
                   setActiveEntry((prev) => ({ ...prev!, content: e.target.value }))
-                }
+                  }
               />
               <div className="flex justify-between items-center mt-4">
                 <div>
@@ -438,12 +447,14 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
                   <button
                     className="bg-red-500 shadow-lg text-white px-4 py-2 rounded hover:bg-red-600"
                     onClick={handleDelete}
+                    disabled={disableSaveDelete}
                   >
                     Delete
                   </button>
                   <button
                     className="bg-[#5E9ED9] shadow-lg text-white px-4 py-2 rounded hover:bg-[#4879a7]"
                     onClick={handleSave}
+                    disabled={disableSaveDelete}
                   >
                     Save
                   </button>

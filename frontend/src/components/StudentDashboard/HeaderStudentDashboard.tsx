@@ -167,7 +167,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
           <div className="flex">
             <div className="w-full p-8">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl text-[#5E9ED9] font-bold">Settings</h2>
+                <h2 className="text-xl text-[#5E9ED9]">Settings</h2>
                 <button
                   className="text-black px-2 rounded hover:text-gray-900"
                   onClick={onClose}
@@ -177,13 +177,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
               </div>
 
               {userSettings ? (
-                <div>
-                    <div className="w-full">
-
-                    <label htmlFor="firstName" className="block text-gray-700 font-bold mb-2">First Name</label>
+                <div className="space-y-3">
+                  <div className="w-full">
+                    <label htmlFor="firstName" className="block text-black mb-2">First Name</label>
                     <input
                       type="text"
-                      className="w-full p-3 border rounded-lg text-black"
+                      className="w-full p-3 border border-[#5E9ED9] rounded-lg text-black font-medium"
                       value={userSettings.fname}
                       onChange={(e) =>
                         setUserSettings((prev) => ({
@@ -195,10 +194,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                   </div>
 
                   <div className="w-full">
-                  <label htmlFor="lastName" className="block text-gray-700 font-bold mb-2">Last Name</label>
-                  <input
+                    <label htmlFor="lastName" className="block text-black font-bold mb-2">Last Name</label>
+                    <input
                       type="text"
-                      className="w-full p-3 border rounded-lg text-black"
+                      className="w-full p-3 border border-[#5E9ED9] rounded-lg text-black font-medium"
                       value={userSettings.last_name}
                       onChange={(e) =>
                         setUserSettings((prev) => ({
@@ -210,10 +209,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                   </div>
 
                   <div className="w-full">
-                  <label htmlFor="email" className="block text-gray-700 font-bold mb-2">Email Address</label>
-                  <input
+                    <label htmlFor="email" className="block text-black font-bold mb-2">Email Address</label>
+                    <input
                       type="email"
-                      className="w-full p-3 border rounded-lg text-black"
+                      className="w-full p-3 border border-[#5E9ED9] rounded-lg text-black font-medium"
                       value={userSettings.email}
                       onChange={(e) =>
                         setUserSettings((prev) => ({
@@ -225,10 +224,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                   </div>
 
                   <div className="w-full">
-                  <label htmlFor="newPassword" className="block text-gray-700 font-bold mb-2">New Password</label>
-                  <input
+                    <label htmlFor="newPassword" className="block text-black font-bold mb-2">New Password</label>
+                    <input
                       type="password"
-                      className="w-full p-3 border rounded-lg text-black"
+                      className="w-full p-3 border border-[#5E9ED9] rounded-lg text-black font-medium"
                       value={userSettings.newPassword}
                       onChange={(e) =>
                         setUserSettings((prev) => ({
@@ -240,10 +239,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                   </div>
 
                   <div className="w-full">
-                  <label htmlFor="confirmPassword" className="block text-gray-700 font-bold mb-2">Confirm Password</label>
-                  <input
+                    <label htmlFor="confirmPassword" className="block text-black font-bold mb-2">Confirm Password</label>
+                    <input
                       type="password"
-                      className="w-full p-3 border rounded-lg text-black"
+                      className="w-full p-3 border border-[#5E9ED9] rounded-lg text-black font-medium"
                       value={userSettings.confirmPassword}
                       onChange={(e) =>
                         setUserSettings((prev) => ({

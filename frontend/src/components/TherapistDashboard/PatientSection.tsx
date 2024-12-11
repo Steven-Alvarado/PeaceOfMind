@@ -86,7 +86,9 @@ const PatientSection: React.FC<PatientListComponentProps> = ({
     indexOfLastPatient
   );
 
-  const totalPages = Math.ceil(filteredPatients.length / patientsPerPage);
+  const totalPages = filteredPatients.length > 0
+  ? Math.ceil(filteredPatients.length / patientsPerPage)
+  : 0;
 
   const handlePageChange = (pageNumber: number) => {
     setCurrentPage(pageNumber);
@@ -169,9 +171,9 @@ const PatientSection: React.FC<PatientListComponentProps> = ({
         <div className="flex justify-center items-center pt-8 space-x-4 border-t mt-4 border-[#5E9ED9]">
           <button
             onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
+            disabled={currentPage === 1 || totalPages === 0}
             className={`px-4 py-2 border w-30 h-15 rounded-lg ${
-              currentPage === 1
+              currentPage === 1 || totalPages === 0
                 ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                 : "bg-[#5E9ED9] text-white hover:bg-[#4b8bc4]"
             } transition`}
@@ -179,13 +181,13 @@ const PatientSection: React.FC<PatientListComponentProps> = ({
             Previous
           </button>
           <span className="text-lg font-medium">
-            Page {currentPage} of {totalPages}
+            {totalPages > 0 ? `Page ${currentPage} of ${totalPages}` : "No Pages"}
           </span>
           <button
             onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
+            disabled={currentPage === totalPages || totalPages === 0}
             className={`px-4 py-2 border w-20 h-15 rounded-lg ${
-              currentPage === totalPages
+              currentPage === totalPages || totalPages === 0
                 ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                 : "bg-[#5E9ED9] text-white hover:bg-[#4b8bc4]"
             } transition`}
