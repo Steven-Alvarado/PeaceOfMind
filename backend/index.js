@@ -20,7 +20,7 @@ const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
     origin: FRONTEND_URL,
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true, // Allow credentials
   },
 });
