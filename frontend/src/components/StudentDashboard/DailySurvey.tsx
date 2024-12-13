@@ -42,9 +42,17 @@ const DailySurvey: React.FC<DailySurveyProps> = ({ isOpen, onClose, user }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
   const [surveyHistory, setSurveyHistory] = useState<SurveyHistoryType[]>([]);
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [filterByDate, setFilterByDate] = useState(false);
   const [hasSubmittedToday, setHasSubmittedToday] = useState(false);
   const [expandedId, setExpandedId] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setFilterByDate(false);
+      setSelectedDate(null);
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     const checkTodaySubmission = async () => {
@@ -72,21 +80,17 @@ const DailySurvey: React.FC<DailySurveyProps> = ({ isOpen, onClose, user }) => {
     }
   }, [isOpen, effectiveUser]);
 
-  const fetchSurveyHistory = async (date: Date) => {
+  const fetchSurveyHistory = async () => {
     if (!effectiveUser) return;
 
     try {
-      const response = await axios.get(
-        `${API_BASE_URL}/api/surveys/weekly/user/${effectiveUser.id}`
-      );
+      const response = await axios.get(`${API_BASE_URL}/api/surveys/weekly/user/${effectiveUser.id}`, {
+        headers: {
+          Authorization: `Bearer ${effectiveUser.token}`,
+        },
+      });
 
-      const selectedDateStr = date.toISOString().slice(0, 10);
-      const filteredSurvey = response.data.surveys.find(
-        (survey: any) =>
-          new Date(survey.survey_date).toISOString().slice(0, 10) === selectedDateStr
-      );
-
-      setSurveyHistory(filteredSurvey ? [filteredSurvey] : []);
+      setSurveyHistory(response.data.surveys);
     } catch (error) {
       console.error("Error fetching survey history:", error);
     }
@@ -94,9 +98,9 @@ const DailySurvey: React.FC<DailySurveyProps> = ({ isOpen, onClose, user }) => {
 
   useEffect(() => {
     if (activeTab === "history" && isOpen) {
-      fetchSurveyHistory(selectedDate);
+      fetchSurveyHistory();
     }
-  }, [activeTab, selectedDate, isOpen]);
+  }, [activeTab, isOpen]);
 
   const handleAnswer = (id: number, answer: string) => {
     setQuestions((prev) => prev.map((q) => (q.id === id ? { ...q, answer } : q)));
@@ -133,20 +137,37 @@ const DailySurvey: React.FC<DailySurveyProps> = ({ isOpen, onClose, user }) => {
     }
   };
 
+  const filteredSurveys = filterByDate && selectedDate
+  ? surveyHistory.filter(
+      (survey) =>
+        new Date(survey.survey_date).toISOString().slice(0, 10) === selectedDate.toISOString().slice(0, 10)
+    )
+  : surveyHistory;
+
   const renderSurveyHistory = () => (
     <div>
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700">Select Date</label>
-        <input
-          type="date"
-          value={selectedDate.toISOString().slice(0, 10)}
-          onChange={(e) => setSelectedDate(new Date(e.target.value))}
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
-        />
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          <input
+            type="checkbox"
+            checked={filterByDate}
+            onChange={(e) => setFilterByDate(e.target.checked)}
+            className="mr-2"
+          />
+          Filter by date
+        </label>
+        {filterByDate && (
+          <input
+            type="date"
+            value={selectedDate ? selectedDate.toISOString().slice(0, 10) : ""}
+            onChange={(e) => setSelectedDate(e.target.value ? new Date(e.target.value) : null)}
+            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
+          />
+        )}
       </div>
 
-      {surveyHistory.length > 0 ? (
-        surveyHistory.map((survey) => (
+      {filteredSurveys.length > 0 ? (
+        filteredSurveys.map((survey) => (
           <div key={survey.id} className="relative">
             <motion.div
               className="relative flex gap-4 mb-4 bg-white p-4 rounded-lg shadow-md cursor-pointer"
