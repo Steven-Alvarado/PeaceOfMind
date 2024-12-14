@@ -17,11 +17,11 @@ paths:
     get:
       tags:
         - Relationships
-      summary: Get all relationships
-      description: Retrieve all student-therapist relationships.
+      summary: Get all student-therapist relationships
+      description: Retrieve a list of all student-therapist relationships.
       responses:
         200:
-          description: A list of all relationships
+          description: Successfully retrieved all relationships
           content:
             application/json:
               schema:
@@ -37,7 +37,6 @@ paths:
       summary: Assign a therapist to a student
       description: Create a new student-therapist relationship or update an existing one.
       requestBody:
-        description: Student and therapist information
         required: true
         content:
           application/json:
@@ -52,7 +51,7 @@ paths:
                   example: 2
       responses:
         201:
-          description: Relationship created successfully
+          description: Therapist assigned successfully
           content:
             application/json:
               schema:
@@ -67,7 +66,7 @@ paths:
       tags:
         - Relationships
       summary: Get relationship by student ID
-      description: Retrieve a relationship for a specific student.
+      description: Retrieve the details of a relationship for a specific student.
       parameters:
         - name: studentId
           in: path
@@ -77,7 +76,41 @@ paths:
             type: integer
       responses:
         200:
-          description: Relationship found
+          description: Successfully retrieved relationship
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Relationship'
+        404:
+          description: Relationship not found
+        500:
+          description: Internal server error
+
+    put:
+      tags:
+        - Relationships
+      summary: Request a therapist switch
+      description: Request to switch to a new therapist for a specific student.
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          description: The ID of the student
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                requestedTherapistId:
+                  type: integer
+                  example: 3
+      responses:
+        200:
+          description: Therapist switch requested successfully
           content:
             application/json:
               schema:
@@ -91,7 +124,7 @@ paths:
       tags:
         - Relationships
       summary: End a student-therapist relationship
-      description: Remove the current therapist for a student.
+      description: Remove the current therapist for a specific student.
       parameters:
         - name: studentId
           in: path
@@ -102,36 +135,6 @@ paths:
       responses:
         200:
           description: Relationship ended successfully
-        500:
-          description: Internal server error
-
-  /relationships/{studentId}/request-switch:
-    put:
-      tags:
-        - Relationships
-      summary: Request a therapist switch
-      description: Request to switch to a new therapist for a student.
-      parameters:
-        - name: studentId
-          in: path
-          required: true
-          description: The ID of the student
-          schema:
-            type: integer
-      requestBody:
-        description: New therapist details
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                requestedTherapistId:
-                  type: integer
-                  example: 3
-      responses:
-        200:
-          description: Therapist switch requested
           content:
             application/json:
               schema:
@@ -156,13 +159,34 @@ paths:
             type: integer
       responses:
         200:
-          description: Therapist switch approved
+          description: Therapist switch approved successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Relationship'
         404:
           description: No pending therapist switch found
+        500:
+          description: Internal server error
+
+  /relationships/{studentId}/reject-switch:
+    put:
+      tags:
+        - Relationships
+      summary: Reject a therapist switch
+      description: Reject the requested therapist switch for a student.
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          description: The ID of the student
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Therapist switch rejected successfully
+        404:
+          description: Relationship not found
         500:
           description: Internal server error
 
@@ -181,7 +205,7 @@ paths:
             type: integer
       responses:
         200:
-          description: List of relationships for the therapist
+          description: Successfully retrieved relationships
           content:
             application/json:
               schema:
@@ -191,45 +215,2203 @@ paths:
         500:
           description: Internal server error
 
+  
+  /accountSettings/therapists/{therapistId}/user/{studentId}:
+    delete:
+      tags:
+        - AccountSettings
+      summary: Delete a user and their therapist
+      description: Deletes a user and their therapist if there are no active relationships or unpaid invoices.
+      parameters:
+        - name: therapistId
+          in: path
+          required: true
+          description: ID of the therapist
+          schema:
+            type: integer
+        - name: studentId
+          in: path
+          required: true
+          description: ID of the student
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Successfully deleted user and therapist
+        400:
+          description: Unable to delete due to active relationships or unpaid invoices
+        500:
+          description: Internal server error
+
+  /accountSettings/student/{userid}:
+    patch:
+      tags:
+        - AccountSettings
+      summary: Update user account settings
+      description: Update the account settings of a user, including name, email, and password.
+      parameters:
+        - name: userid
+          in: path
+          required: true
+          description: ID of the user to update
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                first_name:
+                  type: string
+                  example: "John"
+                last_name:
+                  type: string
+                  example: "Doe"
+                email:
+                  type: string
+                  example: "john.doe@example.com"
+                password:
+                  type: string
+                  example: "securepassword"
+      responses:
+        200:
+          description: User updated successfully
+        404:
+          description: User not found
+        500:
+          description: Internal server error
+
+  /accountSettings/therapist/{userid}:
+    patch:
+      tags:
+        - AccountSettings
+      summary: Update therapist account settings
+      description: Update the account settings of a therapist, including name, email, password, experience, and rate.
+      parameters:
+        - name: userid
+          in: path
+          required: true
+          description: ID of the therapist to update
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                first_name:
+                  type: string
+                  example: "Alice"
+                last_name:
+                  type: string
+                  example: "Smith"
+                email:
+                  type: string
+                  example: "alice.smith@example.com"
+                password:
+                  type: string
+                  example: "securepassword"
+                experience_years:
+                  type: integer
+                  example: 5
+                monthly_rate:
+                  type: number
+                  format: float
+                  example: 150.0
+      responses:
+        200:
+          description: Therapist updated successfully
+        404:
+          description: Therapist not found
+        500:
+          description: Internal server error
+  
+  /accountSettings/students/{studentId}:
+    delete:
+      tags:
+        - AccountSettings
+      summary: Delete a student
+      description: Deletes a student's account if there are no unpaid invoices.
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          description: ID of the student to delete
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Student account deleted successfully
+        400:
+          description: Unable to delete due to unpaid invoices
+        404:
+          description: Student not found
+        500:
+          description: Internal server error
+
+  /appointments/schedule:
+    post:
+      tags:
+        - Appointments
+      summary: Schedule a new appointment
+      description: Create a new appointment for a student and therapist with a specific date and status.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                student_id:
+                  type: integer
+                  example: 1
+                therapist_id:
+                  type: integer
+                  example: 2
+                appointment_date:
+                  type: string
+                  format: date-time
+                  example: "2024-12-15T10:30:00Z"
+                status:
+                  type: string
+                  enum: [confirmed, pending, canceled, completed]
+                  example: "pending"
+                notes:
+                  type: string
+                  example: "Discuss stress management."
+      responses:
+        201:
+          description: Appointment successfully scheduled
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/Appointment'
+        400:
+          description: Invalid input or missing required fields
+        500:
+          description: Internal server error
+
+  /appointments/student/{studentId}:
+    get:
+      tags:
+        - Appointments
+      summary: Get all appointments for a student
+      description: Retrieve all appointments associated with a specific student.
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          description: ID of the student
+          schema:
+            type: integer
+      responses:
+        200:
+          description: A list of appointments for the student
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Appointment'
+        400:
+          description: Invalid student ID
+        500:
+          description: Internal server error
+
+  /appointments/therapist/{therapistId}:
+    get:
+      tags:
+        - Appointments
+      summary: Get all appointments for a therapist
+      description: Retrieve all appointments associated with a specific therapist.
+      parameters:
+        - name: therapistId
+          in: path
+          required: true
+          description: ID of the therapist
+          schema:
+            type: integer
+      responses:
+        200:
+          description: A list of appointments for the therapist
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Appointment'
+        400:
+          description: Invalid therapist ID
+        500:
+          description: Internal server error
+
+  /appointments/{id}:
+    get:
+      tags:
+        - Appointments
+      summary: Get details of a specific appointment
+      description: Retrieve the details of an appointment by its ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Appointment ID
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Appointment details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Appointment'
+        404:
+          description: Appointment not found
+        500:
+          description: Internal server error
+
+    put:
+      tags:
+        - Appointments
+      summary: Update the status of an appointment
+      description: Update the status of an appointment by its ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Appointment ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [confirmed, pending, canceled, completed]
+                  example: "confirmed"
+      responses:
+        200:
+          description: Appointment status updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/Appointment'
+        400:
+          description: Invalid status or appointment ID
+        404:
+          description: Appointment not found
+        500:
+          description: Internal server error
+
+    delete:
+      tags:
+        - Appointments
+      summary: Cancel or delete an appointment
+      description: Cancel or delete an appointment by its ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Appointment ID
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Appointment canceled or deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/Appointment'
+        404:
+          description: Appointment not found
+        500:
+          description: Internal server error
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user
+      description: Create a new user account with email, password, role, and profile details.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "user@example.com"
+                password:
+                  type: string
+                  example: "securepassword"
+                role:
+                  type: string
+                  example: "student"
+                firstName:
+                  type: string
+                  example: "John"
+                lastName:
+                  type: string
+                  example: "Doe"
+                gender:
+                  type: string
+                  enum: [male, female, non-binary]
+                  example: "male"
+      responses:
+        201:
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+        400:
+          description: User already exists
+        500:
+          description: Registration failed
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Log in a user
+      description: Authenticate a user with email and password and return a JWT token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "user@example.com"
+                password:
+                  type: string
+                  example: "securepassword"
+      responses:
+        200:
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  token:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+        400:
+          description: User not found
+        401:
+          description: Invalid password
+        500:
+          description: Login failed
+
+  /auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: Log out a user
+      description: Log out the current user (requires token authentication).
+      responses:
+        200:
+          description: Logged out successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        401:
+          description: Unauthorized
+        500:
+          description: Internal server error
+
+  /auth/check-email:
+    post:
+      tags:
+        - Authentication
+      summary: Check if an email exists
+      description: Verify if an email is associated with a user account.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "user@example.com"
+      responses:
+        200:
+          description: Email exists
+        404:
+          description: Email does not exist
+        500:
+          description: Failed to verify email
+
+  /auth/reset-password-direct:
+    post:
+      tags:
+        - Authentication
+      summary: Reset password directly
+      description: Reset a user's password by providing their email and a new password.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "user@example.com"
+                newPassword:
+                  type: string
+                  example: "newsecurepassword"
+      responses:
+        200:
+          description: Password reset successfully
+        404:
+          description: User not found
+        500:
+          description: Failed to reset password
+
+  /auth/me:
+    get:
+      tags:
+        - Authentication
+      summary: Get current user's profile
+      description: Fetch the profile of the currently authenticated user.
+      responses:
+        200:
+          description: User profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+        401:
+          description: Unauthorized
+        500:
+          description: Failed to fetch profile
+  /conversations/create:
+    post:
+      tags:
+        - Conversations
+      summary: Create a new conversation
+      description: Create a new conversation between a student and therapist or update the `updated_at` timestamp if it already exists.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                student_id:
+                  type: integer
+                  example: 1
+                therapist_id:
+                  type: integer
+                  example: 2
+      responses:
+        201:
+          description: Conversation created or updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Conversation created or updated."
+                  conversation:
+                    $ref: '#/components/schemas/Conversation'
+        400:
+          description: Missing required fields (Student ID or Therapist ID)
+        409:
+          description: Conversation already exists
+        500:
+          description: Failed to create conversation
+
+  /conversations/{userId}:
+    get:
+      tags:
+        - Conversations
+      summary: Get all conversations for a user
+      description: Retrieve all conversations for a user based on their role (student or therapist).
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: ID of the user
+          schema:
+            type: integer
+        - name: role
+          in: query
+          required: true
+          description: Role of the user (must be 'student' or 'therapist')
+          schema:
+            type: string
+            enum: [student, therapist]
+            example: student
+      responses:
+        200:
+          description: List of conversations for the user
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Conversation'
+        400:
+          description: Invalid role or user ID
+        500:
+          description: Failed to fetch conversations
+
+  /conversations/details/{conversationId}:
+    get:
+      tags:
+        - Conversations
+      summary: Get details of a specific conversation
+      description: Retrieve the details of a specific conversation by its ID.
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          description: ID of the conversation
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Conversation details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Conversation'
+        404:
+          description: Conversation not found
+        500:
+          description: Failed to fetch conversation details
+  
+  /documents/createDocument:
+    post:
+      tags:
+        - Documents
+      summary: Create a new document
+      description: Create a new document with a specified type and content for a user.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: integer
+                  example: 1
+                document_type:
+                  type: string
+                  example: "weekly_survey"
+                document_content:
+                  type: string
+                  example: "Survey content here."
+      responses:
+        201:
+          description: Document created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+        500:
+          description: Failed to create document
+
+  /documents/{id}:
+    get:
+      tags:
+        - Documents
+      summary: Retrieve a specific document
+      description: Retrieve the details of a specific document by its ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Document ID
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Document retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+        404:
+          description: Document not found
+        500:
+          description: Failed to retrieve document
+
+  /documents/users/{userId}/documents:
+    get:
+      tags:
+        - Documents
+      summary: Retrieve all documents for a user
+      description: Retrieve all documents associated with a specific user.
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: User ID
+          schema:
+            type: integer
+      responses:
+        200:
+          description: List of documents for the user
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Document'
+        500:
+          description: Failed to retrieve documents
+
+  /documents/{id}:
+    put:
+      tags:
+        - Documents
+      summary: Update an existing document
+      description: Update the type and/or content of an existing document and log changes in the audit table.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Document ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                document_type:
+                  type: string
+                  example: "updated_survey"
+                document_content:
+                  type: string
+                  example: "Updated content here."
+      responses:
+        200:
+          description: Document updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+        404:
+          description: Document not found
+        500:
+          description: Failed to update document
+
+  /documents/audit/user/{id}:
+    get:
+      tags:
+        - Documents
+      summary: Retrieve document audit history for a user
+      description: Retrieve the audit history for all documents associated with a specific user.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User ID
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Audit history retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DocumentAudit'
+        404:
+          description: No audit history found for the user
+        500:
+          description: Failed to retrieve audit history
+  
+  /invoices:
+    get:
+      tags:
+        - Invoices
+      summary: Retrieve all invoices
+      description: Get a list of all invoices with detailed information about students and therapists.
+      responses:
+        200:
+          description: List of all invoices retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Invoice'
+        500:
+          description: Failed to retrieve invoices
+
+    post:
+      tags:
+        - Invoices
+      summary: Create a new invoice
+      description: Create a new invoice for a student and therapist.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                studentId:
+                  type: integer
+                  example: 1
+                therapistId:
+                  type: integer
+                  example: 2
+                amountDue:
+                  type: number
+                  example: 100.0
+                dueDate:
+                  type: string
+                  format: date
+                  example: "2024-12-20"
+      responses:
+        201:
+          description: Invoice created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+        400:
+          description: Missing required fields
+        500:
+          description: Failed to create invoice
+
+  /invoices/student/{id}:
+    get:
+      tags:
+        - Invoices
+      summary: Retrieve invoices for a specific student
+      description: Get a list of invoices associated with a specific student.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the student
+          schema:
+            type: integer
+      responses:
+        200:
+          description: List of invoices for the student retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Invoice'
+        400:
+          description: Invalid Student ID
+        500:
+          description: Failed to retrieve student invoices
+
+  /invoices/{id}:
+    get:
+      tags:
+        - Invoices
+      summary: Retrieve a specific invoice
+      description: Get detailed information about a specific invoice by its ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Invoice ID
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Invoice retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+        404:
+          description: Invoice not found
+        500:
+          description: Failed to retrieve invoice
+
+    put:
+      tags:
+        - Invoices
+      summary: Update invoice details
+      description: Update the details of an existing invoice.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Invoice ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                therapistId:
+                  type: integer
+                  example: 3
+                amountDue:
+                  type: number
+                  example: 150.0
+                dueDate:
+                  type: string
+                  format: date
+                  example: "2024-12-25"
+                status:
+                  type: string
+                  enum: [unpaid, partial, paid]
+                  example: "paid"
+      responses:
+        200:
+          description: Invoice updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+        400:
+          description: Missing or invalid fields
+        404:
+          description: Invoice not found
+        500:
+          description: Failed to update invoice
+
+    delete:
+      tags:
+        - Invoices
+      summary: Delete an invoice
+      description: Delete an existing invoice by its ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Invoice ID
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Invoice deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+        404:
+          description: Invoice not found
+        500:
+          description: Failed to delete invoice
+
+  /invoices/{id}/pay:
+    put:
+      tags:
+        - Invoices
+      summary: Process invoice payment
+      description: Update the payment status and amount paid for an invoice.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Invoice ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amountPaid:
+                  type: number
+                  example: 50.0
+      responses:
+        200:
+          description: Payment processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+        400:
+          description: Missing or invalid payment information
+        404:
+          description: Invoice not found
+        500:
+          description: Failed to process payment
+
+  /journals:
+    post:
+      tags:
+        - Journals
+      summary: Create a new journal entry
+      description: Create a new journal entry for a user with mood and content.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: integer
+                  example: 1
+                mood:
+                  type: string
+                  example: "happy"
+                content:
+                  type: string
+                  example: "Today was a good day."
+      responses:
+        201:
+          description: Journal entry created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  journal:
+                    $ref: '#/components/schemas/Journal'
+        400:
+          description: Missing required fields
+        500:
+          description: Failed to create journal entry
+
+  /journals/{id}:
+    get:
+      tags:
+        - Journals
+      summary: Retrieve a journal entry
+      description: Retrieve the details of a journal entry by its ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Journal ID
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Journal entry retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  journal:
+                    $ref: '#/components/schemas/Journal'
+        404:
+          description: Journal entry not found
+        500:
+          description: Failed to retrieve journal entry
+
+    put:
+      tags:
+        - Journals
+      summary: Update a journal entry
+      description: Update the mood and content of an existing journal entry.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Journal ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                mood:
+                  type: string
+                  example: "excited"
+                content:
+                  type: string
+                  example: "I had an amazing day!"
+      responses:
+        200:
+          description: Journal entry updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  journal:
+                    $ref: '#/components/schemas/Journal'
+        400:
+          description: Missing required fields
+        500:
+          description: Failed to update journal entry
+
+  /journals/user/{userId}:
+    get:
+      tags:
+        - Journals
+      summary: Retrieve all journal entries for a user
+      description: Retrieve all journal entries created by a specific user.
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: User ID
+          schema:
+            type: integer
+      responses:
+        200:
+          description: List of journal entries retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Journal'
+        404:
+          description: No journal entries found for this user
+        500:
+          description: Failed to retrieve journal entries
+
+  /journals/delete/{id}:
+    delete:
+      tags:
+        - Journals
+      summary: Delete a journal entry
+      description: Delete an existing journal entry by its ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Journal ID
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Journal entry deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Journal entry deleted successfully."
+                  id:
+                    type: integer
+                    example: 1
+        404:
+          description: Journal entry not found
+        500:
+          description: Failed to delete journal entry
+
+  /messages/send:
+    post:
+      tags:
+        - Messages
+      summary: Send a new message
+      description: Create a new message within a specific conversation.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                conversation_id:
+                  type: integer
+                  example: 1
+                sender_id:
+                  type: integer
+                  example: 2
+                receiver_id:
+                  type: integer
+                  example: 3
+                message_content:
+                  type: string
+                  example: "Hello, how are you?"
+      responses:
+        201:
+          description: Message sent successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        400:
+          description: Missing required fields
+        500:
+          description: Failed to send message
+
+  /messages/{conversationId}:
+    get:
+      tags:
+        - Messages
+      summary: Get messages for a conversation
+      description: Retrieve all messages for a specific conversation, ordered by the time they were sent.
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          description: The ID of the conversation
+          schema:
+            type: integer
+      responses:
+        200:
+          description: List of messages retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Message'
+        500:
+          description: Failed to fetch messages
+
+  /messages/{messageId}/read:
+    put:
+      tags:
+        - Messages
+      summary: Mark a message as read
+      description: Update the status of a specific message to "read."
+      parameters:
+        - name: messageId
+          in: path
+          required: true
+          description: The ID of the message
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Message marked as read successfully
+        404:
+          description: Message not found
+        500:
+          description: Failed to mark message as read
+
+  /messages/{userId}/unread:
+    get:
+      tags:
+        - Messages
+      summary: Get unread message count
+      description: Retrieve the count of unread messages for a specific user.
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: The ID of the user
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Unread message count retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  unread_count:
+                    type: integer
+                    example: 5
+        500:
+          description: Failed to fetch unread message count
+  /profilePicture/upload/{id}:
+    post:
+      tags:
+        - Profile Pictures
+      summary: Upload a profile picture
+      description: Upload a new profile picture for a user (student or therapist) by user ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                profile_picture:
+                  type: string
+                  format: binary
+      responses:
+        200:
+          description: Profile picture uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Profile picture updated!"
+                  profilePicturePath:
+                    type: string
+                    example: "/uploads/1672439783-profile.jpg"
+        400:
+          description: No file uploaded or invalid request
+        500:
+          description: Failed to upload profile picture
+
+  /profilePicture/therapist/{id}:
+    get:
+      tags:
+        - Profile Pictures
+      summary: Get therapist profile picture
+      description: Retrieve the profile picture URL for a therapist by their ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Therapist ID
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Therapist profile picture URL retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  profile_picture_url:
+                    type: string
+                    example: "/uploads/1672439783-therapist.jpg"
+        404:
+          description: Therapist not found
+        500:
+          description: Internal server error
+
+  /profilePicture/{id}:
+    get:
+      tags:
+        - Profile Pictures
+      summary: Get student profile picture
+      description: Retrieve the profile picture URL for a student by their ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Student ID
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Student profile picture URL retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  profile_picture_url:
+                    type: string
+                    example: "/uploads/1672439783-student.jpg"
+        404:
+          description: Student not found
+        500:
+          description: Internal server error
+  
+  /reviews/submitReview:
+    post:
+      tags:
+        - Reviews
+      summary: Submit a new review
+      description: Submit a new review for a therapist by a student.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                student_id:
+                  type: integer
+                  example: 1
+                  description: ID of the student submitting the review
+                therapist_id:
+                  type: integer
+                  example: 2
+                  description: ID of the therapist being reviewed
+                rating:
+                  type: integer
+                  example: 5
+                  description: Rating given to the therapist (1-5)
+                review_text:
+                  type: string
+                  example: "The therapist was very helpful and attentive."
+                  description: Text of the review
+      responses:
+        201:
+          description: Review successfully submitted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Review successfully submitted"
+                  data:
+                    $ref: '#/components/schemas/Review'
+        400:
+          description: Invalid request or missing required fields
+        500:
+          description: Internal server error
+
+  /reviews:
+    get:
+      tags:
+        - Reviews
+      summary: Get all reviews
+      description: Retrieve a list of all reviews submitted by students.
+      responses:
+        200:
+          description: Successfully retrieved all reviews
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Review'
+        500:
+          description: Internal server error
+
+  /reviews/therapist/{id}:
+    get:
+      tags:
+        - Reviews
+      summary: Get reviews for a therapist
+      description: Retrieve all reviews submitted for a specific therapist.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the therapist
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Successfully retrieved reviews for the therapist
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Review'
+        400:
+          description: Invalid therapist ID
+        404:
+          description: No reviews found for the therapist
+        500:
+          description: Internal server error
+
+  /surveys:
+    post:
+      tags:
+        - Surveys
+      summary: Submit a new survey response
+      description: Create a new survey response for a user.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: integer
+                  example: 1
+                  description: ID of the user submitting the survey
+                content:
+                  type: string
+                  example: "This is the survey response content."
+                  description: Content of the survey response
+      responses:
+        201:
+          description: Survey response created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Survey response submitted successfully"
+                  survey:
+                    $ref: '#/components/schemas/Survey'
+        400:
+          description: Missing required fields
+        500:
+          description: Internal server error
+
+  /surveys/weekly:
+    post:
+      tags:
+        - Surveys
+      summary: Submit a weekly survey response
+      description: Create a new weekly survey response for a user.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: integer
+                  example: 1
+                  description: ID of the user submitting the weekly survey
+                content:
+                  type: string
+                  example: "This is the weekly survey response content."
+                  description: Content of the weekly survey response
+      responses:
+        201:
+          description: Weekly survey submitted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Weekly survey submitted successfully"
+                  survey:
+                    $ref: '#/components/schemas/Survey'
+        400:
+          description: Missing required fields
+        500:
+          description: Internal server error
+
+  /surveys/{id}:
+    get:
+      tags:
+        - Surveys
+      summary: Get a specific survey response by ID
+      description: Retrieve details of a specific survey response by its ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the survey response
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Survey response retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  survey:
+                    $ref: '#/components/schemas/Survey'
+        404:
+          description: Survey response not found
+        500:
+          description: Internal server error
+
+    put:
+      tags:
+        - Surveys
+      summary: Update a survey response
+      description: Update the content of an existing survey response.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the survey response
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+                  example: "Updated survey response content."
+                  description: Updated content of the survey response
+      responses:
+        200:
+          description: Survey response updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Survey response updated successfully"
+                  survey:
+                    $ref: '#/components/schemas/Survey'
+        400:
+          description: Missing required fields
+        500:
+          description: Internal server error
+
+  /surveys/user/{userId}:
+    get:
+      tags:
+        - Surveys
+      summary: Get all surveys for a user
+      description: Retrieve all survey responses submitted by a specific user.
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: The ID of the user
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Successfully retrieved surveys
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Survey'
+        404:
+          description: No surveys found for the user
+        500:
+          description: Internal server error
+
+  /surveys/status/{userId}:
+    get:
+      tags:
+        - Surveys
+      summary: Check weekly survey status
+      description: Check whether a weekly survey has been submitted for the current week.
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: The ID of the user
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Weekly survey status retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Weekly survey already submitted"
+                  canSubmit:
+                    type: boolean
+                    example: false
+        400:
+          description: Missing user ID
+        500:
+          description: Internal server error
+
+  /surveys/weekly/user/{id}:
+    get:
+      tags:
+        - Surveys
+      summary: Get weekly surveys for a user
+      description: Retrieve all weekly survey responses submitted by a specific user.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the user
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Successfully retrieved weekly surveys
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Survey'
+        404:
+          description: No weekly surveys found for the user
+        500:
+          description: Internal server error
+
+  /therapists/register:
+    post:
+      tags:
+        - Therapists
+      summary: Register a new therapist
+      description: Allows new therapists to register, including user account creation and license verification.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: "therapist@example.com"
+                password:
+                  type: string
+                  example: "securepassword123"
+                firstName:
+                  type: string
+                  example: "John"
+                lastName:
+                  type: string
+                  example: "Doe"
+                gender:
+                  type: string
+                  example: "Male"
+                licenseNumber:
+                  type: string
+                  example: "ABC123456"
+                specialization:
+                  type: string
+                  example: "Clinical Psychology"
+                experienceYears:
+                  type: integer
+                  example: 5
+                monthlyRate:
+                  type: number
+                  example: 150.00
+      responses:
+        201:
+          description: Therapist registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  therapist:
+                    $ref: '#/components/schemas/Therapist'
+        400:
+          description: Missing required fields
+        403:
+          description: License number is not verified
+        409:
+          description: User already exists with this email or license number
+        500:
+          description: Registration failed
+
+  /therapists/available:
+    get:
+      tags:
+        - Therapists
+      summary: Get available therapists
+      description: Retrieves a list of therapists currently marked as available.
+      responses:
+        200:
+          description: List of available therapists
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Therapist'
+        404:
+          description: No available therapists found
+        500:
+          description: Failed to fetch available therapists
+
+  /therapists/{id}:
+    get:
+      tags:
+        - Therapists
+      summary: Get therapist details by ID
+      description: Fetches detailed information about a specific therapist using their ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Therapist ID
+      responses:
+        200:
+          description: Therapist details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Therapist'
+        404:
+          description: Therapist not found
+        500:
+          description: Failed to fetch therapist details
+
+  /therapists/user/{id}:
+    get:
+      tags:
+        - Therapists
+      summary: Get therapist details by user ID
+      description: Retrieves therapist details based on their associated user ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: User ID
+      responses:
+        200:
+          description: Therapist details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Therapist'
+        404:
+          description: Therapist not found
+        500:
+          description: Failed to fetch therapist details
+
+  /therapists/toggleAvailability/{id}:
+    put:
+      tags:
+        - Therapists
+      summary: Toggle therapist availability
+      description: Toggles the availability status of a therapist.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Therapist ID
+      responses:
+        200:
+          description: Therapist availability toggled successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Therapist availability toggled successfully
+                  therapist:
+                    $ref: '#/components/schemas/Therapist'
+        400:
+          description: Invalid therapist ID
+        404:
+          description: Therapist not found
+        500:
+          description: Failed to toggle therapist availability
+
+  /therapists/find/{id}:
+    get:
+      tags:
+        - Therapists
+      summary: Get therapist ID by user ID
+      description: Fetches the therapist ID associated with a specific user ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: User ID
+      responses:
+        200:
+          description: Therapist ID retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  therapist_id:
+                    type: integer
+                    example: 10
+        404:
+          description: Therapist not found
+        500:
+          description: Failed to fetch therapist ID
+
+  /users:
+    get:
+      tags:
+        - Users
+      summary: Get all users
+      description: Fetches all registered users.
+      responses:
+        200:
+          description: A list of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        500:
+          description: Failed to fetch users
+
+  /users/{id}:
+    get:
+      tags:
+        - Users
+      summary: Get user by ID
+      description: Retrieves a specific user's details by their ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: User ID
+      responses:
+        200:
+          description: User details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        400:
+          description: Invalid user ID
+        404:
+          description: User not found
+        500:
+          description: Failed to fetch user details
+
+  /users/audit/{id}:
+    get:
+      tags:
+        - Users
+      summary: Get user audit history
+      description: Fetches the audit history for a specific user.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: User ID
+      responses:
+        200:
+          description: Audit history retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AuditEntry'
+        400:
+          description: Invalid user ID
+        404:
+          description: No audit history found
+        500:
+          description: Failed to fetch audit history
+
+  /users/email/{id}:
+    get:
+      tags:
+        - Users
+      summary: Get user email by ID
+      description: Retrieves the email address associated with a specific user ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: User ID
+      responses:
+        200:
+          description: User email retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  email:
+                    type: string
+                    example: user@example.com
+        400:
+          description: Invalid user ID
+        404:
+          description: No email found for this user
+        500:
+          description: Failed to fetch user email
+
 components:
   schemas:
-    Relationship:
+    User:
       type: object
       properties:
-        student_id:
+        id:
           type: integer
           example: 1
-        current_therapist_id:
-          type: integer
-          example: 2
-        requested_therapist_id:
-          type: integer
-          nullable: true
-          example: 3
-        status:
+        first_name:
           type: string
-          example: active
+          example: "John"
+        last_name:
+          type: string
+          example: "Doe"
+        gender:
+          type: string
+          enum: ["male", "female", "other"]
+          example: "male"
+        role:
+          type: string
+          enum: ["student", "therapist"]
+          example: "student"
+        profile_picture_url:
+          type: string
+          example: "default-profile.png"
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T12:00:00Z"
         updated_at:
           type: string
           format: date-time
-          example: "2024-11-25T12:34:56Z"
-        student_first_name:
+          example: "2024-01-02T12:00:00Z"
+
+    Therapist:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        user_id:
+          type: integer
+          example: 1
+        license_number:
           type: string
-          example: John
-        student_last_name:
+          example: "ABC123456"
+        specialization:
           type: string
-          example: Doe
-        current_therapist_first_name:
+          example: "Cognitive Behavioral Therapy"
+        experience_years:
+          type: integer
+          example: 5
+        availability:
+          type: boolean
+          example: true
+        monthly_rate:
+          type: number
+          format: float
+          example: 100.50
+        created_at:
           type: string
-          example: Alice
-        current_therapist_last_name:
+          format: date-time
+          example: "2024-01-01T12:00:00Z"
+        updated_at:
           type: string
-          example: Smith
-        requested_therapist_first_name:
+          format: date-time
+          example: "2024-01-02T12:00:00Z"
+
+    Document:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        user_id:
+          type: integer
+          example: 1
+        document_type:
           type: string
-          nullable: true
-          example: Bob
-        requested_therapist_last_name:
+          enum: ["journal_entry", "survey", "weekly_survey", "therapist_note"]
+          example: "journal_entry"
+        document_content:
+          type: object
+          example: {"content": "This is a sample document content."}
+        created_at:
           type: string
-          nullable: true
-          example: Johnson
+          format: date-time
+          example: "2024-01-01T12:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2024-01-02T12:00:00Z"
+
+    Invoice:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        student_id:
+          type: integer
+          example: 2
+        therapist_id:
+          type: integer
+          example: 3
+        amount_due:
+          type: number
+          format: float
+          example: 150.00
+        amount_paid:
+          type: number
+          format: float
+          example: 50.00
+        due_date:
+          type: string
+          format: date-time
+          example: "2024-01-10T12:00:00Z"
+        status:
+          type: string
+          enum: ["unpaid", "partial", "paid"]
+          example: "partial"
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T12:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2024-01-02T12:00:00Z"
+
+    Message:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        conversation_id:
+          type: integer
+          example: 1
+        sender_id:
+          type: integer
+          example: 2
+        receiver_id:
+          type: integer
+          example: 3
+        message_content:
+          type: string
+          example: "Hello, how are you?"
+        sent_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T12:00:00Z"
+        is_read:
+          type: boolean
+          example: false
+
+    Appointment:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        student_id:
+          type: integer
+          example: 2
+        therapist_id:
+          type: integer
+          example: 3
+        appointment_date:
+          type: string
+          format: date-time
+          example: "2024-01-10T14:30:00Z"
+        status:
+          type: string
+          enum: ["pending", "confirmed", "canceled", "completed"]
+          example: "confirmed"
+        notes:
+          type: string
+          example: "Session focused on stress management."
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T12:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2024-01-02T12:00:00Z"
+
+    Review:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        student_id:
+          type: integer
+          example: 2
+        therapist_id:
+          type: integer
+          example: 3
+        rating:
+          type: integer
+          example: 5
+        review_text:
+          type: string
+          example: "Great therapist, highly recommend!"
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T12:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2024-01-02T12:00:00Z"

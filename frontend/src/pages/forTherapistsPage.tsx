@@ -66,7 +66,7 @@ const TherapistSignUp = () => {
       );
       // Delay navigation by 3 seconds
       setTimeout(() => 3000);
-      navigate('/therapist-dashboard');
+      navigate('/login');
     }
     //Errors to check if everything goes smoothly
     catch (error) {

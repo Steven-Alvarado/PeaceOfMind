@@ -36,7 +36,7 @@ const scheduleAppointment = async (req, res) => {
     );
     res.status(201).json({ success: true, message: "Appointment successfully recorded", data: newAppointment });
   } catch (error) {
-    console.error("Error scheduling appointment:", error);
+    //console.error("Error scheduling appointment:", error);
     res.status(500).json({ success: false, error: "Database query failed" });
   }
 };
