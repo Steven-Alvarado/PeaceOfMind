@@ -124,7 +124,7 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const createConversation = async (studentId: number, therapistId: number) => {
     try {
-      const { data } = await axios.post("${API_BASE_URL}/api/conversations/create", {
+      const { data } = await axios.post(`${API_BASE_URL}/api/conversations/create`, {
         student_id: studentId,
         therapist_id: therapistId,
       });
