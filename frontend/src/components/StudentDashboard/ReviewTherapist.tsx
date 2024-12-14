@@ -67,7 +67,7 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
 
   return (
     isOpen && (
-      <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
+      <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
         <div className="flex flex-col bg-white rounded-lg shadow-lg p-6 w-full max-w-lg">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl text-[#5E9ED9] font-bold">Review Your Therapist</h2>

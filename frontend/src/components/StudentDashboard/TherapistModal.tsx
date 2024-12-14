@@ -198,9 +198,9 @@ const TherapistModal: React.FC<TherapistModalProps> = ({
                 {currentTherapists.map((therapist) => (
                   <li
                     key={therapist.id}
-                    className="flex items-center justify-between bg-blue-50 p-4 rounded-lg shadow-sm"
+                    className="flex items-center justify-between bg-blue-100 py-2 px-5 rounded-lg shadow-sm"
                   >
-                    <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-4 px-2">
                       <ProfilePicture
                         userRole="therapist"
                         therapistId={therapist.id}
@@ -254,19 +254,21 @@ const TherapistModal: React.FC<TherapistModalProps> = ({
               onClose={closeReviewsModal}
             />
           )}
-          <div className="flex justify-center items-center space-x-4 mt-6">
+
+          <div className="flex justify-center space-x-3 pt-5 items-center border-t border-[#5E9ED9]">
             <button
+              className="p-1 mb-1 bg-gray-100 rounded font-bold text-3xl"
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
-              className="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg w-32 hover:bg-gray-400 disabled:bg-gray-100"
             >
-              Previous
+              ←
             </button>
-            <span className="text-sm text-black">
+            <span className="text-[#5E9ED9] font-bold">
               Page {currentPage} of{" "}
               {Math.ceil(filteredTherapists.length / itemsPerPage)}
             </span>
             <button
+              className="p-1 mb-1 bg-gray-100 rounded font-bold text-3xl"
               onClick={() =>
                 setCurrentPage((prev) =>
                   Math.min(
@@ -279,9 +281,8 @@ const TherapistModal: React.FC<TherapistModalProps> = ({
                 currentPage ===
                 Math.ceil(filteredTherapists.length / itemsPerPage)
               }
-              className="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg w-32 hover:bg-gray-400 disabled:bg-gray-100"
             >
-              Next
+              →
             </button>
           </div>
         </div>

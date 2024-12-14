@@ -1,5 +1,6 @@
 import React from "react";
-import { FaUser, FaCalendarAlt, FaComments, FaFileInvoice } from "react-icons/fa";
+import { FaUserPlus, FaTasks, FaFileInvoice } from "react-icons/fa";
+
 
 interface TherapistHelpModalProps {
   isOpen: boolean;
@@ -11,42 +12,29 @@ const TherapistHelpModal: React.FC<TherapistHelpModalProps> = ({ isOpen, onClose
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="relative bg-white rounded-lg p-6 w-full max-w-md outline outline-white outline-2 outline-offset-2">
-        <button
-          onClick={onClose}
-          className="absolute top-0 right-0 text-black text-lg p-2 m-2 hover:text-gray-900"
-        >
-          &#x2715;
-        </button>
-        <h2 className="text-3xl font-extrabold text-center text-[#5E9ED9] mb-4">
-          Help
-        </h2>
-        <ul className="text-gray-700 space-y-3">
-          <li>
-            <FaUser className="inline mr-2" /> <strong>Manage Patients:</strong> Access and update
-            patient records, chats, and notes.
-          </li>
-          <li>
-            <FaCalendarAlt className="inline mr-2" />{" "}
-            <strong>View Appointments:</strong> Manage your calendar and upcoming sessions.
-          </li>
-          <li>
-            <FaComments className="inline mr-2" />{" "}
-            <strong>New Patient Requests:</strong> Review and accept new patient inquiries.
-          </li>
-          <li>
-            <FaFileInvoice className="inline mr-2" /> <strong>Invoices:</strong> View and manage
-            billing for your services.
-          </li>
-        </ul>
-        <div className="flex justify-center">
+      <div className="relative bg-white rounded-lg p-6 w-full max-w-md">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl text-[#5E9ED9] font-bold">Help</h2>
           <button
-            className="mt-6 bg-[#5E9ED9] text-white px-4 py-2 rounded hover:bg-[#4a8ac9]"
+            className="text-black px-2 rounded hover:text-gray-900"
             onClick={onClose}
           >
-            Close
+            X
           </button>
         </div>
+        <ul className="text-black space-y-5">
+          <li>
+            <FaUserPlus className="inline mr-2 mb-1" /> <strong>View New Patient Requests:</strong> <br></br> Access and accept or decline requests from possible new patients.
+          </li>
+          <li>
+            <FaTasks className="inline mr-2 mb-1" />{" "}
+            <strong>Manage Scheduling:</strong> <br></br> Manage your calendar and view upcoming sessions with patients.
+          </li>
+          <li>
+            <FaFileInvoice className="inline mr-2 mb-1" />{" "}
+            <strong>Invoices:</strong><br></br> Used to view your current sent out invoices, the payment status, and handling the creation of new invoices for current patients.
+          </li>
+        </ul>
       </div>
     </div>
   );
