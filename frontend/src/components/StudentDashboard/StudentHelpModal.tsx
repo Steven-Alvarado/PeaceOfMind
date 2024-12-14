@@ -4,7 +4,7 @@ const StudentHelpModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
     if (!isOpen) return null;
   
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-800 bg-opacity-50">
         <div className="bg-white rounded-lg p-6 w-full max-w-lg">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl text-[#5E9ED9] font-bold">Help</h2>

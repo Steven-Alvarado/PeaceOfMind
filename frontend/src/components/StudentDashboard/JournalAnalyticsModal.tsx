@@ -139,7 +139,7 @@ const JournalAnalyticsModal: React.FC<JournalAnalyticsModalProps> = ({ isOpen, o
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-800 bg-opacity-50">
       <div className="relative bg-white rounded-lg w-full max-w-3xl shadow-lg" style={{ height: "70vh" }}>
         <button
           onClick={onClose}

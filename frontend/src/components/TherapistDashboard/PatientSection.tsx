@@ -23,7 +23,7 @@ const PatientSection: React.FC<PatientListComponentProps> = ({
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const patientsPerPage = 4;
+  const patientsPerPage = 3;
 
   useEffect(() => {
     const fetchPatients = async () => {
@@ -110,7 +110,7 @@ const PatientSection: React.FC<PatientListComponentProps> = ({
           />
         </div>
 
-        <div className="space-y-4 mb-5 md:h-[370px] h-[380px] overflow-y-auto">
+        <div className="space-y-4 mt-10 md:h-[370px] h-[380px] overflow-y-auto">
           {currentPatients.length > 0 ? (
             currentPatients.map((patient) => (
               <div

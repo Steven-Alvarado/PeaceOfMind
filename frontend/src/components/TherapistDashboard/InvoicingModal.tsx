@@ -42,7 +42,7 @@ const InvoicingModal: React.FC<InvoicingModalProps> = ({ isOpen, onClose, therap
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<number | null>(null);
   const [patients, setPatients] = useState<{ id: number; name: string }[]>([]);
 
-  const invoicesPerPage = 8;
+  const invoicesPerPage = 9;
 
   useEffect(() => {
     if (isOpen && user?.id) {
@@ -232,7 +232,7 @@ const InvoicingModal: React.FC<InvoicingModalProps> = ({ isOpen, onClose, therap
   }
 
   return (
-    <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
+    <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
       <div className="bg-blue-100 p-6 rounded-lg shadow-lg w-4/5 h-4/5 max-w-6xl max-h-[90vh] flex flex-col justify-between">
         <div>
           <div className="flex justify-between items-center mb-2">

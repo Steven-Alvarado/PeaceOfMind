@@ -340,7 +340,7 @@ const SchedulingForTherapists: React.FC<SchedulingForTherapistsProps> = ({
         </div>
 
         {showNewAppointmentForm && (
-          <div className="absolute inset-0 bg-white bg-opacity-90 flex justify-center items-center p-6">
+          <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center p-6 z-50">
             <div className="bg-white rounded-lg shadow-lg w-full max-w-lg p-6 relative">
               <h2 className="text-lg font-semibold text-gray-800 mb-4">
                 Schedule a New Appointment
@@ -367,7 +367,7 @@ const SchedulingForTherapists: React.FC<SchedulingForTherapistsProps> = ({
                       </option>
                     ))}
                   </select>
-                </div>;
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Select Date

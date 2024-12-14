@@ -26,7 +26,7 @@ const InvoicingModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [payAmount, setPayAmount] = useState("");
 
-  const invoicesPerPage = 8;
+  const invoicesPerPage = 9;
 
   useEffect(() => {
     if (!isOpen || !user) return;
@@ -246,7 +246,7 @@ const InvoicingModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
       </div>
 
       {payModalOpen && selectedInvoice && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-1/3">
             <h2 className="text-xl text-[#5E9ED9] text-center font-bold mb-4">Pay Invoice</h2>
             <div className="text-center mb-6">

@@ -27,7 +27,7 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
   const [successMessage, setSuccessMessage] = useState("");
 
   const [currentPage, setCurrentPage] = useState(1);
-  const entriesPerPage = 9;
+  const entriesPerPage = 8;
 
   const [searchQuery, setSearchQuery] = useState("");
   const [filterBy, setFilterBy] = useState("date");
@@ -280,10 +280,8 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
 
   return (
     isOpen && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-      style={{ marginTop:"80px"}}
-      >
-        <div className="bg-white rounded-lg shadow-lg w-4/5 h-4/5 max-w-6xl max-h-[90vh]">
+      <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
+        <div className="bg-white rounded-lg shadow-lg w-4/5 h-4/5 max-w-6xl">
           <div className="flex h-full">
             <div className="w-1/4 bg-blue-100 p-4 rounded-l-lg flex flex-col">
               <h2 className="text-lg font-bold mt-2 text-[#5E9ED9]">Journal Entries</h2>
@@ -342,7 +340,7 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
               <div className="flex mb-2 mt-2 flex-col space-y-2">
                 <div className="flex justify-between space-x-2">
                   <button
-                    className="px-4 py-2 bg-white shadow-lg rounded hover:bg-gray-100"
+                    className="px-4 py-2 bg-white shadow-lg rounded font-extrabold hover:bg-gray-100"
                     onClick={handlePreviousPage}
                     disabled={currentPage === 1}
                   >
@@ -355,7 +353,7 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
                     + New Entry
                   </button>
                   <button
-                    className="px-4 py-2 bg-white shadow-lg rounded hover:bg-gray-100"
+                    className="px-4 py-2 bg-white shadow-lg rounded font-extrabold hover:bg-gray-100"
                     onClick={handleNextPage}
                     disabled={currentPage === totalPages}
                   >
