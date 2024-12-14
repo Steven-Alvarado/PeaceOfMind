@@ -41,7 +41,7 @@ const DropModal: React.FC<DropModalProps> = ({ isOpen, sentDrop, onClose }) => {
 
   return (
     isOpen && (
-      <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
+      <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
         <div className="flex flex-col bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl text-[#5E9ED9] font-bold">Drop Assigned Therapist</h2>
@@ -54,8 +54,8 @@ const DropModal: React.FC<DropModalProps> = ({ isOpen, sentDrop, onClose }) => {
           </div>
           {user ? ( 
             <div className="flex flex-col justify-center">
-              <h1 className="text-center font-extrabold">This action can not be undone!</h1>
-              <div className="flex mt-3 justify-center">
+              <h1 className="text-center mt-10 font-extrabold">This action can not be undone!</h1>
+              <div className="flex mt-10 justify-center">
                 <button
                   onClick={() => {
                     rejectSwitch(user.id);

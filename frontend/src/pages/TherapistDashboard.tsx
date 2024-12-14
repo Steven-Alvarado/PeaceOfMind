@@ -69,55 +69,55 @@ const TherapistDashboard: React.FC = () => {
           />
         </div>
         <div className="col-span-1 backdrop-blur-lg bg-blue-100 shadow-lg rounded-2xl p-8 border-2 border-[#5E9ED9] mt-7 mb-6">
-  {/* Header */}
-  <header className="flex justify-between items-center mb-6">
-    <h2 className="text-3xl font-semibold text-center text-[#5E9ED9]">Menu</h2>
-    <button
-      onClick={() => setIsHelpOpen(true)}
-      className="text-[#5E9ED9] hover:text-blue-700 transition-colors duration-200"
-      aria-label="Help"
-    >
-      <FaQuestionCircle className="w-5 h-5" />
-    </button>
-  </header>
+          {/* Header */}
+          <header className="flex justify-between items-center mb-6">
+            <h2 className="text-3xl font-semibold text-center text-[#5E9ED9]">Menu</h2>
+            <button
+              onClick={() => setIsHelpOpen(true)}
+              className="text-[#5E9ED9] hover:text-blue-700 transition-colors duration-200"
+              aria-label="Help"
+            >
+              <FaQuestionCircle className="w-5 h-5" />
+            </button>
+          </header>
 
-  {/* Availability Toggle */}
-  <div className="flex flex-col items-center bg-blue-100 p-4 rounded-lg border border-[#5E9ED9] mb-6">
-    <span className="text-gray-700 font-medium text-lg mb-2">
-      Set your availability for Patient Requests
-    </span>
-    <div className="flex items-center space-x-4">
-      <span className="text-sm text-gray-700">Not Available</span>
-      <Switch checked={isAvailable || false} onChange={toggleAvailability} />
-      <span className="text-sm text-gray-700">Available</span>
-    </div>
-  </div>
+          {/* Availability Toggle */}
+          <div className="flex flex-col items-center bg-blue-100 p-4 rounded-lg border border-[#5E9ED9] mb-12">
+            <span className="text-gray-700 font-medium text-lg mb-2">
+              Set your availability for Patient Requests
+            </span>
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-700">Not Available</span>
+              <Switch checked={isAvailable || false} onChange={toggleAvailability} />
+              <span className="text-sm text-gray-700">Available</span>
+            </div>
+          </div>
 
-  {/* Menu Buttons */}
-  <div className="space-y-4">
-    <button
-      onClick={() => setIsRequestOpen(true)}
-      className="w-full flex items-center justify-between px-4 py-3 bg-[#5E9ED9] text-white rounded-lg hover:bg-[#4a8ac9] transition-all duration-200"
-    >
-      <span>View New Patient Requests</span>
-      <FaUserPlus className="w-5 h-5" />
-    </button>
-    <button
-      onClick={() => setIsSchedulingModalOpen(true)}
-      className="w-full flex items-center justify-between px-4 py-3 bg-[#5E9ED9] text-white rounded-lg hover:bg-[#4a8ac9] transition-all duration-200"
-    >
-      <span>Manage Scheduling</span>
-      <FaTasks className="w-5 h-5" />
-    </button>
-    <button
-      onClick={() => setIsInvoicingOpen(true)}
-      className="w-full flex items-center justify-between px-4 py-3 bg-[#5E9ED9] text-white rounded-lg hover:bg-[#4a8ac9] transition-all duration-200"
-    >
-      <span>Invoices</span>
-      <FaFileInvoice className="w-5 h-5" />
-    </button>
-  </div>
-</div>
+          {/* Menu Buttons */}
+          <div className="space-y-10">
+            <button
+              onClick={() => setIsRequestOpen(true)}
+              className="w-full flex items-center justify-between px-10 py-8 bg-[#5E9ED9] text-white rounded-lg hover:bg-[#4a8ac9] transition-all duration-200"
+            >
+              <span>View New Patient Requests</span>
+              <FaUserPlus className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => setIsSchedulingModalOpen(true)}
+              className="w-full flex items-center justify-between px-10 py-8 bg-[#5E9ED9] text-white rounded-lg hover:bg-[#4a8ac9] transition-all duration-200"
+            >
+              <span>Manage Scheduling</span>
+              <FaTasks className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => setIsInvoicingOpen(true)}
+              className="w-full flex items-center justify-between px-10 py-8 bg-[#5E9ED9] text-white rounded-lg hover:bg-[#4a8ac9] transition-all duration-200"
+            >
+              <span>Invoices</span>
+              <FaFileInvoice className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
 
       </div>
       <Footer />

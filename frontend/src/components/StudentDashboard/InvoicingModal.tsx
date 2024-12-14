@@ -11,6 +11,7 @@ const InvoicingModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [payModalOpen, setPayModalOpen] = useState(false);
+  const [payModalError, setPayModalError] = useState("");
   interface Invoice {
     id: number;
     created_at: string;
@@ -25,7 +26,7 @@ const InvoicingModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [payAmount, setPayAmount] = useState("");
 
-  const invoicesPerPage = 8;
+  const invoicesPerPage = 9;
 
   useEffect(() => {
     if (!isOpen || !user) return;
@@ -49,27 +50,37 @@ const InvoicingModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
 
   const handlePay = async () => {
     if (!selectedInvoice || isNaN(Number(payAmount)) || Number(payAmount) <= 0) {
-      setError("Invalid payment amount.");
+      setPayModalError("Invalid payment amount.");
       return;
     }
-
+    
     if (Number(payAmount) > selectedInvoice.amount_due) {
-      setError("Payment exceeds amount owed.");
+      setPayModalError("Payment exceeds amount owed.");
       return;
     }
-
+    
     try {
-      await axios.put(`${API_BASE_URL}/api/invoices/${selectedInvoice.id}/pay`, { amountPaid: Number(payAmount) });
+      setPayModalError("");
+      await axios.put(`${API_BASE_URL}/api/invoices/${selectedInvoice.id}/pay`, {
+        amountPaid: Number(payAmount),
+      });
       setPayModalOpen(false);
       setSelectedInvoice(null);
       setPayAmount("");
-
+    
       const response = await axios.get(`${API_BASE_URL}/api/invoices/student/${user?.id}`);
       setInvoices(response.data.invoices);
     } catch (err) {
       console.error("Error processing payment:", err);
-      setError("Failed to process payment. Please try again.");
+      setPayModalError("Failed to process payment. Please try again.");
     }
+  };
+
+  const openPayModal = (invoice: Invoice) => {
+    setSelectedInvoice(invoice);
+    setPayModalOpen(true);
+    setPayAmount("");
+    setError("");
   };
 
   const filteredInvoices =
@@ -173,6 +184,7 @@ const InvoicingModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
                               onClick={() => {
                                 setPayModalOpen(true);
                                 setSelectedInvoice(invoice);
+                                openPayModal(invoice);
                               }}
                             >
                               Pay
@@ -185,6 +197,7 @@ const InvoicingModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
                               onClick={() => {
                                 setPayModalOpen(true);
                                 setSelectedInvoice(invoice);
+                                openPayModal(invoice);
                               }}
                             >
                               Partial
@@ -233,38 +246,30 @@ const InvoicingModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
       </div>
 
       {payModalOpen && selectedInvoice && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-1/3">
             <h2 className="text-xl text-[#5E9ED9] text-center font-bold mb-4">Pay Invoice</h2>
             <div className="text-center mb-6">
-            {selectedInvoice.status === "unpaid" ? (
-                <span
-                  className="bg-red-500 text-white px-4 py-1 rounded w-20 h-10"
-                >
+              {selectedInvoice.status === "unpaid" ? (
+                <span className="bg-red-500 text-white px-4 py-1 rounded w-20 h-10">
                   Status: Have to Pay
                 </span>
               ) : selectedInvoice.status === "partial" ? (
-                <span
-                  className="bg-yellow-500 text-white px-4 py-1 rounded w-20 h-10"
-                >
+                <span className="bg-yellow-500 text-white px-4 py-1 rounded w-20 h-10">
                   Status: Partially Paid
                 </span>
               ) : (
-                <div className="justify-center flex">
-                  <span className="bg-green-500 text-white px-4 py-1 rounded w-20 h-10 flex items-center justify-center">
-                    Status: Fully Paid
-                  </span>
-                </div>
+                <span className="bg-green-500 text-white px-4 py-1 rounded w-20 h-10">
+                  Status: Fully Paid
+                </span>
               )}
             </div>
-            <div className=" justify-center space-x-5 flex">
-              <p className=" border border-red-500 p-2 rounded-lg">
-                <strong>Amount Owed:</strong> $
-                {Number(selectedInvoice.amount_due || 0).toFixed(2)}
+            <div className="justify-center space-x-5 flex">
+              <p className="border border-red-500 p-2 rounded-lg">
+                <strong>Amount Owed:</strong> ${Number(selectedInvoice.amount_due || 0).toFixed(2)}
               </p>
               <p className="border border-green-500 p-2 rounded-lg">
-                <strong>Amount Paid:</strong> $
-                {Number(selectedInvoice.amount_paid || 0).toFixed(2)}
+                <strong>Amount Paid:</strong> ${Number(selectedInvoice.amount_paid || 0).toFixed(2)}
               </p>
             </div>
             <div className="justify-center flex space-x-3">
@@ -276,8 +281,8 @@ const InvoicingModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
                 onChange={(e) => setPayAmount(e.target.value)}
                 placeholder=""
               />
-              {error && <p className="text-red-500 mt-2">{error}</p>}
             </div>
+            {payModalError && <p className="text-red-500 text-center text-sm p-3">{payModalError}</p>}
             <div className="flex justify-center mt-4 space-x-3">
               <button
                 className="px-4 py-2 bg-[#5E9ED9] text-white rounded w-20 h-10 hover:bg-[#5791c6]"
@@ -285,14 +290,13 @@ const InvoicingModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
               >
                 Pay
               </button>
-
               <button
                 className="px-4 py-2 bg-gray-400 text-white w-20 h-10 rounded hover:bg-gray-500"
                 onClick={() => {
                   setPayModalOpen(false);
                   setSelectedInvoice(null);
                   setPayAmount("");
-                  setError("");
+                  setPayModalError("");
                 }}
               >
                 Cancel

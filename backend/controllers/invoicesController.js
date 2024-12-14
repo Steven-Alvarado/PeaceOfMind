@@ -5,6 +5,7 @@ const {
     createInvoice, 
     payInvoice, 
     updateInvoice, 
+    getInvoicesByTherapistId,
     deleteInvoice 
   } = require('../models/invoicesModel');
   
@@ -40,6 +41,23 @@ const {
     } catch (error) {
       console.error(`Error retrieving invoices for student ID ${studentId}:`, error);
       res.status(500).json({ error: "Failed to retrieve student invoices" });
+    }
+  };
+
+  // Retrieve invoices for a specific therapist
+  const handleGetInvoicesByTherapistId = async (req, res) => {
+    const { id: therapistId } = req.params;
+
+    if (!therapistId || isNaN(Number(therapistId))) {
+        return res.status(400).json({ error: "Valid Therapist ID is required" });
+    }
+
+    try {
+        const invoices = await getInvoicesByTherapistId(therapistId);
+        res.status(200).json({ invoices });
+    } catch (error) {
+        console.error(`Error retrieving invoices for therapist ID ${therapistId}:`, error);
+        res.status(500).json({ error: "Failed to retrieve therapist invoices" });
     }
   };
   
@@ -178,5 +196,6 @@ const {
     createInvoice: handleCreateInvoice,
     payInvoice: handlePayInvoice,
     updateInvoice: handleUpdateInvoice,
+    getInvoicesByTherapistId: handleGetInvoicesByTherapistId,
     deleteInvoice: handleDeleteInvoice
   };

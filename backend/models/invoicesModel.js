@@ -122,6 +122,22 @@ const deleteInvoice = async (invoiceId) => {
   return result.rows[0];
 };
 
+// Get invoice by therapist id
+const getInvoicesByTherapistId = async (therapistId) => {
+  const result = await pool.query(
+      `SELECT 
+          inv.*,
+          student.first_name AS student_first_name,
+          student.last_name AS student_last_name
+      FROM invoices inv
+      LEFT JOIN users student ON inv.student_id = student.id
+      WHERE inv.therapist_id = $1
+      ORDER BY inv.created_at DESC`,
+      [therapistId]
+  );
+  return result.rows;
+};
+
 module.exports = {
   getAllInvoices,
   getInvoicesByStudentId,
@@ -129,5 +145,6 @@ module.exports = {
   createInvoice,
   payInvoice,
   updateInvoice,
+  getInvoicesByTherapistId,
   deleteInvoice
 };

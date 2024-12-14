@@ -165,9 +165,9 @@ const RequestList: React.FC<RequestListModalProps> = ({
                   {paginatedRelations.map((relation) => (
                     <div
                       key={relation.id}
-                      className="flex justify-between items-center bg-gray-100 rounded-lg p-4 mb-4 shadow-sm"
+                      className="flex justify-between items-center rounded-xl bg-blue-100 border border-[#5E9ED9] p-4 mb-4"
                     >
-                      <span className="text-lg font-medium text-gray-700">
+                      <span className="text-lg font-medium text-black">
                         {relation.student_first_name} {relation.student_last_name}
                       </span>
 
@@ -206,7 +206,7 @@ const RequestList: React.FC<RequestListModalProps> = ({
         </div>
 
         {/* Pagination */}
-        <div className="flex justify-between items-center mt-4">
+        <div className="flex justify-center space-x-3 pt-5 items-center border-t border-[#5E9ED9]">
           <button
             className={`px-4 py-2 rounded ${
               currentPage === 1

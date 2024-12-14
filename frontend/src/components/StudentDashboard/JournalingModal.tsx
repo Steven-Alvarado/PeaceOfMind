@@ -27,7 +27,7 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
   const [successMessage, setSuccessMessage] = useState("");
 
   const [currentPage, setCurrentPage] = useState(1);
-  const entriesPerPage = 9;
+  const entriesPerPage = 8;
 
   const [searchQuery, setSearchQuery] = useState("");
   const [filterBy, setFilterBy] = useState("date");
@@ -36,6 +36,8 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
   const totalPages = Math.ceil(entries.length / entriesPerPage);
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);  
+
+  const [disableSaveDelete, setDisableSaveDelete] = useState(true);
 
   useEffect(() => {
     if (isOpen && user?.id) {
@@ -73,7 +75,7 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
       setErrorMessage("User ID is not available.");
       return;
     }
-  
+
     try {
       const response = await axios.get(`${API_BASE_URL}/api/journals/user/${user.id}`, {
         headers: {
@@ -90,13 +92,13 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
           date: journal.created_at,
           entryNumber: arr.length - index,
         }));
-  
+
       if (fetchedJournals.length === 0) {
-        setErrorMessage("No journal entries found. Create your first entry!");
+        setErrorMessage("");
       } else {
         setErrorMessage("");
       }
-  
+
       setEntries(fetchedJournals);
       setActiveEntry(fetchedJournals[0] || null);
     } catch (error: any) {
@@ -118,6 +120,10 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
       } else {
         console.log("Updating an existing entry:", activeEntry);
         await updateJournalEntry();
+      }
+  
+      if (entries.length === 0) {
+        setDisableSaveDelete(true);
       }
     } catch (error: any) {
       console.error("Error saving journal entry:", error.message);
@@ -191,6 +197,7 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
         setActiveEntry(updatedEntries[0]);
       } else {
         setActiveEntry(null);
+        setDisableSaveDelete(true);
       }
   
       setSuccessMessage("Journal entry deleted successfully.");
@@ -256,6 +263,7 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
     };
     setActiveEntry(newEntryData);
     setNewEntry(true);
+    setDisableSaveDelete(false);
     setErrorMessage("");
     setSuccessMessage("");
   
@@ -272,10 +280,8 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
 
   return (
     isOpen && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-      style={{ marginTop:"80px"}}
-      >
-        <div className="bg-white rounded-lg shadow-lg w-4/5 h-4/5 max-w-6xl max-h-[90vh]">
+      <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
+        <div className="bg-white rounded-lg shadow-lg w-4/5 h-4/5 max-w-6xl">
           <div className="flex h-full">
             <div className="w-1/4 bg-blue-100 p-4 rounded-l-lg flex flex-col">
               <h2 className="text-lg font-bold mt-2 text-[#5E9ED9]">Journal Entries</h2>
@@ -291,7 +297,7 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
                 </select>
                 <input
                   type="text"
-                  placeholder={`${filterBy === "date" ? "Date (MM/DD/YYYY)" : filterBy === "entry" ? "Entry number": "Mood (e.g. Happy)" }`}
+                  placeholder={`${filterBy === "date" ? "(MM/DD/YYYY)" : filterBy === "entry" ? "Entry number": "Mood (e.g. Happy)" }`}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className=" w-44 p-2 border border-[#5E9ED9] rounded"
@@ -334,7 +340,7 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
               <div className="flex mb-2 mt-2 flex-col space-y-2">
                 <div className="flex justify-between space-x-2">
                   <button
-                    className="px-4 py-2 bg-white shadow-lg rounded hover:bg-gray-100"
+                    className="px-4 py-2 bg-white shadow-lg rounded font-extrabold hover:bg-gray-100"
                     onClick={handlePreviousPage}
                     disabled={currentPage === 1}
                   >
@@ -347,7 +353,7 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
                     + New Entry
                   </button>
                   <button
-                    className="px-4 py-2 bg-white shadow-lg rounded hover:bg-gray-100"
+                    className="px-4 py-2 bg-white shadow-lg rounded font-extrabold hover:bg-gray-100"
                     onClick={handleNextPage}
                     disabled={currentPage === totalPages}
                   >
@@ -398,9 +404,10 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
               <textarea
                 className="flex-grow shadow-lg border-[#5E9ED9] border-2 rounded p-2"
                 value={activeEntry?.content || ""}
+                disabled={disableSaveDelete}
                 onChange={(e) =>
                   setActiveEntry((prev) => ({ ...prev!, content: e.target.value }))
-                }
+                  }
               />
               <div className="flex justify-between items-center mt-4">
                 <div>
@@ -438,12 +445,14 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
                   <button
                     className="bg-red-500 shadow-lg text-white px-4 py-2 rounded hover:bg-red-600"
                     onClick={handleDelete}
+                    disabled={disableSaveDelete}
                   >
                     Delete
                   </button>
                   <button
                     className="bg-[#5E9ED9] shadow-lg text-white px-4 py-2 rounded hover:bg-[#4879a7]"
                     onClick={handleSave}
+                    disabled={disableSaveDelete}
                   >
                     Save
                   </button>

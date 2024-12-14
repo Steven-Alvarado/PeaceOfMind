@@ -159,10 +159,10 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-lg">
+    <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
+      <div className="flex flex-col bg-white rounded-lg p-6 w-full max-w-lg">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl text-[#5E9ED9] font-bold">Settings</h2>
+          <h2 className="text-xl text-[#5E9ED9]">Settings</h2>
           <button
             className="text-black px-2 rounded hover:text-gray-900"
             onClick={onClose}
@@ -170,25 +170,27 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
             X
           </button>
         </div>
+
         {/* First Name and Last Name on the same line */}
         <div className="flex space-x-4">
           <div className="w-full">
-            <label htmlFor="firstName" className="block text-gray-700 font-bold mb-2">First Name</label>
+            <label htmlFor="firstName" className="block text-black font-bold mb-2">First Name</label>
             <input
               id="firstName"
               type="text"
-              className="w-full p-2 border border-gray-300 rounded text-black"
+              className="w-full p-2 border border-[#5E9ED9] rounded text-black font-medium"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
               placeholder="Enter your first name"
             />
           </div>
+
           <div className="w-full">
-            <label htmlFor="lastName" className="block text-gray-700 font-bold mb-2">Last Name</label>
+            <label htmlFor="lastName" className="block text-black font-bold mb-2">Last Name</label>
             <input
               id="lastName"
               type="text"
-              className="w-full p-2 border border-gray-300 rounded text-black"
+              className="w-full p-2 border border-[#5E9ED9] rounded text-black font-medium"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
               placeholder="Enter your last name"
@@ -199,49 +201,51 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
         {/* Email Address and Experience (Years) */}
         <div className="flex space-x-4 mt-4">
           <div className="w-full">
-            <label htmlFor="email" className="block text-gray-700 font-bold mb-2">Email Address</label>
+            <label htmlFor="email" className="block text-black font-bold mb-2">Email Address</label>
             <input
               id="email"
               type="email"
-              className="w-full p-2 border border-gray-300 rounded text-black"
+              className="w-full p-2 border border-[#5E9ED9] rounded text-black font-medium"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
             />
           </div>
+          
           <div className="w-full">
-            <label htmlFor="experienceYears" className="block text-gray-700 font-bold mb-2">Experience (Years)</label>
+            <label htmlFor="experienceYears" className="block text-black font-bold mb-2">Experience (Years)</label>
             <input
               id="experienceYears"
               type="number"
               min="0" // Prevent negative values
-              className="w-full p-2 border border-gray-300 rounded text-black"
+              className="w-full p-2 border border-[#5E9ED9] rounded text-black font-medium"
               value={experienceYears}
               onChange={(e) => setExperienceYears(e.target.value)}
               placeholder="Enter years of experience"
-          />
-        </div>
+            />
+          </div>
         </div>
 
         {/* New Password and Confirm Password */}
         <div className="flex space-x-4 mt-4">
           <div className="w-full">
-            <label htmlFor="newPassword" className="block text-gray-700 font-bold mb-2">New Password</label>
+            <label htmlFor="newPassword" className="block text-black font-bold mb-2">New Password</label>
             <input
               id="newPassword"
               type="password"
-              className="w-full p-2 border border-gray-300 rounded text-black"
+              className="w-full p-2 border border-[#5E9ED9] rounded text-black font-medium"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               placeholder="Enter your new password"
             />
           </div>
+
           <div className="w-full">
-            <label htmlFor="confirmPassword" className="block text-gray-700 font-bold mb-2">Confirm Password</label>
+            <label htmlFor="confirmPassword" className="block text-black font-bold mb-2">Confirm Password</label>
             <input
               id="confirmPassword"
               type="password"
-              className="w-full p-2 border border-gray-300 rounded text-black"
+              className="w-full p-2 border border-[#5E9ED9] rounded text-black font-medium"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Confirm your password"
@@ -251,17 +255,17 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
 
         {/* Monthly Rate */}
         <div className="mt-4">
-        <label htmlFor="monthlyRate" className="block text-gray-700 font-bold mb-2">Monthly Rate</label>
-        <input
-          id="monthlyRate"
-          type="number"
-          min="0" // Prevent negative values
-          className="w-full p-2 border border-gray-300 rounded text-black"
-          value={monthlyRate}
-          onChange={(e) => setMonthlyRate(e.target.value)}
-          placeholder="Enter your monthly rate"
-        />
-          </div>
+          <label htmlFor="monthlyRate" className="block text-black font-bold mb-2">Monthly Rate</label>
+          <input
+            id="monthlyRate"
+            type="number"
+            min="0" // Prevent negative values
+            className="w-full p-2 border border-[#5E9ED9] rounded text-black font-medium"
+            value={monthlyRate}
+            onChange={(e) => setMonthlyRate(e.target.value)}
+            placeholder="Enter your monthly rate"
+          />
+        </div>
 
         {/* Update, Delete Account, and Close buttons in the same row */}
         <div className="mt-6 flex justify-between">

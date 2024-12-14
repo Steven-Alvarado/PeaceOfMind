@@ -61,20 +61,20 @@ const getJournal = async (req, res) => {
 
 // Get all journals by userId
 const getJournals = async (req, res) => {
-    const { userId } = req.params;
+  const { userId } = req.params;
 
-    try {
-        const journals = await getJournalsByUserId(userId);
+  try {
+      const journals = await getJournalsByUserId(userId);
 
-        if (journals.length === 0) {
-            return res.status(404).json({ error: 'No journals found for this user' });
-        }
+      if (journals.length === 0) {
+        return res.status(200).json({ journals: [] });
+      }
 
-        res.status(200).json({ journals });
-    } catch (error) {
-        console.error("Error fetching journals:", error);
-        res.status(500).json({ error: 'Failed to fetch journals' });
-    }
+      res.status(200).json({ journals });
+  } catch (error) {
+      console.error("Error fetching journals:", error);
+      res.status(500).json({ error: 'Failed to fetch journals' });
+  }
 };
 
 // Delete a journal entry
