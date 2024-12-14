@@ -29,9 +29,9 @@ const StudentMenuSection: React.FC<StudentMenuSectionProps> = ({
   const [isInvoicingOpen, setIsInvoicingOpen] = useState(false);
 
   return (
-    <div className="bg-blue-100 border-2 py-24 border-[#5E9ED9] rounded-lg shadow-lg p-10">
+    <div className="bg-blue-100 border-2 border-[#5E9ED9] rounded-lg shadow-lg px-10 py-20 flex flex-col h-full">
       {/* Header */}
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex justify-between items-center mb-11">
         <h1 className="text-3xl font-semibold text-center text-[#5E9ED9]">
           Menu
         </h1>
@@ -45,7 +45,7 @@ const StudentMenuSection: React.FC<StudentMenuSectionProps> = ({
       </div>
 
       {/* Menu Buttons */}
-      <div className="space-y-6">
+      <div className="space-y-7">
         <button
           onClick={() => setIsJournalOpen(true)}
           className="w-full flex items-center p-4 bg-[#5E9ED9] text-white rounded-lg hover:bg-[#4a8ac9] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"

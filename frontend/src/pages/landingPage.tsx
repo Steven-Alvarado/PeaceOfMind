@@ -289,7 +289,7 @@ function FAQSection() {
       id: 1,
       question: "What is Peace of Mind?",
       answer:
-        "Peace of Mind is a mental health platform designed for college students, offering affordable access to licensed therapists, daily journaling, progress tracking, and self-care resources.",
+        "Peace of Mind is a mental health platform designed for college students, offering affordable access to licensed therapists, daily journaling, and progress tracking.",
     },
     {
       id: 2,
@@ -307,13 +307,13 @@ function FAQSection() {
       id: 4,
       question: "How does journaling help with mental health?",
       answer:
-        "Journaling helps you process thoughts and emotions, track your mental health progress, and understand your stress patterns. Our platform provides prompts and reminders to make it easy to start.",
+        "Journaling helps you process thoughts and emotions, track your mental health progress, and understand your stress patterns. Our platform provides journaling to track this!",
     },
     {
       id: 5,
       question: "Can I track my mental health progress?",
       answer:
-        "Yes, Peace of Mind includes an analytics tool that tracks your daily check-ins, mood logs, and other self-care activities to help you visualize your mental health journey.",
+        "Yes, Peace of Mind includes an analytics tool that tracks your mood overtime to help you visualize your mental health journey.",
     },
   ];
 

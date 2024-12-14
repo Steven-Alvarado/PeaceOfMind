@@ -41,7 +41,7 @@ const StudentDashboard: React.FC = () => {
       }} */
     >
       <HeaderStudentDashboard /> 
-      <main className="flex flex-col-1 items-center justify-center px-6 py-10 space-y-6 mb-11">
+      <main className="flex flex-col-1 items-center justify-center px-6 py-10 space-x-3 mb-16 mt-11">
         <div className="w-full max-w-3xl">
           <TherapistSection user={user} /> {/* Pass user as a prop */}
         </div>
