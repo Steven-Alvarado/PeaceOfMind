@@ -20,7 +20,7 @@ const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
     origin: FRONTEND_URL,
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     credentials: true, // Allow credentials
   },
 });
@@ -35,7 +35,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use(
   cors({
     origin: FRONTEND_URL,
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true,
   })
 );
