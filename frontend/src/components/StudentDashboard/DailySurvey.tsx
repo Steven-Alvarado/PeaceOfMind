@@ -47,6 +47,9 @@ const DailySurvey: React.FC<DailySurveyProps> = ({ isOpen, onClose, user }) => {
   const [hasSubmittedToday, setHasSubmittedToday] = useState(false);
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const surveysPerPage = 3;
+
   useEffect(() => {
     if (isOpen) {
       setFilterByDate(false);
@@ -138,11 +141,23 @@ const DailySurvey: React.FC<DailySurveyProps> = ({ isOpen, onClose, user }) => {
   };
 
   const filteredSurveys = filterByDate && selectedDate
-  ? surveyHistory.filter(
-      (survey) =>
-        new Date(survey.survey_date).toISOString().slice(0, 10) === selectedDate.toISOString().slice(0, 10)
-    )
-  : surveyHistory;
+    ? surveyHistory.filter(
+        (survey) =>
+          new Date(survey.survey_date).toISOString().slice(0, 10) === selectedDate.toISOString().slice(0, 10)
+      )
+    : surveyHistory;
+
+  const indexOfLastSurvey = currentPage * surveysPerPage;
+  const indexOfFirstSurvey = indexOfLastSurvey - surveysPerPage;
+  const currentSurveys = filteredSurveys.slice(indexOfFirstSurvey, indexOfLastSurvey);
+
+  const totalPages = Math.ceil(filteredSurveys.length / surveysPerPage);
+
+  const handlePageChange = (pageNumber: number) => {
+    if (pageNumber >= 1 && pageNumber <= totalPages) {
+      setCurrentPage(pageNumber);
+    }
+  };
 
   const renderSurveyHistory = () => (
     <div>
@@ -166,8 +181,8 @@ const DailySurvey: React.FC<DailySurveyProps> = ({ isOpen, onClose, user }) => {
         )}
       </div>
 
-      {filteredSurveys.length > 0 ? (
-        filteredSurveys.map((survey) => (
+      {currentSurveys.length > 0 ? (
+        currentSurveys.map((survey) => (
           <div key={survey.id} className="relative">
             <motion.div
               className="relative flex gap-4 mb-4 bg-white p-4 rounded-lg shadow-md cursor-pointer"
@@ -205,7 +220,34 @@ const DailySurvey: React.FC<DailySurveyProps> = ({ isOpen, onClose, user }) => {
           </div>
         ))
       ) : (
-        <p className="text-gray-500">No survey found for the selected date.</p>
+        <p className="text-gray-500">No surveys found.</p>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 0 && (
+      <div className="flex justify-center items-center pt-4 space-x-4 border-t mt-4 border-[#5E9ED9]">
+        <button
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className={`px-4 py-2 border rounded-lg ${
+            currentPage === 1 ? "bg-gray-300 cursor-not-allowed" : "bg-[#5E9ED9] text-white"
+          }`}
+        >
+          Previous
+        </button>
+        <span className="text-lg font-medium">
+          {`Page ${currentPage} of ${totalPages}`}
+        </span>
+        <button
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className={`px-4 py-2 border rounded-lg ${
+            currentPage === totalPages ? "bg-gray-300 cursor-not-allowed" : "bg-[#5E9ED9] text-white"
+          }`}
+        >
+          Next
+        </button>
+      </div>
       )}
     </div>
   );
@@ -242,59 +284,65 @@ const DailySurvey: React.FC<DailySurveyProps> = ({ isOpen, onClose, user }) => {
             Survey History
           </button>
         </div>
-        <div className="p-6">{activeTab === "takeSurvey" ? hasSubmittedToday ? (
-          <div className="text-center">
-            <CheckCircle size={40} className="text-green-500 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold">Today's survey has already been submitted!</h3>
-          </div>
-        ) : (
-          <>
-            <div className="h-2 bg-gray-100 rounded-full mb-4">
-              <div
-                className="h-2 bg-[#5E9ED9] rounded-full"
-                style={{ width: `${((currentQuestionIndex + 1) / questions.length) * 100}%` }}
-              />
-            </div>
-            <motion.div key={currentQuestionIndex} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <h3 className="text-lg font-semibold mb-4">{questions[currentQuestionIndex].question}</h3>
-              <div className="space-y-3">
-                {["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"].map((option) => (
-                  <button
-                    key={option}
-                    onClick={() => handleAnswer(questions[currentQuestionIndex].id, option)}
-                    className={`block w-full px-4 py-2 rounded-md ${
-                      questions[currentQuestionIndex].answer === option
-                        ? "bg-blue-100 border border-blue-500"
-                        : "bg-gray-100 border border-gray-400"
-                    }`}
-                  >
-                    {option}
-                  </button>
-                ))}
+        <div className="p-6">
+          {activeTab === "takeSurvey" ? (
+            hasSubmittedToday ? (
+              <div className="text-center">
+                <CheckCircle size={40} className="text-green-500 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold">Today's survey has already been submitted!</h3>
               </div>
-            </motion.div>
-            <div className="flex justify-between mt-4">
-              <button
-                onClick={() => setCurrentQuestionIndex((prev) => prev - 1)}
-                disabled={currentQuestionIndex === 0}
-                className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 disabled:opacity-50"
-              >
-                Back
-              </button>
-              <button
-                onClick={
-                  currentQuestionIndex === questions.length - 1
-                    ? handleSubmit
-                    : () => setCurrentQuestionIndex((prev) => prev + 1)
-                }
-                disabled={!questions[currentQuestionIndex].answer || isSubmitting}
-                className="px-6 py-2 bg-[#5E9ED9] text-white rounded-lg hover:bg-[#4a8ac9] disabled:opacity-50"
-              >
-                {currentQuestionIndex === questions.length - 1 ? "Submit" : "Next"}
-              </button>
-            </div>
-          </>
-        ) : renderSurveyHistory()}</div>
+            ) : (
+              <>
+                <div className="h-2 bg-gray-100 rounded-full mb-4">
+                  <div
+                    className="h-2 bg-[#5E9ED9] rounded-full"
+                    style={{ width: `${((currentQuestionIndex + 1) / questions.length) * 100}%` }}
+                  />
+                </div>
+                <motion.div key={currentQuestionIndex} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                  <h3 className="text-lg font-semibold mb-4">{questions[currentQuestionIndex].question}</h3>
+                  <div className="space-y-3">
+                    {["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"].map((option) => (
+                      <button
+                        key={option}
+                        onClick={() => handleAnswer(questions[currentQuestionIndex].id, option)}
+                        className={`block w-full px-4 py-2 rounded-md ${
+                          questions[currentQuestionIndex].answer === option
+                            ? "bg-blue-100 border border-blue-500"
+                            : "bg-gray-100 border border-gray-400"
+                        }`}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+                <div className="flex justify-between mt-4">
+                  <button
+                    onClick={() => setCurrentQuestionIndex((prev) => prev - 1)}
+                    disabled={currentQuestionIndex === 0}
+                    className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 disabled:opacity-50"
+                  >
+                    Back
+                  </button>
+                  <button
+                    onClick={
+                      currentQuestionIndex === questions.length - 1
+                        ? handleSubmit
+                        : () => setCurrentQuestionIndex((prev) => prev + 1)
+                    }
+                    disabled={!questions[currentQuestionIndex].answer || isSubmitting}
+                    className="px-6 py-2 bg-[#5E9ED9] text-white rounded-lg hover:bg-[#4a8ac9] disabled:opacity-50"
+                  >
+                    {currentQuestionIndex === questions.length - 1 ? "Submit" : "Next"}
+                  </button>
+                </div>
+              </>
+            )
+          ) : (
+            renderSurveyHistory()
+          )}
+        </div>
       </motion.div>
     </div>
   );
