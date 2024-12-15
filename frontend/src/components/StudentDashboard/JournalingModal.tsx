@@ -42,8 +42,20 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
   useEffect(() => {
     if (isOpen && user?.id) {
       fetchJournals();
+
+      setErrorMessage("");
+      setSuccessMessage("");
     }
   }, [isOpen, user?.id]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setErrorMessage("");
+      setSuccessMessage("");
+    }, 4000);
+
+    return () => clearTimeout(timer);
+  }, [successMessage, errorMessage]);
 
   useEffect(() => {
     if (searchQuery.trim() === "") {
@@ -75,14 +87,14 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
       setErrorMessage("User ID is not available.");
       return;
     }
-
+  
     try {
       const response = await axios.get(`${API_BASE_URL}/api/journals/user/${user.id}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("jwt")}`,
         },
       });
-
+  
       const fetchedJournals = response.data.journals
         .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
         .map((journal: any, index: number, arr: any[]) => ({
@@ -92,15 +104,18 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
           date: journal.created_at,
           entryNumber: arr.length - index,
         }));
-
+  
       if (fetchedJournals.length === 0) {
-        setErrorMessage("");
+        setEntries([]);
+        setActiveEntry(null);
+        setDisableSaveDelete(true);
       } else {
-        setErrorMessage("");
+        setEntries(fetchedJournals);
+        setActiveEntry(fetchedJournals[0]);
+        setDisableSaveDelete(false);
       }
-
-      setEntries(fetchedJournals);
-      setActiveEntry(fetchedJournals[0] || null);
+  
+      setErrorMessage("");
     } catch (error: any) {
       console.error("Error fetching journals:", error.message);
       setErrorMessage(error.response?.data?.error || "Failed to fetch journal entries.");
@@ -261,9 +276,10 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
       date: new Date().toISOString(),
       entryNumber: entries.length > 0 ? entries[0].entryNumber + 1 : 1,
     };
+    
+    setDisableSaveDelete(false);
     setActiveEntry(newEntryData);
     setNewEntry(true);
-    setDisableSaveDelete(false);
     setErrorMessage("");
     setSuccessMessage("");
   
@@ -379,18 +395,18 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
                 </button>
               </div>
               {activeEntry && (
-                <div className=" mb-4">
+                <div className="flex-grow">
                   <p className="text-sm text-gray-500 mb-4">
                     {new Date(activeEntry.date).toLocaleDateString()}
                   </p>
                   <div className="flex space-x-7 bg-[#5E9ED9] rounded-lg p-2 w-80 shadow-lg">
-                    <p className="text-white">How are you feeling today? </p>
+                    <p className="text-white">How are you feeling today?</p>
                     <select
                       value={activeEntry.mood}
                       onChange={(e) =>
                         setActiveEntry((prev) => ({ ...prev!, mood: e.target.value }))
                       }
-                      className=" border border-blue-100 bg-[#5E9ED9] text-white rounded"
+                      className="border border-blue-100 bg-[#5E9ED9] text-white rounded"
                     >
                       <option value="Happy">Happy</option>
                       <option value="Anxious">Anxious</option>
@@ -399,17 +415,17 @@ const JournalingModal: React.FC<JournalingModalProps> = ({ isOpen, onClose }) =>
                       <option value="Sad">Sad</option>
                     </select>
                   </div>
+                  <textarea
+                    className="flex w-full shadow-lg mt-5 h-[550px] border-[#5E9ED9] border-2 resize-none rounded p-2"
+                    value={activeEntry?.content || ""}
+                    disabled={disableSaveDelete}
+                    onChange={(e) =>
+                      setActiveEntry((prev) => ({ ...prev!, content: e.target.value }))
+                    }
+                  />
                 </div>
               )}
-              <textarea
-                className="flex-grow shadow-lg border-[#5E9ED9] border-2 rounded p-2"
-                value={activeEntry?.content || ""}
-                disabled={disableSaveDelete}
-                onChange={(e) =>
-                  setActiveEntry((prev) => ({ ...prev!, content: e.target.value }))
-                  }
-              />
-              <div className="flex justify-between items-center mt-4">
+              <div className="flex justify-between items-center mt-auto sticky bottom-0">
                 <div>
                   {errorMessage && <p className="text-red-500 text-sm">{errorMessage}</p>}
                   {successMessage && <p className="text-green-500 text-sm">{successMessage}</p>}

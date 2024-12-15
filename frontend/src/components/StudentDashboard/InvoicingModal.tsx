@@ -222,22 +222,23 @@ const InvoicingModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
         {/* Pagination Controls */}
         <div className="flex justify-center space-x-3 pt-8 mb-5 items-center border-t mt-4 border-[#5E9ED9]">
           <button
-            className="px-4 py-2 bg-white roundedfont-bold"
+            className="px-4 py-2 bg-white rounded font-bold"
             onClick={handlePreviousPage}
-            disabled={currentPage === 1}
+            disabled={currentPage === 1 || filteredInvoices.length === 0}
           >
             ←
           </button>
           <span className="text-[#5E9ED9] font-bold">
-            Page {currentPage} of{" "}
-            {Math.ceil(filteredInvoices.length / invoicesPerPage)}
+            {filteredInvoices.length > 0
+              ? `Page ${currentPage} of ${Math.ceil(filteredInvoices.length / invoicesPerPage)}`
+              : "Page 1 of 1"}
           </span>
           <button
-            className="px-4 py-2 bg-white rounded front-bold"
+            className="px-4 py-2 bg-white rounded font-bold"
             onClick={handleNextPage}
             disabled={
-              currentPage ===
-              Math.ceil(filteredInvoices.length / invoicesPerPage)
+              currentPage === Math.ceil(filteredInvoices.length / invoicesPerPage) ||
+              filteredInvoices.length === 0
             }
           >
             →

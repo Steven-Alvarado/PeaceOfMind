@@ -257,7 +257,7 @@ const TherapistModal: React.FC<TherapistModalProps> = ({
 
           <div className="flex justify-center space-x-3 pt-5 items-center border-t border-[#5E9ED9]">
             <button
-              className="p-1 mb-1 bg-gray-100 rounded font-bold text-3xl"
+              className="p-1 mb-1 bg-gray-100 rounded font-bold text-xl"
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
             >
@@ -268,7 +268,7 @@ const TherapistModal: React.FC<TherapistModalProps> = ({
               {Math.ceil(filteredTherapists.length / itemsPerPage)}
             </span>
             <button
-              className="p-1 mb-1 bg-gray-100 rounded font-bold text-3xl"
+              className="p-1 mb-1 bg-gray-100 rounded font-bold text-xl"
               onClick={() =>
                 setCurrentPage((prev) =>
                   Math.min(

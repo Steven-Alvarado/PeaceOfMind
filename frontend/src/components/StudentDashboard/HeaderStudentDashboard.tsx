@@ -21,16 +21,23 @@ interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
 const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
+  const navigate = useNavigate();
   const [userSettings, setUserSettings] = useState<UserSettings | null>(null);
+  const [successModalOpen, setSuccessModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
   const [deleteErrorMessage, setDeleteErrorMessage] = useState("");
   const [saveErrorMessage, setSaveErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
     if (isOpen && user?.id) {
       fetchSettings();
+      setSaveErrorMessage("");
+      setDeleteErrorMessage(""); 
+      setSuccessMessage("");
     }
   }, [isOpen, user?.id]);
 
@@ -41,7 +48,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/users/${user.id}`, {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/users/${user.id}`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("jwt")}`,
@@ -50,13 +57,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
       });
 
       const data = await response.json();
-      console.log("Response Data:", data);
 
       if (data && data.first_name && data.last_name && data.email) {
         setUserSettings({
-          fname: data.first_name || "",
-          last_name: data.last_name || "",
-          email: data.email || "",
+          fname: data.first_name,
+          last_name: data.last_name,
+          email: data.email,
           newPassword: "",
           confirmPassword: "",
         });
@@ -69,233 +75,304 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
-
-
+  
   const handleSave = async () => {
     if (!userSettings) {
       setSaveErrorMessage("User settings are not loaded.");
       return;
     }
   
-    // Check if passwords match before proceeding
-    if (userSettings.newPassword !== userSettings.confirmPassword) {
-      window.alert("Passwords do not match. Please try again."); // Show a pop-up alert
+    const { fname, last_name, email, newPassword, confirmPassword } = userSettings;
+  
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  
+    if (!fname.trim()) {
+      setSaveErrorMessage("First name cannot be empty.");
+      return;
+    }
+  
+    if (!last_name.trim()) {
+      setSaveErrorMessage("Last name cannot be empty.");
+      return;
+    }
+  
+    if (!email.trim() || !emailRegex.test(email)) {
+      setSaveErrorMessage("Please enter a valid email address.");
+      return;
+    }
+  
+    if (newPassword && (!confirmPassword || newPassword !== confirmPassword)) {
+      setSaveErrorMessage(
+        "Passwords do not match. Please confirm your new password."
+      );
       return;
     }
   
     try {
-      const response = await fetch(`${API_BASE_URL}/api/accountSettings/student/${user.id}`, {
-        method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("jwt")}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          first_name: userSettings.fname,
-          last_name: userSettings.last_name,
-          email: userSettings.email,
-          ...(userSettings.newPassword && { password: userSettings.newPassword }), // Send the correct field name
-        }),
-      });
-  
-      const data = await response.json();
-      console.log("Response Data:", data);
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/accountSettings/student/${user.id}`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            first_name: fname,
+            last_name: last_name,
+            email,
+            password: newPassword || undefined,
+          }),
+        }
+      );
   
       if (response.ok) {
-        alert("Details updated successfully.");
-        setSaveErrorMessage(""); // Clear error message on success
-        onClose(); // Close the modal after successful update
+        setUser((prevUser) => {
+          if (!prevUser) return prevUser;
+          return {
+            ...prevUser,
+            firstName: fname,
+            lastName: last_name,
+            email,
+          };
+        });
+  
+        setSuccessMessage("Details updated successfully.");
+        setSuccessModalOpen(true);
       } else {
-        setSaveErrorMessage(data.message || "Failed to update details.");
+        setSaveErrorMessage("Failed to update details.");
       }
     } catch (error) {
-      console.error("Error updating therapist details:", error);
-      setSaveErrorMessage(error.message || "Error updating therapist details.");
+      console.error("Error updating details:", error);
+      setSaveErrorMessage("Error updating details.");
     }
   };
-  
 
-  // Handle student deletion
   const handleDelete = async () => {
     if (!user?.id) {
       setDeleteErrorMessage("User ID is not available.");
       return;
     }
-    const confirmDelete = window.confirm("Are you sure you want to delete this account? This action is irreversible.");
-    if (!confirmDelete) return;
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/accountSettings/students/${user.id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("jwt")}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/accountSettings/students/${user.id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
       const data = await response.json();
+
       if (response.ok) {
-        alert("Account deleted successfully.");
-        window.location.href = "/"; // Or wherever you want to redirect
+        setDeleteModalOpen(false);
+        localStorage.removeItem("jwt");
+        navigate("/");
       } else {
         setDeleteErrorMessage(data.error || "Failed to delete account.");
       }
     } catch (error) {
-      console.error("Error fetching therapist data or deleting account:", error);
+      console.error("Error deleting account:", error);
       setDeleteErrorMessage("An error occurred while deleting the account.");
     }
   };
-  
 
-
-
-
+  const handleCloseModal = () => {
+    setSuccessModalOpen(false);
+    setSuccessMessage("");
+    onClose();
+  };
 
   const handleClose = () => {
-    onClose(); // Close the modal
-    // Reset error messages and success state when modal is closed
+    onClose();
     setDeleteErrorMessage("");
     setSaveErrorMessage("");
     setSuccessMessage("");
-    setUserSettings(null); // Optional: Reset settings when modal is closed
+    setUserSettings(null);
   };
   
   if (!isOpen) return null;
 
   return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-        <div className="bg-white rounded-lg w-full max-w-lg">
-          <div className="flex">
-            <div className="w-full p-8">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl text-[#5E9ED9]">Settings</h2>
-                <button
-                  className="text-black px-2 rounded hover:text-gray-900"
-                  onClick={onClose}
-                >
-                  X
-                </button>
-              </div>
+    <>
+      {isOpen && (
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg w-full max-w-lg relative">
+            <div className="flex">
+              <div className="w-full p-8">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl text-[#5E9ED9]">Settings</h2>
+                  <button
+                    className="text-black px-2 rounded hover:text-gray-900"
+                    onClick={handleClose}
+                  >
+                    X
+                  </button>
+                </div>
 
-              {userSettings ? (
-                <div className="space-y-3">
-                  <div className="w-full">
-                    <label htmlFor="firstName" className="block text-black mb-2">First Name</label>
-                    <input
-                      type="text"
-                      className="w-full p-3 border border-[#5E9ED9] rounded-lg text-black font-medium"
-                      value={userSettings.fname}
-                      onChange={(e) =>
-                        setUserSettings((prev) => ({
-                          ...prev!,
-                          fname: e.target.value,
-                        }))
-                      }
-                    />
-                  </div>
+                {userSettings ? (
+                  <div className="space-y-3">
+                    <div className="w-full">
+                      <label htmlFor="firstName" className="block text-black mb-2">
+                        First Name
+                      </label>
+                      <input
+                        type="text"
+                        className="w-full p-3 border border-[#5E9ED9] rounded-lg text-black font-medium"
+                        value={userSettings.fname}
+                        onChange={(e) =>
+                          setUserSettings((prev) => ({
+                            ...prev!,
+                            fname: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
 
-                  <div className="w-full">
-                    <label htmlFor="lastName" className="block text-black font-bold mb-2">Last Name</label>
-                    <input
-                      type="text"
-                      className="w-full p-3 border border-[#5E9ED9] rounded-lg text-black font-medium"
-                      value={userSettings.last_name}
-                      onChange={(e) =>
-                        setUserSettings((prev) => ({
-                          ...prev!,
-                          last_name: e.target.value,
-                        }))
-                      }
-                    />
-                  </div>
+                    <div className="w-full">
+                      <label htmlFor="lastName" className="block text-black mb-2">
+                        Last Name
+                      </label>
+                      <input
+                        type="text"
+                        className="w-full p-3 border border-[#5E9ED9] rounded-lg text-black font-medium"
+                        value={userSettings.last_name}
+                        onChange={(e) =>
+                          setUserSettings((prev) => ({
+                            ...prev!,
+                            last_name: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
 
-                  <div className="w-full">
-                    <label htmlFor="email" className="block text-black font-bold mb-2">Email Address</label>
-                    <input
-                      type="email"
-                      className="w-full p-3 border border-[#5E9ED9] rounded-lg text-black font-medium"
-                      value={userSettings.email}
-                      onChange={(e) =>
-                        setUserSettings((prev) => ({
-                          ...prev!,
-                          email: e.target.value,
-                        }))
-                      }
-                    />
-                  </div>
+                    <div className="w-full">
+                      <label htmlFor="email" className="block text-black mb-2">
+                        Email Address
+                      </label>
+                      <input
+                        type="email"
+                        className="w-full p-3 border border-[#5E9ED9] rounded-lg text-black font-medium"
+                        value={userSettings.email}
+                        onChange={(e) =>
+                          setUserSettings((prev) => ({
+                            ...prev!,
+                            email: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
 
-                  <div className="w-full">
-                    <label htmlFor="newPassword" className="block text-black font-bold mb-2">New Password</label>
-                    <input
-                      type="password"
-                      className="w-full p-3 border border-[#5E9ED9] rounded-lg text-black font-medium"
-                      value={userSettings.newPassword}
-                      onChange={(e) =>
-                        setUserSettings((prev) => ({
-                          ...prev!,
-                          newPassword: e.target.value,
-                        }))
-                      }
-                    />
-                  </div>
+                    <div className="w-full">
+                      <label htmlFor="newPassword" className="block text-black mb-2">
+                        New Password
+                      </label>
+                      <input
+                        type="password"
+                        className="w-full p-3 border border-[#5E9ED9] rounded-lg text-black font-medium"
+                        value={userSettings.newPassword}
+                        onChange={(e) =>
+                          setUserSettings((prev) => ({
+                            ...prev!,
+                            newPassword: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
 
-                  <div className="w-full">
-                    <label htmlFor="confirmPassword" className="block text-black font-bold mb-2">Confirm Password</label>
-                    <input
-                      type="password"
-                      className="w-full p-3 border border-[#5E9ED9] rounded-lg text-black font-medium"
-                      value={userSettings.confirmPassword}
-                      onChange={(e) =>
-                        setUserSettings((prev) => ({
-                          ...prev!,
-                          confirmPassword: e.target.value,
-                        }))
-                      }
-                    />
-                  </div>
+                    <div className="w-full">
+                      <label htmlFor="confirmPassword" className="block text-black mb-2">
+                        Confirm Password
+                      </label>
+                      <input
+                        type="password"
+                        className="w-full p-3 border border-[#5E9ED9] rounded-lg text-black font-medium"
+                        value={userSettings.confirmPassword}
+                        onChange={(e) =>
+                          setUserSettings((prev) => ({
+                            ...prev!,
+                            confirmPassword: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
 
-                  {/* Save Button and Error Message */}
-                  <div className="justify-between flex">
-                    <div className="flex justify-center gap-4 mt-4">
+                    <div className="flex justify-between">
                       <button
-                        className="bg-[#5E9ED9] text-white px-4 py-2 w-44 rounded hover:bg-[#4a8ac9]"
+                        className="bg-[#5E9ED9] text-white mt-5 px-4 py-2 rounded w-48 hover:bg-[#4a8ac9]"
                         onClick={handleSave}
                       >
                         Save
                       </button>
-                      {saveErrorMessage && (
-                        <p className="text-red-500 mt-2 text-sm">{saveErrorMessage}</p>
-                      )}
-                      {successMessage && (
-                        <p className="text-green-500 mt-2 text-sm">{successMessage}</p>
-                      )}
-                    </div>
-
-                    {/* Delete Button and Error Message */}
-                    <div className="flex justify-center gap-4 mt-4">
                       <button
-                        className="bg-red-500 text-white px-4 py-2 w-44 rounded hover:bg-red-600"
-                        onClick={handleDelete}
+                        className="bg-red-500 text-white px-4 mt-5 py-2 w-48 rounded hover:bg-red-600"
+                        onClick={() => setDeleteModalOpen(true)}
                       >
                         Delete Account
                       </button>
-                      {deleteErrorMessage && (
-                        <p className="text-red-500 mt-2 text-sm">{deleteErrorMessage}</p>
-                      )}
-                      {successMessage && (
-                        <p className="text-green-500 mt-2 text-sm">{successMessage}</p>
-                      )}
                     </div>
+                    <p className="text-red-500 text-center mt-3">{saveErrorMessage}{deleteErrorMessage}</p>
                   </div>
-                </div>
-              ) : (
-                <p className="text-gray-500">Loading settings...</p>
-              )}
+                ) : (
+                  <p className="text-gray-500">Loading settings...</p>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    )
-  
+      )}
+
+      {successModalOpen && (
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white rounded-lg p-6 shadow-lg max-w-sm">
+            <h2 className="text-lg font-bold text-center text-[#5E9ED9] mb-4">
+              Success
+            </h2>
+            <p className="text-center text-gray-700 mb-6">{successMessage}</p>
+            <div className="flex justify-center">
+              <button
+                className="bg-[#5E9ED9] text-white px-6 py-2 rounded-lg hover:bg-[#4a8ac9]"
+                onClick={handleCloseModal}
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deleteModalOpen && (
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-sm">
+            <h2 className="text-lg font-bold text-center text-black mb-4">
+              Confirm Account Deletion
+            </h2>
+            <p className="text-center text-black mb-6 font-normal">
+              Are you sure you want to delete your account? This action is irreversible.
+            </p>
+            <div className="flex justify-center gap-10">
+              <button
+                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                onClick={handleDelete}
+              >
+                Delete
+              </button>
+              <button
+                className="bg-[#5E9ED9] text-white px-4 py-2 rounded hover:bg-[#4a8ac9]"
+                onClick={() => setDeleteModalOpen(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
 };
 
 const LogoutConfirmationModal = ({ isOpen, onConfirm, onCancel }: { isOpen: boolean; onConfirm: () => void; onCancel: () => void }) => {
@@ -345,7 +422,7 @@ const HeaderStudentDashboard = () => {
 
     navigate("/login");
   };
-
+  
   /*const handleProfilePictureChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files || event.target.files.length === 0) return;
 
@@ -394,7 +471,7 @@ const HeaderStudentDashboard = () => {
                 />
               </label> 
               <span className="text-white text-xl font-bold">
-                {user.first_name} {user.last_name}
+                {user.firstName} {user.lastName}
               </span>
             </div>
           )}

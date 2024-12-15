@@ -10,6 +10,7 @@ import Logo from "../../assets/images/logobetter.png";
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
 const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+  const { user, setUser } = useAuth();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -18,11 +19,14 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
   const [confirmPassword, setConfirmPassword] = useState('');
   const [monthlyRate, setMonthlyRate] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
-  const { user } = useAuth(); 
+  const [successMessage, setSuccessMessage] = useState("");
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [successModalOpen, setSuccessModalOpen] = useState(false);
   
   useEffect(() => {
     if (isOpen && user?.id) {
       fetchTherapistDetails();
+      setErrorMessage("");
     }
   }, [isOpen, user?.id]);
 
@@ -58,71 +62,62 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
     }
   };
 
-
-
-
-  const handleDeleteAccount = async () => {
-    console.log("Delete account button clicked");
-  
-    // Check if user contains necessary data
-    console.log("User data:", user);
-  
+  const handleDelete = async () => {
     if (!user?.id) {
       setErrorMessage("User ID is not available.");
       return;
     }
-  
-    const userId = user.id;  // The logged-in user's ID (from the 'auth' table)
-  
-    // Fetch therapist data using the user ID
+
     try {
-      const therapistResponse = await fetch(`/api/therapists/find/${userId}`);
-      const therapistData = await therapistResponse.json();
-  
-      if (!therapistData?.therapist?.id) {
-        setErrorMessage("Therapist not found.");
-        return;
-      }
-  
-      const therapistId = therapistData.therapist.id; // This is the therapist_id we need (12 in your example)
-  
-      const confirmDelete = window.confirm("Are you sure you want to delete this account? This action is irreversible.");
-      if (!confirmDelete) return;
-  
-      // Proceed with deleting the account using both therapistId and userId
-      const response = await fetch(`${API_BASE_URL}/api/accountSettings/therapists/${therapistId}/user/${userId}`, {
+      const response = await fetch(`/api/accountSettings/therapists/${user?.id}`, {
         method: "DELETE",
         headers: {
-          "Authorization": `Bearer ${localStorage.getItem("jwt")}`,
+          Authorization: `Bearer ${localStorage.getItem("jwt")}`,
           "Content-Type": "application/json",
         },
       });
-  
+
       const data = await response.json();
-  
+
       if (response.ok) {
-        alert("Account deleted successfully.");
-        window.location.href = "/"; // Or wherever you want to redirect
+        setDeleteModalOpen(false);
+        localStorage.removeItem("jwt");
+        window.location.href = "/";
       } else {
         setErrorMessage(data.error || "Failed to delete account.");
       }
     } catch (error) {
-      console.error("Error fetching therapist data or deleting account:", error);
-      setErrorMessage("An error occurred while deleting the account.");
+      console.error("Error deleting account:", error);
+      setErrorMessage("Error deleting account.");
     }
   };
 
   const handleUpdate = async () => {
-    // Check if passwords match before proceeding
-    if (newPassword !== confirmPassword) {
-      window.alert("Passwords do not match. Please try again."); // Show a pop-up alert
-      setErrorMessage("Passwords do not match.");
+    if (!firstName.trim()) {
+      setErrorMessage("First name cannot be empty.");
+      return;
+    }
+  
+    if (!lastName.trim()) {
+      setErrorMessage("Last name cannot be empty.");
+      return;
+    }
+  
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  
+    if (!email.trim() || !emailRegex.test(email)) {
+      setErrorMessage("Please enter a valid email address.");
+      return;
+    }
+  
+    if (newPassword && (!confirmPassword || newPassword !== confirmPassword)) {
+      setErrorMessage("Passwords do not match. Please confirm your new password.");
       return;
     }
   
     try {
-      const response = await fetch(`${API_BASE_URL}/api/accountSettings/therapist/${user.id}`, {
-        method: "PATCH", // Use PATCH to update the therapist details
+      const response = await fetch(`/api/accountSettings/therapist/${user?.id}`, {
+        method: "PATCH",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("jwt")}`,
           "Content-Type": "application/json",
@@ -132,7 +127,7 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
           last_name: lastName,
           email,
           experience_years: experienceYears,
-          ...(newPassword && { password: newPassword }), // Send as "password" if provided
+          ...(newPassword && { password: newPassword }),
           monthly_rate: monthlyRate,
         }),
       });
@@ -140,22 +135,35 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
       const data = await response.json();
   
       if (response.ok) {
-        alert("Details updated successfully.");
-        setErrorMessage(""); // Clear error message on success
-        onClose(); // Close the modal after successful update
+        setSuccessMessage("Details updated successfully.");
+        setErrorMessage("");
+        setSuccessModalOpen(true);
+  
+        setUser((prevUser) =>
+          prevUser
+            ? {
+                ...prevUser,
+                firstName,
+                lastName,
+                email,
+              }
+            : prevUser
+        );
       } else {
         setErrorMessage(data.message || "Failed to update details.");
       }
     } catch (error) {
-      console.error("Error updating therapist details:", error);
-      setErrorMessage(error.message || "Error updating therapist details.");
+      console.error("Error updating details:", error);
+      setErrorMessage("Error updating details.");
     }
   };
-  
-  
-  const handleClose = () => {
-    onClose();  
+
+  const handleCloseModal = () => {
+    setSuccessModalOpen(false);
+    setSuccessMessage("");
+    onClose(); 
   };
+
   if (!isOpen) return null;
 
   return (
@@ -268,21 +276,69 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
         </div>
 
         {/* Update, Delete Account, and Close buttons in the same row */}
-        <div className="mt-6 flex justify-between">
+        <div className="flex justify-between mt-6">
           <button
-            className="bg-[#5E9ED9] text-white px-4 py-2 w-44 rounded hover:bg-[#4a8ac9]"
+            className="bg-[#5E9ED9] text-white px-4 py-2 rounded w-44 hover:bg-[#4a8ac9]"
             onClick={handleUpdate}
           >
-            Update
+            Save
           </button>
           <button
-            className="bg-red-500 text-white px-4 py-2  w-44 rounded hover:bg-red-400"
-            onClick={handleDeleteAccount}
+            className="bg-red-500 text-white px-4 py-2 rounded w-44 hover:bg-red-600"
+            onClick={() => setDeleteModalOpen(true)}
           >
             Delete Account
           </button>
         </div>
+        <p className="text-red-500 text-center mt-3">{errorMessage}</p>
       </div>
+      {/* Save Confirmation Modal */}
+      {successModalOpen && (
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white rounded-lg p-6 shadow-lg max-w-sm">
+            <h2 className="text-lg font-bold text-center text-[#5E9ED9] mb-4">
+              Success
+            </h2>
+            <p className="text-center text-gray-700 mb-6">{successMessage}</p>
+            <div className="flex justify-center">
+              <button
+                className="bg-[#5E9ED9] text-white px-6 py-2 rounded-lg hover:bg-[#4a8ac9]"
+                onClick={handleCloseModal}
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteModalOpen && (
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-sm">
+            <h2 className="text-lg font-bold text-center text-black mb-4">
+              Confirm Account Deletion
+            </h2>
+            <p className="text-center text-black mb-6 font-normal">
+              Are you sure you want to delete your account? This action is irreversible.
+            </p>
+            <div className="flex justify-center gap-10">
+              <button
+                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                onClick={handleDelete}
+              >
+                Delete
+              </button>
+              <button
+                className="bg-[#5E9ED9] text-white px-4 py-2 rounded hover:bg-[#4a8ac9]"
+                onClick={() => setDeleteModalOpen(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -383,12 +439,12 @@ const HeaderTherapistDashboard = () => {
             <div className="flex items-center gap-2">
               <ProfilePicture
                 userRole="therapist"
-                therapistId={therapistId} // Assuming the user's ID is accessible
+                therapistId={therapistId}
                 className="w-14 h-14"
                 style={{ border: "2px solid white" }}
               />
               <span className="text-white text-xl font-bold">
-                {user.first_name} {user.last_name}
+                {user.firstName} {user.lastName}
               </span>
             </div>
           )}
