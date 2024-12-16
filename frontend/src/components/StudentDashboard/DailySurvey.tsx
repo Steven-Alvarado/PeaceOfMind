@@ -33,6 +33,35 @@ const dailyQuestions: QuestionType[] = [
   { id: 5, question: "I felt motivated to achieve my goals today.", answer: null },
 ];
 
+const normalizeSurveyDateToEST = (date: string | Date): string => {
+  // Parse the UTC date string to a Date object
+  const utcDate = new Date(date);
+
+  // Subtract one day from the UTC date
+  const adjustedDate = new Date(utcDate);
+  adjustedDate.setUTCDate(adjustedDate.getUTCDate() - 1);
+
+  // Convert the adjusted date to the local EST timezone
+  const localDate = new Date(
+    adjustedDate.toLocaleString("en-US", { timeZone: "America/New_York" })
+  );
+
+  // Format the adjusted date to YYYY-MM-DD
+  return `${localDate.getFullYear()}-${String(localDate.getMonth() + 1).padStart(2, "0")}-${String(localDate.getDate()).padStart(2, "0")}`;
+};
+
+
+const normalizeDate = (date: string | Date): string => {
+  const dateObject = new Date(date); // Parse the UTC date
+  // Convert the date to the user's local timezone (e.g., EST)
+  const localDate = new Date(
+    dateObject.toLocaleString("en-US", { timeZone: "America/New_York" })
+  );
+  // Format the date to YYYY-MM-DD
+  return `${localDate.getFullYear()}-${String(localDate.getMonth() + 1).padStart(2, "0")}-${String(localDate.getDate()).padStart(2, "0")}`;
+};
+
+
 const DailySurvey: React.FC<DailySurveyProps> = ({ isOpen, onClose, user }) => {
   const { user: authUser } = useContext(AuthContext);
   const effectiveUser = user || authUser;
@@ -40,147 +69,122 @@ const DailySurvey: React.FC<DailySurveyProps> = ({ isOpen, onClose, user }) => {
   const [activeTab, setActiveTab] = useState<"takeSurvey" | "history">("takeSurvey");
   const [questions, setQuestions] = useState<QuestionType[]>(dailyQuestions);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
   const [surveyHistory, setSurveyHistory] = useState<SurveyHistoryType[]>([]);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [filterByDate, setFilterByDate] = useState(false);
-  const [hasSubmittedToday, setHasSubmittedToday] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [expandedId, setExpandedId] = useState<number | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-
-  const entriesPerPage = 3; // Fixed number of entries per page
-  const totalPages = Math.ceil(surveyHistory.length / entriesPerPage);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasSubmittedToday, setHasSubmittedToday] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
-      setFilterByDate(false);
-      setSelectedDate(null);
-      setCurrentPage(1);
-    }
-  }, [isOpen]);
-
-  useEffect(() => {
-    const checkTodaySubmission = async () => {
-      if (!effectiveUser) return;
-    
-      try {
-        const response = await axios.get(
-          `${API_BASE_URL}/api/surveys/weekly/user/${effectiveUser.id}`,
-          {
-            headers: { Authorization: `Bearer ${effectiveUser.token}` },
-          }
-        );
-    
-        // Get today's date in local time
-        const today = new Date();
-        const todayLocalDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-        console.log("Today (local): ", todayLocalDate);
-    
-        const hasSubmitted = response.data.surveys.some((survey: any) => {
-          // Parse the survey date into local time
-          const surveyDate = new Date(survey.survey_date);
-          const surveyLocalDate = `${surveyDate.getFullYear()}-${String(surveyDate.getMonth() + 1).padStart(2, '0')}-${String(surveyDate.getDate()).padStart(2, '0')}`;
-          console.log("Survey Date (local): ", surveyLocalDate);
-    
-          return surveyLocalDate === todayLocalDate; // Compare local dates
-        });
-    
-        setHasSubmittedToday(hasSubmitted);
-      } catch (error) {
-        console.error("Error checking today's survey submission:", error);
-      }
-    };
-    
-    // Fetch survey status whenever the user logs in or when the component mounts
-    if (effectiveUser) {
-      checkTodaySubmission();
-    }
-    
-  }, [effectiveUser]);
-  
-  useEffect(() => {
-    if (activeTab === "history" && isOpen) {
+      checkIfSurveyExistsForToday();
       fetchSurveyHistory();
     }
-  }, [activeTab, isOpen]);
-  
-  // When modal opens, ensure no reset occurs for completed surveys
-  useEffect(() => {
-    if (isOpen && hasSubmittedToday) {
-      setActiveTab("takeSurvey"); // Default to the survey tab
-    }
-  }, [isOpen, hasSubmittedToday]);
-
+  }, [isOpen]);
 
   const fetchSurveyHistory = async () => {
     if (!effectiveUser) return;
 
     try {
-      const response = await axios.get(
-        `${API_BASE_URL}/api/surveys/weekly/user/${effectiveUser.id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${effectiveUser.token}`,
-          },
-        }
-      );
-
+      const response = await axios.get(`${API_BASE_URL}/api/surveys/weekly/user/${effectiveUser.id}`, {
+        headers: { Authorization: `Bearer ${effectiveUser.token}` },
+      });
       setSurveyHistory(response.data.surveys);
     } catch (error) {
       console.error("Error fetching survey history:", error);
     }
   };
 
-  useEffect(() => {
-    if (activeTab === "history" && isOpen) {
-      fetchSurveyHistory();
+  const checkIfSurveyExistsForToday = async () => {
+    if (!effectiveUser) return;
+  
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/surveys/weekly/user/${effectiveUser.id}`, {
+        headers: { Authorization: `Bearer ${effectiveUser.token}` },
+      });
+  
+      const today = normalizeDate(new Date());
+      console.log("Normalized today's date (EST):", today);
+  
+      const surveys = response.data.surveys;
+      console.log("Fetched surveys from API:", surveys);
+  
+      const surveyForToday = surveys.find((survey: SurveyHistoryType) => {
+        const normalizedSurveyDate = normalizeSurveyDateToEST(survey.survey_date);
+        console.log(
+          `Comparing survey date (UTC: ${survey.survey_date} | Normalized: ${normalizedSurveyDate}) with today's date (${today})`
+        );
+        return normalizedSurveyDate === today;
+      });
+  
+      console.log("Survey for today (if found):", surveyForToday);
+  
+      setHasSubmittedToday(!!surveyForToday);
+    } catch (error) {
+      console.error("Error checking today's survey:", error);
     }
-  }, [activeTab, isOpen]);
-
-  const handleAnswer = (id: number, answer: string) => {
-    setQuestions((prev) => prev.map((q) => (q.id === id ? { ...q, answer } : q)));
   };
+  
+  
+
 
   const handleSubmit = async () => {
     if (!effectiveUser) return;
 
     setIsSubmitting(true);
+
+    const content = questions.reduce((acc, question) => {
+      if (question.answer) {
+        acc[question.question] = question.answer;
+      }
+      return acc;
+    }, {} as Record<string, string>);
+
+    if (Object.keys(content).length !== questions.length) {
+      alert("Please answer all questions before submitting.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    const payload = {
+      userId: effectiveUser.id,
+      content,
+    };
+
     try {
-      await axios.post(
-        `${API_BASE_URL}/api/surveys/weekly`,
-        { userId: effectiveUser.id, content: {} }, // Example payload
-        {
-          headers: { Authorization: `Bearer ${effectiveUser.token}` },
-        }
-      );
+      await axios.post(`${API_BASE_URL}/api/surveys/weekly`, payload, {
+        headers: {
+          Authorization: `Bearer ${effectiveUser.token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
       setHasSubmittedToday(true);
+      setQuestions(dailyQuestions.map((q) => ({ ...q, answer: null })));
+      fetchSurveyHistory();
     } catch (error) {
-      console.error("Error submitting survey:", error);
+      console.error("Error submitting survey:", error.response || error.message);
+      alert("Failed to submit survey. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (!isOpen || !effectiveUser) return null;
-
-  const paginatedSurveys = surveyHistory.slice(
-    (currentPage - 1) * entriesPerPage,
-    currentPage * entriesPerPage
-  );
-
   const renderSurveyHistory = () => {
     const filteredSurvey = surveyHistory.find((survey) => {
       if (!selectedDate) return true;
   
-      // Normalize survey date to local time
-      const surveyDate = new Date(survey.survey_date);
-      const surveyLocalDate = `${surveyDate.getFullYear()}-${String(surveyDate.getMonth() + 1).padStart(2, '0')}-${String(surveyDate.getDate()).padStart(2, '0')}`;
+      // Adjust the survey date and selected date to EST
+      const surveyDateAdjusted = normalizeSurveyDateToEST(new Date(survey.survey_date));
+      const selectedDateNormalized = normalizeDate(selectedDate);
   
-      // Use the selected date as a local date with no time offset
-      const selectedLocalDate = selectedDate.toISOString().split("T")[0];
+      // Debugging logs
+      console.log("Filtering by date:");
+      console.log("Survey Date (Adjusted to EST):", surveyDateAdjusted);
+      console.log("Selected Date (Normalized to EST):", selectedDateNormalized);
   
-      return surveyLocalDate === selectedLocalDate;
+      // Compare the adjusted dates
+      return surveyDateAdjusted === selectedDateNormalized;
     });
   
     return (
@@ -189,12 +193,11 @@ const DailySurvey: React.FC<DailySurveyProps> = ({ isOpen, onClose, user }) => {
           <label className="block text-sm font-medium text-gray-700 mb-2">Filter by date</label>
           <input
             type="date"
-            value={selectedDate ? selectedDate.toISOString().split("T")[0] : ""}
+            value={selectedDate ? normalizeDate(selectedDate) : ""}
             onChange={(e) => {
               const inputDate = e.target.value;
               if (inputDate) {
                 const [year, month, day] = inputDate.split("-");
-                // Create a date object that ensures no timezone shift
                 setSelectedDate(new Date(Number(year), Number(month) - 1, Number(day)));
               }
             }}
@@ -202,14 +205,11 @@ const DailySurvey: React.FC<DailySurveyProps> = ({ isOpen, onClose, user }) => {
           />
         </div>
   
-        <div
-          className="bg-gray-100 p-4 rounded-lg shadow-md overflow-hidden"
-          style={{ minHeight: "200px" }} // Fixed container height
-        >
+        <div className="bg-gray-100 p-4 rounded-lg shadow-md" style={{ minHeight: "200px" }}>
           {filteredSurvey ? (
-            <div className="relative">
+            <div>
               <motion.div
-                className="relative flex gap-4 mb-4 bg-white p-4 rounded-lg shadow-md cursor-pointer"
+                className="flex gap-4 bg-white p-4 rounded-lg shadow-md cursor-pointer"
                 onClick={() => setExpandedId(expandedId === filteredSurvey.id ? null : filteredSurvey.id)}
                 whileHover={{ scale: 1.02 }}
               >
@@ -217,23 +217,20 @@ const DailySurvey: React.FC<DailySurveyProps> = ({ isOpen, onClose, user }) => {
                   <Calendar size={20} />
                 </div>
                 <div className="flex-1">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-semibold text-gray-800">{filteredSurvey.document_type}</h3>
-                    {expandedId === filteredSurvey.id ? <ChevronUp /> : <ChevronDown />}
-                  </div>
+                  <h3 className="text-lg font-semibold text-gray-800">{filteredSurvey.document_type}</h3>
                   <p className="text-gray-600">
-                    {new Date(filteredSurvey.survey_date).toLocaleDateString()}
+                    {normalizeSurveyDateToEST(new Date(filteredSurvey.survey_date))}
                   </p>
                 </div>
+                {expandedId === filteredSurvey.id ? <ChevronUp /> : <ChevronDown />}
               </motion.div>
               <AnimatePresence>
                 {expandedId === filteredSurvey.id && (
                   <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="overflow-hidden bg-gray-50 rounded-lg p-4 shadow-inner"
-                    style={{ maxHeight: "300px", overflowY: "auto" }} // Scrollable if content exceeds
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="p-4 bg-gray-50 rounded-lg shadow-inner"
                   >
                     {Object.entries(filteredSurvey.document_content).map(([question, answer]) => (
                       <div key={question} className="mb-2">
@@ -246,7 +243,7 @@ const DailySurvey: React.FC<DailySurveyProps> = ({ isOpen, onClose, user }) => {
               </AnimatePresence>
             </div>
           ) : (
-            <p className="text-gray-500 text-center">No survey found for the selected date.</p>
+            <p className="text-gray-500">No survey found for the selected date.</p>
           )}
         </div>
       </div>
@@ -254,11 +251,10 @@ const DailySurvey: React.FC<DailySurveyProps> = ({ isOpen, onClose, user }) => {
   };
   
   
-  
-  
+
   if (!isOpen || !effectiveUser) return null;
 
-   return (
+  return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
@@ -293,7 +289,7 @@ const DailySurvey: React.FC<DailySurveyProps> = ({ isOpen, onClose, user }) => {
             hasSubmittedToday ? (
               <div className="text-center">
                 <CheckCircle size={40} className="text-green-500 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold">Today's survey has already been submitted!</h3>
+                <h3 className="text-lg font-semibold">You've already submitted today's survey.</h3>
               </div>
             ) : (
               <>
@@ -309,11 +305,18 @@ const DailySurvey: React.FC<DailySurveyProps> = ({ isOpen, onClose, user }) => {
                     {["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"].map((option) => (
                       <button
                         key={option}
-                        onClick={() => handleAnswer(questions[currentQuestionIndex].id, option)}
-                        className={`block w-full px-4 py-2 rounded-md ${questions[currentQuestionIndex].answer === option
+                        onClick={() =>
+                          setQuestions((prev) =>
+                            prev.map((q) =>
+                              q.id === questions[currentQuestionIndex].id ? { ...q, answer: option } : q
+                            )
+                          )
+                        }
+                        className={`block w-full px-4 py-2 rounded-md ${
+                          questions[currentQuestionIndex].answer === option
                             ? "bg-blue-100 border border-blue-500"
                             : "bg-gray-100 border border-gray-400"
-                          }`}
+                        }`}
                       >
                         {option}
                       </button>
