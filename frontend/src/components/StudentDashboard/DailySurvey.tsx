@@ -175,7 +175,7 @@ const DailySurvey: React.FC<DailySurveyProps> = ({ isOpen, onClose, user }) => {
       if (!selectedDate) return true;
   
       // Adjust the survey date and selected date to EST
-      const surveyDateAdjusted = normalizeSurveyDateToEST(new Date(survey.survey_date));
+      const surveyDateAdjusted = normalizeDate(new Date(survey.survey_date));
       const selectedDateNormalized = normalizeDate(selectedDate);
   
       // Debugging logs
@@ -219,7 +219,7 @@ const DailySurvey: React.FC<DailySurveyProps> = ({ isOpen, onClose, user }) => {
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold text-gray-800">{filteredSurvey.document_type}</h3>
                   <p className="text-gray-600">
-                    {normalizeSurveyDateToEST(new Date(filteredSurvey.survey_date))}
+                    {normalizeDate(new Date(filteredSurvey.survey_date))}
                   </p>
                 </div>
                 {expandedId === filteredSurvey.id ? <ChevronUp /> : <ChevronDown />}
@@ -249,6 +249,7 @@ const DailySurvey: React.FC<DailySurveyProps> = ({ isOpen, onClose, user }) => {
       </div>
     );
   };
+  
   
   
 
