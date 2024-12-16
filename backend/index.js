@@ -125,6 +125,6 @@ app.options("*", cors());
 // Start the server
 httpServer.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
-  console.log(`API documentation is available at http://localhost:${PORT}/api-docs`);
+  console.log(`API documentation is available at /api-docs`);
 });
 
