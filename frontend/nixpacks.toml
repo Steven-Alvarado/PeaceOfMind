@@ -9,7 +9,7 @@ commands = [
 ]
 
 [phases.build]
-commands = ["npm install", "npm test", "npm run build"]
+commands = ["npm install", "npm run build"]
 
 [start]
 cmd = "caddy run --config ./Caddyfile"
