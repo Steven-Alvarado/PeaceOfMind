@@ -172,7 +172,7 @@ const TherapistSection: React.FC<TherapistSectionProps> = ({ user }) => {
               </Alert>
             )}
           </div>
-          <h2 className="text-2xl font-bold text-[#5E9ED9]">
+          <h2 className="text-3xl font-semibold text-center text-[#5E9ED9]">
             Therapist Details
           </h2>
         </div>
