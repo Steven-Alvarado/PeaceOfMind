@@ -18,6 +18,7 @@ export interface User {
 // Define the AuthContext properties
 interface AuthContextProps {
   user: User | null;
+  setUser: React.Dispatch<React.SetStateAction<User | null>>;
   login: (email: string, password: string) => Promise<void>;
   registerUser: (
     firstName: string,
@@ -54,11 +55,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const navigate = useNavigate();
 
   useEffect(() => {
-    // On mount, check if a JWT exists and fetch user profile
     const token = localStorage.getItem("jwt");
     if (token) {
       setAxiosAuthHeader(token);
-      fetchProfile();
+      fetchUser();
     }
   }, []);
 
@@ -66,15 +66,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
   };
 
-  const fetchProfile = async () => {
-    try {
-      const { data } = await axios.get(`${API_BASE_URL}/api/auth/me`);
-      setUser(data.user);
-    } catch (error) {
-      console.error("Failed to fetch user profile", error);
-      logout(); // Clear state if token is invalid
-    }
-  };
+  // const fetchProfile = async () => {
+  //   try {
+  //     const { data } = await axios.get(`${API_BASE_URL}/api/auth/me`);
+  //     setUser(data.user);
+  //   } catch (error) {
+  //     console.error("Failed to fetch user profile", error);
+  //     logout(); // Clear state if token is invalid
+  //   }
+  // };
 
   const registerUser = async (
     firstName: string,
@@ -143,10 +143,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const login = async (email: string, password: string) => {
     try {
-      const { data } = await axios.post(`${API_BASE_URL}/api/auth/login`, { email, password });
-      const { token, user } = data;
+      const { data } = await axios.post(`${API_BASE_URL}/api/auth/login`, {
+        email,
+        password,
+      });
+      const { token } = data;
   
-      if (!token || !user) {
+      if (!token) {
         throw new Error("Invalid response from the server.");
       }
   
@@ -154,29 +157,35 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       localStorage.setItem("jwt", token);
       setAxiosAuthHeader(token);
   
-  
-      const profileResponse = await axios.get(`${API_BASE_URL}/api/auth/me`);
-      const fullUser = {
-        ...profileResponse.data.user, // Merge additional user details
+      // Fetch the user profile
+      const { data: userData } = await axios.get(`${API_BASE_URL}/api/auth/me`);
+      const updatedUser = {
+        id: userData.user.id,
+        email: userData.user.email,
+        role: userData.user.role || "student",
+        firstName: userData.user.first_name || "Unknown",
+        lastName: userData.user.last_name || "User",
         token,
       };
   
-      setUser(fullUser);
+      setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
   
-      // Redirect based on role
-      navigate(fullUser.role === "student" ? "/student-dashboard" : "/therapist-dashboard");
-    } catch (error: any) {
-      if (error.response?.data?.message) {
-        console.error("Login failed:", error.response.data.message);
+      // Redirect based on the role dynamically
+      if (updatedUser.role === "student") {
+        navigate("/student-dashboard");
+      } else if (updatedUser.role === "therapist") {
+        navigate("/therapist-dashboard");
       } else {
-        console.error("Login failed:", error.message);
+        throw new Error("Invalid user role detected.");
       }
+  
+      console.log("Login successful, user fetched successfully.");
+    } catch (error: any) {
+      console.error("Login failed:", error.response?.data?.message || error.message);
       throw new Error("Invalid email or password. Please try again.");
     }
   };
-  
-  
- 
 
   const logout = () => {
     localStorage.removeItem("jwt");
@@ -184,7 +193,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setUser(null);
     navigate("/");
   };
-
+  
   const fetchUser = async () => {
     const token = localStorage.getItem("jwt");
   
@@ -201,15 +210,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         throw new Error("Invalid user data from the server.");
       }
   
-      setUser({
+      const updatedUser = {
         id: data.user.id,
         email: data.user.email,
         role: data.user.role || "student",
         firstName: data.user.first_name || "Unknown",
         lastName: data.user.last_name || "User",
         token,
-        therapistId: data.user.therapist_id || "Unknown",
-      });
+      };
+  
+      setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
     } catch (error) {
       console.error("Failed to fetch user profile:", error);
       logout();
@@ -226,7 +237,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   return (
     <AuthContext.Provider value={{  
-      user, 
+      user,
+      setUser, 
       login, 
       registerUser,
       registerTherapist, 
