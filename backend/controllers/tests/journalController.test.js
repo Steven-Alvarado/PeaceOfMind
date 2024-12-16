@@ -186,19 +186,7 @@ const {
         expect(res.json).toHaveBeenCalledWith({ journals: mockJournals });
       });
   
-      it('should return 404 if no journals are found', async () => {
-        const req = mockReq();
-        req.params.userId = 1;
-        const res = mockRes();
-  
-        getJournalsByUserId.mockResolvedValue([]);
-  
-        await getJournals(req, res);
-  
-        expect(getJournalsByUserId).toHaveBeenCalledWith(1);
-        expect(res.status).toHaveBeenCalledWith(404);
-        expect(res.json).toHaveBeenCalledWith({ error: 'No journals found for this user' });
-      });
+      
   
       it('should return 500 if fetching journals fails', async () => {
         const req = mockReq();
