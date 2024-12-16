@@ -39,7 +39,7 @@ const normalizeSurveyDateToEST = (date: string | Date): string => {
 
   // Subtract one day from the UTC date
   const adjustedDate = new Date(utcDate);
-  adjustedDate.setUTCDate(adjustedDate.getUTCDate() - 1);
+  adjustedDate.setUTCDate(adjustedDate.getUTCDate() );
 
   // Convert the adjusted date to the local EST timezone
   const localDate = new Date(
