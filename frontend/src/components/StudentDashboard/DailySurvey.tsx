@@ -39,7 +39,7 @@ const normalizeSurveyDateToEST = (date: string | Date): string => {
 
   // Subtract one day from the UTC date
   const adjustedDate = new Date(utcDate);
-  adjustedDate.setUTCDate(adjustedDate.getUTCDate() );
+  adjustedDate.setUTCDate(adjustedDate.getUTCDate() - 1);
 
   // Convert the adjusted date to the local EST timezone
   const localDate = new Date(
@@ -110,7 +110,7 @@ const DailySurvey: React.FC<DailySurveyProps> = ({ isOpen, onClose, user }) => {
       console.log("Fetched surveys from API:", surveys);
   
       const surveyForToday = surveys.find((survey: SurveyHistoryType) => {
-        const normalizedSurveyDate = normalizeSurveyDateToEST(survey.survey_date);
+        const normalizedSurveyDate = normalizeDate(survey.survey_date);
         console.log(
           `Comparing survey date (UTC: ${survey.survey_date} | Normalized: ${normalizedSurveyDate}) with today's date (${today})`
         );
