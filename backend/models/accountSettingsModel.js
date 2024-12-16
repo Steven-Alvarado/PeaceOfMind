@@ -189,15 +189,44 @@ const updateTherapistAccountSettings = async (id, first_name, last_name, email, 
 
  
 
-const deleteUser = async (studentId) => {
-  const query = `
-    DELETE FROM users
-    WHERE id = $1
-    RETURNING *;
-  `;
-  const result = await pool.query(query, [studentId]);
-  return result.rows[0];
+const deleteUser = async (userId) => {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    // Delete from dependent tables first
+    await client.query(`DELETE FROM therapists WHERE user_id = $1`, [userId]);
+    await client.query(`DELETE FROM auth WHERE user_id = $1`, [userId]);
+
+    // Delete from users table
+    const result = await client.query(
+      `DELETE FROM users WHERE id = $1 RETURNING *`,
+      [userId]
+    );
+
+    await client.query("COMMIT");
+    return result.rows[0];
+  } catch (error) {
+    await client.query("ROLLBACK");
+    console.error("Error deleting user:", error);
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
+const getTherapistRelationships = async (therapistId) => {
+  try {
+    const result = await pool.query(
+      `SELECT * FROM student_therapist_relationships WHERE current_therapist_id = $1`,
+      [therapistId]
+    );
+    return result.rows;
+  } catch (error) {
+    console.error("Error fetching therapist relationships:", error);
+    throw error;
+  }
 };
 
 
- module.exports = { updateUserAccountSettings, updateTherapistAccountSettings, deleteUser};
+ module.exports = { getTherapistRelationships, updateUserAccountSettings, updateTherapistAccountSettings, deleteUser};

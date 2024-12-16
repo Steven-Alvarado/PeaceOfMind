@@ -1,7 +1,8 @@
 const bcrypt = require('bcrypt');
-const { updateUserAccountSettings, updateTherapistAccountSettings, deleteUser  } = require('../models/accountSettingsModel');
-const {getTherapistRelationshipss } = require('../controllers/relationshipController');
+const { updateUserAccountSettings, updateTherapistAccountSettings, deleteUser , getTherapistRelationships } = require('../models/accountSettingsModel');
+
 const { getAllInvoices, getInvoicesByStudentId } = require('../models/invoicesModel');
+const pool = require('../config/db'); 
  
 const updateUser = async (req, res) => {
   const { userid } = req.params;
@@ -50,7 +51,7 @@ const handleDeleteUserAndTherapist = async (req, res) => {
 
   try {
     // Check for active relationships
-    const relationships = await getTherapistRelationshipss(therapistId);
+    const relationships = await getTherapistRelationships(therapistId); 
     const activeRelationships = relationships.filter(
       (relationship) => relationship.status === "active"
     );
@@ -62,7 +63,7 @@ const handleDeleteUserAndTherapist = async (req, res) => {
     }
 
     // Check for unpaid invoices
-    const invoices = await getAllInvoices();
+    const invoices = await getAllInvoices(); 
     const unpaidInvoices = invoices.filter(
       (invoice) => invoice.therapist_id === parseInt(therapistId) && invoice.status !== "paid"
     );
@@ -73,18 +74,25 @@ const handleDeleteUserAndTherapist = async (req, res) => {
       });
     }
 
-    // Proceed with deleting the user
+    // Delete therapist record from therapists table
+    await pool.query(`DELETE FROM therapists WHERE user_id = $1`, [therapistId]);
+
+    // Delete auth record
+    await pool.query(`DELETE FROM auth WHERE user_id = $1`, [therapistId]);
+
+    // Delete user record from users table
     const deletedUser = await deleteUser(studentId);
 
-    res.status(200).json({
+    return res.status(200).json({
       message: "Therapist and user deleted successfully.",
       user: deletedUser,
     });
   } catch (error) {
     console.error("Error deleting user and therapist:", error);
-    res.status(500).json({ error: "Failed to delete user and therapist." });
+    return res.status(500).json({ error: "Failed to delete user and therapist." });
   }
 };
+
 
 
 

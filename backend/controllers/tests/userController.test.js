@@ -13,7 +13,16 @@ const {
   } = require("../../models/usersModel");
   
   jest.mock("../../models/usersModel");
+
+  beforeEach(() => {
+    jest.spyOn(console, "error").mockImplementation(() => {});
+  });
   
+  afterEach(() => {
+    jest.clearAllMocks();
+    jest.restoreAllMocks();
+  }); 
+
   const mockReq = () => ({ body: {}, params: {}, query: {} });
   const mockRes = () => {
     const res = {};
