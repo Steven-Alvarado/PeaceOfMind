@@ -35,18 +35,18 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
       setErrorMessage("User ID is not available.");
       return;
     }
-
+  
     try {
-      const response = await fetch(`/api/therapists/user/${user.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/therapists/user/${user.id}`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("jwt")}`,
           "Content-Type": "application/json",
         },
       });
-
+  
       const data = await response.json();
-
+  
       if (response.ok) {
         setFirstName(data.therapist.first_name || '');
         setLastName(data.therapist.last_name || '');
@@ -63,32 +63,61 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
   };
 
   const handleDelete = async () => {
+    console.log("Delete account button clicked");
+  
     if (!user?.id) {
       setErrorMessage("User ID is not available.");
       return;
     }
-
+  
     try {
-      const response = await fetch(`/api/accountSettings/therapists/${user?.id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("jwt")}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setDeleteModalOpen(false);
-        localStorage.removeItem("jwt");
-        window.location.href = "/";
-      } else {
-        setErrorMessage(data.error || "Failed to delete account.");
+      const therapistResponse = await fetch(
+        `${API_BASE_URL}/api/therapists/find/${user.id}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+  
+      const therapistData = await therapistResponse.json();
+      if (!therapistData?.therapist?.id) {
+        setErrorMessage("Therapist not found.");
+        return;
+      }
+  
+      const therapistId = therapistData.therapist.id;
+      console.log("Fetched therapist ID:", therapistId);
+  
+      setDeleteModalOpen(true);
+  
+      if (deleteModalOpen) {
+        const deleteResponse = await fetch(
+          `${API_BASE_URL}/api/accountSettings/therapists/${therapistId}/user/${user.id}`,
+          {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+  
+        const deleteData = await deleteResponse.json();
+  
+        if (deleteResponse.ok) {
+          alert("Account deleted successfully.");
+          localStorage.removeItem("jwt");
+          window.location.href = "/";
+        } else {
+          setErrorMessage(deleteData.error || "Failed to delete account.");
+        }
       }
     } catch (error) {
       console.error("Error deleting account:", error);
-      setErrorMessage("Error deleting account.");
+      setErrorMessage("An error occurred while deleting the account.");
     }
   };
 
@@ -104,7 +133,6 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
     }
   
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  
     if (!email.trim() || !emailRegex.test(email)) {
       setErrorMessage("Please enter a valid email address.");
       return;
@@ -116,21 +144,24 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
     }
   
     try {
-      const response = await fetch(`/api/accountSettings/therapist/${user?.id}`, {
-        method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("jwt")}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          first_name: firstName,
-          last_name: lastName,
-          email,
-          experience_years: experienceYears,
-          ...(newPassword && { password: newPassword }),
-          monthly_rate: monthlyRate,
-        }),
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/api/accountSettings/therapist/${user?.id}`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            first_name: firstName,
+            last_name: lastName,
+            email,
+            experience_years: experienceYears,
+            ...(newPassword && { password: newPassword }),
+            monthly_rate: monthlyRate,
+          }),
+        }
+      );
   
       const data = await response.json();
   
@@ -385,24 +416,24 @@ const HeaderTherapistDashboard = () => {
   };
 
  // Fetch therapist_id using user_id
- useEffect(() => {
-  const fetchTherapistId = async () => {
-    if (user?.id) {
-      try {
-        const response = await axios.get(
-          `${API_BASE_URL}/api/therapists/find/${user.id}`
-        );
-        const therapistData = response.data.therapist;
-        if (therapistData && therapistData.id) {
-          setTherapistId(therapistData.id); // Set the therapist ID
-        } else {
-          console.error("Therapist data is missing or invalid:", therapistData);
+  useEffect(() => {
+    const fetchTherapistId = async () => {
+      if (user?.id) {
+        try {
+          const response = await axios.get(
+            `${API_BASE_URL}/api/therapists/find/${user.id}`
+          );
+          const therapistData = response.data.therapist;
+          if (therapistData && therapistData.id) {
+            setTherapistId(therapistData.id); // Set the therapist ID
+          } else {
+            console.error("Therapist data is missing or invalid:", therapistData);
+          }
+        } catch (error) {
+          console.error("Failed to fetch therapist_id:", error);
         }
-      } catch (error) {
-        console.error("Failed to fetch therapist_id:", error);
       }
-    }
-  };
+    };
 
   fetchTherapistId();
 }, [user]);
