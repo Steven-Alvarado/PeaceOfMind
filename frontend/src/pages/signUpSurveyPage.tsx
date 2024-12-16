@@ -83,7 +83,7 @@ const SignUpSurveyPage = () => {
 
       setSubmitStatus("success");
       setTimeout(() => {
-        navigate("/student-dashboard"); // Redirect after success
+        navigate("/login"); // Redirect after success
       }, 2000);
     } catch (err: any) {
       setSubmitStatus("error");
@@ -192,7 +192,7 @@ const SignUpSurveyPage = () => {
                   Thank you for completing the survey!
                 </h3>
                 <p className="text-gray-600 mt-2">
-                  Redirecting to your dashboard...
+                  Redirecting to Login...
                 </p>
               </>
             ) : (
