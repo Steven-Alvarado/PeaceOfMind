@@ -110,7 +110,7 @@ const DailySurvey: React.FC<DailySurveyProps> = ({ isOpen, onClose, user }) => {
       console.log("Fetched surveys from API:", surveys);
   
       const surveyForToday = surveys.find((survey: SurveyHistoryType) => {
-        const normalizedSurveyDate = normalizeSurveyDateToEST(survey.survey_date);
+        const normalizedSurveyDate = normalizeDate(survey.survey_date);
         console.log(
           `Comparing survey date (UTC: ${survey.survey_date} | Normalized: ${normalizedSurveyDate}) with today's date (${today})`
         );
