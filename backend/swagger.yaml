@@ -2203,6 +2203,31 @@ paths:
 
 components:
   schemas:
+    Relationship:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        student_id:
+          type: integer
+          example: 123
+        therapist_id:
+          type: integer
+          example: 456
+        status:
+          type: string
+          enum: [active, inactive, pending]
+          example: active
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-12-15T06:18:33.189Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2024-12-15T06:18:33.189Z"
+
     User:
       type: object
       properties:
